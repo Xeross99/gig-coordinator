@@ -6,7 +6,12 @@ require_relative "../config/environment"
 
 def link_for(record)
   token = record.signed_id(purpose: :magic_link, expires_in: 15.minutes)
-  "http://localhost:3000/login/verify?token=#{token}"
+  base = if (host = ENV["PUBLIC_HOST"]).present?
+           "https://#{host}"
+         else
+           "http://localhost:3000"
+         end
+  "#{base}/login/verify?token=#{token}"
 end
 
 if email = ARGV[0]
