@@ -1,0 +1,5 @@
+<%= t("mailers.magic_link.hello", name: @user.first_name) %>
+
+<%= t("mailers.completed_event.body", name: @event.name, date: l(@event.scheduled_at.to_date, format: :long)) %>
+
+Zapłata: <%= number_to_currency(@event.pay_per_person) %>

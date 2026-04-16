@@ -1,0 +1,5 @@
+<%= t("mailers.magic_link.hello", name: @user.first_name) %>
+
+<%= t("mailers.promotion.body", name: @event.name) %>
+
+Start: <%= l(@event.scheduled_at, format: :long) %>

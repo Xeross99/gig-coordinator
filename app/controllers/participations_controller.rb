@@ -33,6 +33,9 @@ class ParticipationsController < ApplicationController
       end
     end
 
+    if promoted
+      PromotionMailer.with(participation: promoted).notify.deliver_later
+    end
     broadcast_event_updates(@event)
     redirect_to event_path(@event)
   end
