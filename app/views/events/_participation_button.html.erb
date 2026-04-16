@@ -1,0 +1,28 @@
+<% participation = event.participations.active.find_by(user_id: current_user&.id) %>
+
+<div class="flex items-center justify-between mb-3">
+  <div class="text-sm">
+    <span class="text-stone-500"><%= t("events.confirmed_count") %>:</span>
+    <span class="font-semibold"><%= event.participations.confirmed.count %>/<%= event.capacity %></span>
+  </div>
+  <div class="text-sm">
+    <span class="text-stone-500"><%= t("events.waitlist_count") %>:</span>
+    <span class="font-semibold"><%= event.participations.waitlist.count %></span>
+  </div>
+</div>
+
+<% if participation&.confirmed? %>
+  <div class="rounded-lg bg-emerald-50 text-emerald-800 px-3 py-2 text-sm mb-3"><%= t("events.confirmed_badge") %></div>
+  <%= button_to t("events.cancel"), event_participation_path(event), method: :delete,
+                class: "w-full py-3 rounded-lg border border-stone-300 text-stone-800 font-medium" %>
+<% elsif participation&.waitlist? %>
+  <div class="rounded-lg bg-amber-50 text-amber-800 px-3 py-2 text-sm mb-3"><%= t("events.waitlist_badge") %></div>
+  <%= button_to t("events.cancel"), event_participation_path(event), method: :delete,
+                class: "w-full py-3 rounded-lg border border-stone-300 text-stone-800 font-medium" %>
+<% elsif event.full? %>
+  <%= button_to t("events.waitlist_accept"), event_participation_path(event), method: :post,
+                class: "w-full py-3 rounded-lg bg-amber-500 text-white font-medium" %>
+<% else %>
+  <%= button_to t("events.accept"), event_participation_path(event), method: :post,
+                class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium" %>
+<% end %>
