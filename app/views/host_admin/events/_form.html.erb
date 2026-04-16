@@ -1,0 +1,38 @@
+<%= form_with model: [:host, event], local: true, class: "space-y-4" do |f| %>
+  <% if event.errors.any? %>
+    <div class="bg-red-50 text-red-800 rounded-lg p-3 text-sm">
+      <ul class="list-disc list-inside">
+        <% event.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :name, "Nazwa eventu", class: "block text-sm text-stone-700 mb-1" %>
+    <%= f.text_field :name, required: true, class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :scheduled_at, t("events.starts_at"), class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.datetime_local_field :scheduled_at, required: true, class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
+    </div>
+    <div>
+      <%= f.label :ends_at, t("events.ends_at"), class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.datetime_local_field :ends_at, required: true, class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :pay_per_person, t("events.pay_per_person"), class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.number_field :pay_per_person, step: 0.01, min: 0, required: true, class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
+    </div>
+    <div>
+      <%= f.label :capacity, "Liczba miejsc", class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.number_field :capacity, min: 1, required: true, class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
+    </div>
+  </div>
+
+  <%= f.submit class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium" %>
+<% end %>

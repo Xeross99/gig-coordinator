@@ -1,0 +1,31 @@
+<%= link_to "← " + t("host_panel.my_events"), host_events_path, class: "text-sm text-stone-500" %>
+
+<div class="bg-white rounded-xl shadow-sm p-5 mt-4">
+  <h1 class="text-2xl font-semibold text-stone-900"><%= @event.name %></h1>
+  <div class="mt-1 text-sm text-stone-500">
+    <%= l(@event.scheduled_at, format: :long) %>
+    —
+    <%= l(@event.ends_at, format: :short) %>
+  </div>
+
+  <dl class="grid grid-cols-2 gap-3 mt-4 text-sm">
+    <div>
+      <dt class="text-stone-500"><%= t("events.pay_per_person") %></dt>
+      <dd class="font-medium"><%= number_to_currency(@event.pay_per_person) %></dd>
+    </div>
+    <div>
+      <dt class="text-stone-500">Liczba miejsc</dt>
+      <dd class="font-medium"><%= @event.capacity %></dd>
+    </div>
+  </dl>
+
+  <div class="flex gap-2 mt-5">
+    <%= link_to "Edytuj", edit_host_event_path(@event),
+                class: "flex-1 text-center py-2 rounded-lg border border-stone-300 text-sm" %>
+    <%= button_to "Usuń", host_event_path(@event), method: :delete,
+                  data: { turbo_confirm: "Na pewno?" },
+                  class: "flex-1 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-medium" %>
+  </div>
+</div>
+
+<%# Roster section added in M6 %>

@@ -10,7 +10,50 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_204616) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_205509) do
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "events", force: :cascade do |t|
+    t.integer "capacity", null: false
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "ends_at", null: false
+    t.integer "host_id", null: false
+    t.string "name", null: false
+    t.decimal "pay_per_person", precision: 8, scale: 2, null: false
+    t.datetime "scheduled_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ends_at"], name: "index_events_on_ends_at"
+    t.index ["host_id"], name: "index_events_on_host_id"
+    t.index ["scheduled_at"], name: "index_events_on_scheduled_at"
+  end
+
   create_table "hosts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -21,6 +64,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_204616) do
     t.string "location", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_hosts_on_email", unique: true
+  end
+
+  create_table "participations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "event_id", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["event_id", "status", "position"], name: "index_participations_on_event_id_and_status_and_position"
+    t.index ["event_id", "user_id"], name: "index_participations_on_event_id_and_user_id", unique: true
+    t.index ["event_id"], name: "index_participations_on_event_id"
+    t.index ["user_id"], name: "index_participations_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -43,4 +99,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_204616) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
   end
+
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "events", "hosts"
+  add_foreign_key "participations", "events"
+  add_foreign_key "participations", "users"
 end

@@ -1,0 +1,15 @@
+gig-coordinators_tomorrow:
+  host: jan
+  name: "Lapanie kur"
+  scheduled_at: <%= 2.days.from_now %>
+  ends_at: <%= 2.days.from_now + 3.hours %>
+  pay_per_person: 150.0
+  capacity: 4
+
+harvest_next_week:
+  host: anna
+  name: "Zbieranie truskawek"
+  scheduled_at: <%= 7.days.from_now %>
+  ends_at: <%= 7.days.from_now + 5.hours %>
+  pay_per_person: 200.0
+  capacity: 10
