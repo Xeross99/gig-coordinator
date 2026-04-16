@@ -14,12 +14,14 @@ class ParticipationsController < ApplicationController
       end
     end
 
+    broadcast_event_updates(@event)
     redirect_to event_path(@event)
   end
 
   # DELETE /events/:event_id/participation
   def destroy
     @event = Event.find(params[:event_id])
+    promoted = nil
 
     Event.transaction do
       @event.lock!
@@ -27,14 +29,34 @@ class ParticipationsController < ApplicationController
       if participation
         was_confirmed = participation.confirmed?
         participation.update!(status: :cancelled)
-        promote_from_waitlist(@event) if was_confirmed
+        promoted = promote_from_waitlist(@event) if was_confirmed
       end
     end
 
+    broadcast_event_updates(@event)
     redirect_to event_path(@event)
   end
 
   private
+
+  def broadcast_event_updates(event)
+    Turbo::StreamsChannel.broadcast_replace_to(
+      [ event, :roster ],
+      target: dom_id(event, :roster),
+      partial: "events/roster",
+      locals: { event: event.reload }
+    )
+    Turbo::StreamsChannel.broadcast_replace_to(
+      [ event, :counts ],
+      target: dom_id(event, :counts),
+      partial: "events/counts",
+      locals: { event: event.reload }
+    )
+  end
+
+  def dom_id(*args)
+    ActionView::RecordIdentifier.dom_id(*args)
+  end
 
   def next_slot_for(event)
     if event.participations.confirmed.count < event.capacity

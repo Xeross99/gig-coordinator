@@ -1,15 +1,7 @@
 <% participation = event.participations.active.find_by(user_id: current_user&.id) %>
 
-<div class="flex items-center justify-between mb-3">
-  <div class="text-sm">
-    <span class="text-stone-500"><%= t("events.confirmed_count") %>:</span>
-    <span class="font-semibold"><%= event.participations.confirmed.count %>/<%= event.capacity %></span>
-  </div>
-  <div class="text-sm">
-    <span class="text-stone-500"><%= t("events.waitlist_count") %>:</span>
-    <span class="font-semibold"><%= event.participations.waitlist.count %></span>
-  </div>
-</div>
+<%= turbo_stream_from event, :counts %>
+<%= render "events/counts", event: event %>
 
 <% if participation&.confirmed? %>
   <div class="rounded-lg bg-emerald-50 text-emerald-800 px-3 py-2 text-sm mb-3"><%= t("events.confirmed_badge") %></div>

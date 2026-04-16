@@ -28,4 +28,8 @@
   </div>
 </div>
 
-<%# Roster section added in M6 %>
+<div class="bg-white rounded-xl shadow-sm p-5 mt-4">
+  <h2 class="text-lg font-semibold mb-4"><%= t("host_panel.roster") %></h2>
+  <%= turbo_stream_from @event, :roster %>
+  <%= render "events/roster", event: @event %>
+</div>

@@ -1,0 +1,41 @@
+<div id="<%= dom_id(event, :roster) %>" class="space-y-4">
+  <div>
+    <h3 class="text-stone-500 text-xs uppercase tracking-wide mb-2">
+      <%= t("events.confirmed_count") %>
+      (<%= event.participations.confirmed.count %>/<%= event.capacity %>)
+    </h3>
+    <% confirmed = event.participations.confirmed.includes(:user).order(:position) %>
+    <% if confirmed.any? %>
+      <ul class="space-y-2">
+        <% confirmed.each do |p| %>
+          <li class="flex items-center justify-between bg-emerald-50 rounded-lg px-3 py-2 text-sm">
+            <span class="font-medium text-stone-900"><%= p.user.display_name %></span>
+            <span class="text-stone-500 text-xs"><%= p.user.email %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="text-stone-400 text-sm">Brak zapisanych.</div>
+    <% end %>
+  </div>
+
+  <div>
+    <h3 class="text-stone-500 text-xs uppercase tracking-wide mb-2">
+      <%= t("events.waitlist_count") %>
+      (<%= event.participations.waitlist.count %>)
+    </h3>
+    <% waitlist = event.participations.waitlist.includes(:user).order(:position) %>
+    <% if waitlist.any? %>
+      <ul class="space-y-2">
+        <% waitlist.each do |p| %>
+          <li class="flex items-center justify-between bg-amber-50 rounded-lg px-3 py-2 text-sm">
+            <span class="font-medium text-stone-900"><%= p.user.display_name %></span>
+            <span class="text-stone-500 text-xs"><%= p.user.email %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="text-stone-400 text-sm">Lista rezerwowa pusta.</div>
+    <% end %>
+  </div>
+</div>
