@@ -21,7 +21,5 @@ Rails.application.routes.draw do
   end
   resources :push_subscriptions, only: %i[create destroy]
 
-  # PWA
-  get "manifest.webmanifest", to: "pwa#manifest",       as: :pwa_manifest
-  get "service-worker.js",    to: "pwa#service_worker", as: :pwa_service_worker
+  # PWA manifest + service worker are served from /public as static files.
 end
