@@ -35,6 +35,7 @@ class ParticipationsController < ApplicationController
 
     if promoted
       PromotionMailer.with(participation: promoted).notify.deliver_later
+      WebPushNotifier.perform_later(:promotion, participation_id: promoted.id)
     end
     broadcast_event_updates(@event)
     redirect_to event_path(@event)

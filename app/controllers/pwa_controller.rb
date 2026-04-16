@@ -16,6 +16,6 @@ class PwaController < ApplicationController
   end
 
   def service_worker
-    render plain: "// empty — filled in M9", content_type: "application/javascript"
+    render template: "pwa/service_worker", layout: false, content_type: "application/javascript"
   end
 end
