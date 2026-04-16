@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <title><%= content_for(:title) || "GigCoordinator" %></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="GigCoordinator">
+    <meta name="theme-color" content="#111111">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+
+    <%= tag.link rel: "manifest", href: pwa_manifest_path %>
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen bg-stone-50 text-stone-900 antialiased">
+    <% if signed_in? %>
+      <nav class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-stone-200 px-4 py-3 flex items-center justify-between">
+        <%= link_to "GigCoordinator", root_path, class: "font-semibold" %>
+        <div class="flex items-center gap-3 text-sm">
+          <span class="text-stone-500"><%= (current_user || current_host)&.display_name %></span>
+          <%= button_to t("auth.logout"), session_path, method: :delete, class: "text-stone-600 hover:text-stone-900" %>
+        </div>
+      </nav>
+    <% end %>
+
+    <% if flash[:notice] %>
+      <div class="mx-4 my-3 rounded-lg bg-emerald-50 text-emerald-800 px-3 py-2 text-sm"><%= flash[:notice] %></div>
+    <% end %>
+    <% if flash[:alert] %>
+      <div class="mx-4 my-3 rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm"><%= flash[:alert] %></div>
+    <% end %>
+
+    <main class="max-w-md mx-auto px-4 py-4">
+      <%= yield %>
+    </main>
+  </body>
+</html>

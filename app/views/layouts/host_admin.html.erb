@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>GigCoordinator — <%= t("host_panel.title") %></title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="min-h-screen bg-stone-50">
+    <header class="bg-white border-b border-stone-200 px-5 py-3 flex items-center justify-between">
+      <strong class="text-stone-900"><%= t("host_panel.title") %></strong>
+      <div class="flex items-center gap-4 text-sm">
+        <span class="text-stone-600"><%= current_host&.display_name %></span>
+        <%= button_to t("auth.logout"), session_path, method: :delete, class: "text-stone-500 hover:text-stone-900" %>
+      </div>
+    </header>
+    <main class="max-w-3xl mx-auto px-5 py-6">
+      <%= yield %>
+    </main>
+  </body>
+</html>

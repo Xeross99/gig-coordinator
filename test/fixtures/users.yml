@@ -1,0 +1,19 @@
+ala:
+  first_name: Ala
+  last_name: Nowak
+  email: ala@example.com
+
+bartek:
+  first_name: Bartek
+  last_name: Wiśniewski
+  email: bartek@example.com
+
+cezary:
+  first_name: Cezary
+  last_name: Lewandowski
+  email: cezary@example.com
+
+dominika:
+  first_name: Dominika
+  last_name: Dąbrowska
+  email: dominika@example.com

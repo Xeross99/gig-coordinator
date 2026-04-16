@@ -1,0 +1,4 @@
+<h1><%= t("mailers.magic_link.hello", name: @record.first_name) %></h1>
+<p><%= t("mailers.magic_link.intro") %></p>
+<p><a href="<%= @url %>" style="display:inline-block;padding:12px 20px;background:#111;color:#fff;text-decoration:none;border-radius:8px"><%= t("mailers.magic_link.button") %></a></p>
+<p style="color:#666;font-size:12px"><%= @url %></p>

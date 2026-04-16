@@ -1,0 +1,61 @@
+pl:
+  date:
+    formats:
+      default: "%d.%m.%Y"
+      long: "%-d %B %Y"
+    day_names: [niedziela, poniedziałek, wtorek, środa, czwartek, piątek, sobota]
+    abbr_day_names: [ndz, pon, wt, śr, czw, pt, sob]
+    month_names: [~, styczeń, luty, marzec, kwiecień, maj, czerwiec, lipiec, sierpień, wrzesień, październik, listopad, grudzień]
+    abbr_month_names: [~, sty, lut, mar, kwi, maj, cze, lip, sie, wrz, paź, lis, gru]
+  time:
+    formats:
+      default: "%d.%m.%Y %H:%M"
+      short: "%d.%m %H:%M"
+      long: "%-d %B %Y, %H:%M"
+  number:
+    currency:
+      format:
+        unit: zł
+        format: "%n %u"
+        separator: ","
+        delimiter: " "
+  auth:
+    login_title: "Zaloguj się"
+    email_label: "Adres e-mail"
+    send_link: "Wyślij link logowania"
+    check_email: "Sprawdź swoją skrzynkę — jeżeli adres istnieje w systemie, wysłaliśmy tam link logowania."
+    invalid_token: "Ten link wygasł lub jest nieprawidłowy."
+    logout: "Wyloguj"
+  events:
+    upcoming: "Nadchodzące eventy"
+    accept: "Akceptuję"
+    cancel: "Anuluj"
+    waitlist_accept: "Dołącz na listę rezerwową"
+    waitlist_badge: "Lista rezerwowa"
+    confirmed_badge: "Potwierdzony"
+    seats: "miejsc"
+    confirmed_count: "Potwierdzeni"
+    waitlist_count: "Rezerwa"
+    pay_per_person: "Zapłata za osobę"
+    starts_at: "Początek"
+    ends_at: "Koniec"
+    host: "Organizator"
+    open_in_maps: "Otwórz w Google Maps"
+  host_panel:
+    title: "Panel organizatora"
+    my_events: "Moje eventy"
+    new_event: "Nowy event"
+    profile: "Mój profil"
+    roster: "Uczestnicy"
+  mailers:
+    magic_link:
+      subject: "Twój link logowania"
+      hello: "Cześć %{name}!"
+      intro: "Kliknij poniższy link, aby zalogować się do aplikacji. Link wygaśnie za 15 minut."
+      button: "Zaloguj się"
+    completed_event:
+      subject: "Event %{name} zakończony"
+      body: "Dziękujemy za pracę na evencie \"%{name}\" w dniu %{date}."
+    promotion:
+      subject: "Awansowałeś na listę potwierdzonych"
+      body: "Ktoś zrezygnował z eventu \"%{name}\". Jesteś teraz na liście potwierdzonych!"
