@@ -65,5 +65,7 @@ class WebPushNotifier < ApplicationJob
     )
   rescue WebPush::InvalidSubscription, WebPush::ExpiredSubscription
     subscription.destroy
+  rescue WebPush::ResponseError => e
+    Rails.logger.warn("WebPush failed for sub #{subscription.id}: #{e.class} #{e.message}")
   end
 end
