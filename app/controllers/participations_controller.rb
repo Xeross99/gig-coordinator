@@ -47,6 +47,11 @@ class ParticipationsController < ApplicationController
   end
 
   def promote_from_waitlist(event)
-    # Waitlist/promotion wiring added in M5
+    promoted = event.participations.waitlist.order(:position).first
+    return nil unless promoted
+
+    next_position = (event.participations.confirmed.maximum(:position) || 0) + 1
+    promoted.update!(status: :confirmed, position: next_position)
+    promoted
   end
 end
