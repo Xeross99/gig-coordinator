@@ -31,11 +31,27 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  # Raise delivery errors so we see misconfigured SMTP immediately.
+  config.action_mailer.raise_delivery_errors = true
 
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
+
+  # Real email via Gmail SMTP (credentials: google.user_name + google.password = App Password).
+  # Fall back to :test adapter when credentials are missing.
+  google_creds = Rails.application.credentials.google
+  if google_creds&.user_name.present? && google_creds&.password.present?
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      address:              "smtp.gmail.com",
+      port:                 587,
+      domain:               "gmail.com",
+      user_name:            google_creds.user_name,
+      password:             google_creds.password,
+      authentication:       :plain,
+      enable_starttls_auto: true
+    }
+  end
 
   # Set host used for links in mailers + signed ids.
   # Override via PUBLIC_HOST env when using a tunnel (ngrok, cloudflared, etc.).

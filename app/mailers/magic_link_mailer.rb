@@ -1,6 +1,4 @@
 class MagicLinkMailer < ApplicationMailer
-  default from: "no-reply@gig-coordinator.local"
-
   def link
     @record = params[:record]
     @token = params[:token]

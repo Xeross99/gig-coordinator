@@ -1,6 +1,4 @@
 class CompletedEventMailer < ApplicationMailer
-  default from: "no-reply@gig-coordinator.local"
-
   def notify
     @participation = params[:participation]
     @event = @participation.event
