@@ -1,32 +1,47 @@
 class WebPushNotifier < ApplicationJob
   queue_as :default
 
-  # Message format:
+  # Message forms:
   #   perform(:completion, participation_id: 42)
   #   perform(:promotion,  participation_id: 42)
-  def perform(kind, participation_id:)
-    participation = Participation.find(participation_id)
-    payload = build_payload(kind, participation)
-    participation.user.push_subscriptions.find_each do |subscription|
-      send_web_push(subscription, payload)
+  #   perform(:new_event,  event_id: 7)
+  def perform(kind, **args)
+    case kind.to_sym
+    when :completion, :promotion
+      participation = Participation.find(args.fetch(:participation_id))
+      payload = build_payload(kind, participation: participation)
+      participation.user.push_subscriptions.find_each { |s| send_web_push(s, payload) }
+    when :new_event
+      event = Event.find(args.fetch(:event_id))
+      payload = build_payload(:new_event, event: event)
+      PushSubscription.find_each { |s| send_web_push(s, payload) }
+    else
+      raise ArgumentError, "unknown kind: #{kind}"
     end
   end
 
   private
 
-  def build_payload(kind, participation)
-    case kind
+  def build_payload(kind, participation: nil, event: nil)
+    url_for = ->(ev) { Rails.application.routes.url_helpers.event_path(ev) }
+    case kind.to_sym
     when :completion
       {
         title: "Event zakończony",
         body:  "Dziękujemy za pracę na \"#{participation.event.name}\".",
-        url:   Rails.application.routes.url_helpers.event_path(participation.event)
+        url:   url_for.call(participation.event)
       }
     when :promotion
       {
         title: "Awansowałeś z listy rezerwowej",
         body:  "Zwolniło się miejsce na \"#{participation.event.name}\" — jesteś teraz potwierdzony!",
-        url:   Rails.application.routes.url_helpers.event_path(participation.event)
+        url:   url_for.call(participation.event)
+      }
+    when :new_event
+      {
+        title: "Nowy event: #{event.name}",
+        body:  "#{event.host.display_name} · #{ActionController::Base.helpers.number_to_currency(event.pay_per_person, unit: "zł", format: "%n %u")} · #{event.capacity} miejsc",
+        url:   url_for.call(event)
       }
     else
       raise ArgumentError, "unknown kind: #{kind}"

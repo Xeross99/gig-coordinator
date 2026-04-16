@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+# Usage: bin/login-link <email>
+#    or: bin/login-link (lists all hosts and users with fresh links)
+
+require_relative "../config/environment"
+
+def link_for(record)
+  token = record.signed_id(purpose: :magic_link, expires_in: 15.minutes)
+  "http://localhost:3000/login/verify?token=#{token}"
+end
+
+if email = ARGV[0]
+  record = Host.find_by(email: email.downcase) || User.find_by(email: email.downcase)
+  abort "Nie znaleziono rekordu z emailem #{email}" unless record
+  puts "#{record.class.name}: #{record.display_name} (#{record.email})"
+  puts link_for(record)
+else
+  (Host.all.to_a + User.all.to_a).each do |r|
+    puts "#{r.class.name.ljust(5)} #{r.display_name.ljust(22)} #{r.email.ljust(35)} #{link_for(r)}"
+  end
+end

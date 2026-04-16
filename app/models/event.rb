@@ -3,7 +3,8 @@ class Event < ApplicationRecord
   has_many :participations, dependent: :destroy
   has_many :users, through: :participations
 
-  after_create_commit  :broadcast_feed_append, if: :upcoming_now?
+  after_create_commit  :broadcast_feed_append,        if: :upcoming_now?
+  after_create_commit  :notify_new_event_subscribers, if: :upcoming_now?
   after_update_commit  :broadcast_feed_replace
   after_destroy_commit :broadcast_feed_remove
 
@@ -63,5 +64,9 @@ class Event < ApplicationRecord
 
   def broadcast_feed_remove
     broadcast_remove_to(:events, target: ActionView::RecordIdentifier.dom_id(self))
+  end
+
+  def notify_new_event_subscribers
+    WebPushNotifier.perform_later(:new_event, event_id: id)
   end
 end
