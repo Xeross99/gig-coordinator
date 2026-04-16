@@ -3,6 +3,10 @@ class Event < ApplicationRecord
   has_many :participations, dependent: :destroy
   has_many :users, through: :participations
 
+  after_create_commit  :broadcast_feed_append, if: :upcoming_now?
+  after_update_commit  :broadcast_feed_replace
+  after_destroy_commit :broadcast_feed_remove
+
   validates :name, presence: true
   validates :scheduled_at, :ends_at, presence: true
   validates :pay_per_person, presence: true, numericality: { greater_than_or_equal_to: 0 }
@@ -33,5 +37,31 @@ class Event < ApplicationRecord
   def ends_at_after_scheduled_at
     return if ends_at.blank? || scheduled_at.blank?
     errors.add(:ends_at, :must_be_after_start) if ends_at <= scheduled_at
+  end
+
+  def upcoming_now?
+    scheduled_at.present? && scheduled_at > Time.current
+  end
+
+  def broadcast_feed_append
+    broadcast_prepend_to(
+      :events,
+      target: "events_list",
+      partial: "events/event_card",
+      locals: { event: self }
+    )
+  end
+
+  def broadcast_feed_replace
+    broadcast_replace_to(
+      :events,
+      target: ActionView::RecordIdentifier.dom_id(self),
+      partial: "events/event_card",
+      locals: { event: self }
+    )
+  end
+
+  def broadcast_feed_remove
+    broadcast_remove_to(:events, target: ActionView::RecordIdentifier.dom_id(self))
   end
 end

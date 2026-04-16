@@ -14,12 +14,14 @@
   <% end %>
 <% end %>
 
-<% if @events.any? %>
-  <ul class="space-y-3">
-    <% @events.each do |event| %>
-      <%= render "event_card", event: event %>
-    <% end %>
-  </ul>
-<% else %>
-  <div class="text-stone-500 py-8 text-center">Brak nadchodzących eventów.</div>
-<% end %>
+<%= turbo_stream_from :events %>
+
+<ul id="events_list" class="space-y-3">
+  <% @events.each do |event| %>
+    <%= render "event_card", event: event %>
+  <% end %>
+</ul>
+
+<div id="events_empty" class="<%= "hidden" unless @events.empty? %> text-stone-500 py-8 text-center">
+  Brak nadchodzących eventów.
+</div>
