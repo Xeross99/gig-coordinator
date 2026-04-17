@@ -308,7 +308,7 @@ Anulowanie:
 
 ## Zakończenie eventu
 
-`EventCompletionJob` (recurring) skanuje `Event.awaiting_completion`, oznacza `completed_at`, wysyła `CompletedEventMailer` + `WebPushNotifier(:completion)` do confirmed userów.
+`EventCompletionJob` (recurring) skanuje `Event.awaiting_completion`, oznacza `completed_at` i wysyła `WebPushNotifier(:completion)` do confirmed userów. (Maila podziękowania nie ma — push wystarczy.)
 
 ---
 

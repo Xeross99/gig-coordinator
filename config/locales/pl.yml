@@ -60,9 +60,6 @@ pl:
       hello: "Cześć %{name}!"
       intro: "Kliknij poniższy link, aby zalogować się do aplikacji. Link wygaśnie za 15 minut."
       button: "Zaloguj się"
-    completed_event:
-      subject: "Event %{name} zakończony"
-      body: "Dziękujemy za pracę na evencie \"%{name}\" w dniu %{date}."
     promotion:
       subject: "Awansowałeś na listę potwierdzonych"
       body: "Ktoś zrezygnował z eventu \"%{name}\". Jesteś teraz na liście potwierdzonych!"

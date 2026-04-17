@@ -1,5 +1,5 @@
-<%= t("mailers.magic_link.hello", name: @user.first_name) %>
+Świetna wiadomość, <%= @user.first_name %>!
 
-<%= t("mailers.promotion.body", name: @event.name) %>
+Ktoś zwolnił miejsce na evencie "<%= @event.name %>" — awansowałeś z listy rezerwowej. Start: <%= l(@event.scheduled_at, format: :long) %>.
 
-Start: <%= l(@event.scheduled_at, format: :long) %>
+<%= event_url(@event) %>

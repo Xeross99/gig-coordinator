@@ -1,3 +1,13 @@
-<h1><%= t("mailers.magic_link.hello", name: @user.first_name) %></h1>
-<p><%= t("mailers.promotion.body", name: @event.name) %></p>
-<p>Start: <strong><%= l(@event.scheduled_at, format: :long) %></strong></p>
+<% event_url = event_url(@event) %>
+<%= render "mailers/title", text: "Świetna wiadomość, #{@user.first_name}!" %>
+
+<%= render "mailers/paragraph", html: safe_join([
+  "Ktoś zwolnił miejsce na evencie ".html_safe,
+  tag.strong(@event.name, style: "color:#0c0a09"),
+  " — awansowałeś z listy rezerwowej. Widzimy się ".html_safe,
+  tag.strong(l(@event.scheduled_at, format: :long), style: "color:#0c0a09"),
+  "."
+]) %>
+
+<%= render "mailers/cta_button", label: "Zobacz event", url: event_url %>
+<%= render "mailers/raw_url", url: event_url %>

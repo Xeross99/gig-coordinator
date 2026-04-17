@@ -3,7 +3,7 @@ require "test_helper"
 class EventCompletionJobTest < ActiveJob::TestCase
   include ActionMailer::TestHelper
 
-  test "marks past events as completed and enqueues notifications for confirmed participants" do
+  test "marks past events as completed and enqueues one push notification per confirmed participant" do
     event = events(:gig-coordinators_tomorrow)
     event.update!(scheduled_at: 3.hours.ago, ends_at: 1.hour.ago)
     u1 = users(:ala); u2 = users(:bartek); u3 = users(:cezary)
@@ -11,29 +11,29 @@ class EventCompletionJobTest < ActiveJob::TestCase
     Participation.create!(event: event, user: u2, status: :confirmed, position: 2)
     Participation.create!(event: event, user: u3, status: :waitlist,  position: 1)
 
-    assert_enqueued_emails 2 do
+    assert_enqueued_with(job: WebPushNotifier) do
       EventCompletionJob.perform_now
     end
+    assert_equal 2, ActiveJob::Base.queue_adapter.enqueued_jobs.count { |j| j[:job] == WebPushNotifier }
     assert_not_nil event.reload.completed_at
   end
 
-  test "is idempotent — running twice does not notify again" do
+  test "is idempotent — running twice does not re-notify" do
     event = events(:gig-coordinators_tomorrow)
     event.update!(scheduled_at: 3.hours.ago, ends_at: 1.hour.ago)
     Participation.create!(event: event, user: users(:ala), status: :confirmed, position: 1)
 
     EventCompletionJob.perform_now
-    assert_enqueued_emails 0 do
-      EventCompletionJob.perform_now
-    end
+    before = ActiveJob::Base.queue_adapter.enqueued_jobs.count
+    EventCompletionJob.perform_now
+    assert_equal before, ActiveJob::Base.queue_adapter.enqueued_jobs.count
   end
 
   test "does not touch future events" do
     event = events(:gig-coordinators_tomorrow)
     Participation.create!(event: event, user: users(:ala), status: :confirmed, position: 1)
-    assert_enqueued_emails 0 do
-      EventCompletionJob.perform_now
-    end
+    EventCompletionJob.perform_now
     assert_nil event.reload.completed_at
+    refute ActiveJob::Base.queue_adapter.enqueued_jobs.any? { |j| j[:job] == WebPushNotifier }
   end
 end
