@@ -64,5 +64,5 @@ pl:
       subject: "Awansowałeś na listę potwierdzonych"
       body: "Ktoś zrezygnował z eventu \"%{name}\". Jesteś teraz na liście potwierdzonych!"
     invitation:
-      subject: "Zaproszenie na %{event} — masz godzinę na potwierdzenie"
-      body: "Jako jeden z najwyższych w rankingu dostajesz slot na evencie \"%{event}\". Masz godzinę na potwierdzenie — jeśli nie zdążysz, miejsce przejdzie do kolejnej osoby z rankingu."
+      subject: "Zaproszenie na %{event} - masz godzinę na potwierdzenie"
+      body: "Jako jeden z najwyższych w rankingu dostajesz slot na evencie \"%{event}\". Masz godzinę na potwierdzenie - jeśli nie zdążysz, miejsce przejdzie do kolejnej osoby z rankingu."

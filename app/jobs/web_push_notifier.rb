@@ -40,7 +40,7 @@ class WebPushNotifier < ApplicationJob
     when :promotion
       {
         title: "Awansowałeś z listy rezerwowej",
-        body:  "Zwolniło się miejsce na \"#{participation.event.name}\" — jesteś teraz potwierdzony!",
+        body:  "Zwolniło się miejsce na \"#{participation.event.name}\" - jesteś teraz potwierdzony!",
         url:   url_for.call(participation.event)
       }
     when :new_event

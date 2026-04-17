@@ -4,7 +4,7 @@
 <%= render "mailers/paragraph", html: safe_join([
   "Ktoś zwolnił miejsce na evencie ".html_safe,
   tag.strong(@event.name, style: "color:#0c0a09"),
-  " — awansowałeś z listy rezerwowej. Widzimy się ".html_safe,
+  " - awansowałeś z listy rezerwowej. Widzimy się ".html_safe,
   tag.strong(l(@event.scheduled_at, format: :long), style: "color:#0c0a09"),
   "."
 ]) %>

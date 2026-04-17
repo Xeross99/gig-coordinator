@@ -135,7 +135,7 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
                           reserved_until: 1.hour.from_now)
     post accept_event_participation_path(@event)
-    assert_equal "Potwierdzone — do zobaczenia na łapaniu!", flash[:notice]
+    assert_equal "Potwierdzone - do zobaczenia na łapaniu!", flash[:notice]
 
     follow_redirect!
     assert_response :success
