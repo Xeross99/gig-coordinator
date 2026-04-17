@@ -10,66 +10,44 @@ class ReservationService
       next if missing <= 0
       invite_candidates(event, limit: missing).each { |u| invite!(event, u) }
     end
-    broadcast(event)
   end
 
-  # Replace one vacated slot. Prefer inviting the next highest-rank user who
-  # isn't yet in the event; fall back to promoting from the waitlist if the
-  # ranking pool is exhausted.
+  # Replace one vacated slot. **Waitlist goes first** — someone already raised
+  # their hand and joined the queue, they shouldn't be overtaken by a fresh
+  # rank-based invite. Only if no one is waiting do we reach for the next
+  # highest-rank user who isn't yet in the event.
   def self.refill_one(event)
     with_lock(event) do
+      next unless promote_from_waitlist(event).nil?
+
       next_candidate = invite_candidates(event, limit: 1).first
-      if next_candidate
-        invite!(event, next_candidate)
-      else
-        promote_from_waitlist(event)
-      end
+      invite!(event, next_candidate) if next_candidate
     end
-    broadcast(event)
   end
 
-  # Sweeper — finds expired reservations, cancels them, and refills each slot.
-  # Called by ReservationExpirationJob on a recurring schedule.
+  # Sweeper — finds expired reservations, cancels them, and refills each slot
+  # with the same "waitlist first" rule. Called by ReservationExpirationJob.
   def self.expire_stale!
     expired = Participation.reserved.where("reserved_until <= ?", Time.current).includes(:event)
     expired.find_each do |p|
-      Event.transaction do
-        p.event.lock!
-        p.update!(status: :cancelled, reserved_until: nil)
-        candidate = invite_candidates(p.event, limit: 1).first
-        if candidate
-          invite!(p.event, candidate)
-        else
-          promote_from_waitlist(p.event)
-        end
-      end
-      broadcast(p.event)
+      with_lock(p.event) { p.update!(status: :cancelled, reserved_until: nil) }
+      refill_one(p.event)
     end
-  end
-
-  def self.broadcast(event)
-    event.reload
-    Turbo::StreamsChannel.broadcast_replace_to(
-      [ event, :roster ],
-      target: ActionView::RecordIdentifier.dom_id(event, :roster),
-      partial: "events/roster",
-      locals: { event: event }
-    )
-    Turbo::StreamsChannel.broadcast_replace_to(
-      [ event, :counts ],
-      target: ActionView::RecordIdentifier.dom_id(event, :counts),
-      partial: "events/counts",
-      locals: { event: event }
-    )
   end
 
   # --- internals ---
 
+  # Picks invitees from the currently-highest-rank tier of users who aren't
+  # already in the event. Deliberately NOT cascading through lower ranks on the
+  # initial seed — only the top rank gets pre-booked. Lower ranks only get a
+  # chance when a reservation is declined/expired (refill_one is called with a
+  # smaller pool and the next tier becomes the "top").
   def self.invite_candidates(event, limit:)
-    User
-      .where.not(id: event.participations.pluck(:user_id))
-      .order(title: :desc, id: :asc)
-      .limit(limit)
+    pool = User.where.not(id: event.participations.pluck(:user_id))
+    top_title = pool.maximum(:title)
+    return User.none if top_title.nil?
+
+    pool.where(title: top_title).order(:id).limit(limit)
   end
 
   def self.invite!(event, user)
@@ -80,6 +58,14 @@ class ReservationService
     )
     InvitationMailer.with(event: event, user: user).notify.deliver_later
     WebPushNotifier.perform_later(:invitation, event_id: event.id, user_id: user.id)
+    # Replace the generic feed card with one that shows the pending badge for THIS
+    # invitee only (the global :events broadcast already appended the plain card).
+    Turbo::StreamsChannel.broadcast_replace_to(
+      [ user, :events ],
+      target: ActionView::RecordIdentifier.dom_id(event),
+      partial: "events/event_card",
+      locals: { event: event, pending_reservation: true }
+    )
   end
 
   def self.promote_from_waitlist(event)

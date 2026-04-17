@@ -131,6 +131,45 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to event_path(@event)
   end
 
+  test "POST accept sets a confirmation notice that renders as a toast after the redirect" do
+    Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
+                          reserved_until: 1.hour.from_now)
+    post accept_event_participation_path(@event)
+    assert_equal "Potwierdzone — do zobaczenia na łapaniu!", flash[:notice]
+
+    follow_redirect!
+    assert_response :success
+    # Toast lives in the shared layout partial. Asserting its text is in the body
+    # proves the redirect was followed as a full page load (not trapped inside a
+    # turbo-frame, in which case the layout wouldn't re-render).
+    assert_match "Potwierdzone", response.body
+  end
+
+  test "POST decline sets a notice that renders as a toast after the redirect" do
+    Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
+                          reserved_until: 1.hour.from_now)
+    post decline_event_participation_path(@event)
+    assert_match(/Odrzucone/, flash[:notice])
+
+    follow_redirect!
+    assert_response :success
+    assert_match "Odrzucone", response.body
+  end
+
+  test "reservation accept/decline buttons target _top so submission breaks out of the turbo-frame" do
+    # Reproduces the bug "confirmation toast only appears on refresh": without
+    # data-turbo-frame=_top the button_to form stays inside the participation
+    # turbo-frame, the redirect is extracted frame-scoped, and the layout (with
+    # the flash toast) never re-renders.
+    Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
+                          reserved_until: 1.hour.from_now)
+    get event_path(@event)
+    assert_response :success
+
+    assert_select "form[action=?][data-turbo-frame=?]", accept_event_participation_path(@event), "_top"
+    assert_select "form[action=?][data-turbo-frame=?]", decline_event_participation_path(@event), "_top"
+  end
+
   test "POST accept on an expired reservation is a no-op (doesn't confirm)" do
     p = Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
                               reserved_until: 1.hour.from_now)

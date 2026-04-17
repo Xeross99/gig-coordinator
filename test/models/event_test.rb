@@ -59,16 +59,17 @@ class EventTest < ActiveSupport::TestCase
     refute_includes Event.awaiting_completion, future
   end
 
-  test "creating an upcoming event auto-reserves the top-ranked users up to capacity" do
+  test "creating an upcoming event auto-reserves users of the currently highest rank only" do
     users(:ala).update!(title:      :master)
     users(:bartek).update!(title:   :veteran)
     users(:cezary).update!(title:   :member)
     users(:dominika).update!(title: :rookie)
 
-    event = Event.create!(valid_attrs(capacity: 2))
+    event = Event.create!(valid_attrs(capacity: 4))
 
-    reserved_users = event.participations.reserved.includes(:user).order(:position).map(&:user)
-    assert_equal [ users(:ala), users(:bartek) ], reserved_users
+    reserved_users = event.participations.reserved.includes(:user).map(&:user)
+    # Only ala is master; the rest stay unreserved even though capacity is 4.
+    assert_equal [ users(:ala) ], reserved_users
   end
 
   test "creating an event in the past does not trigger reservations" do

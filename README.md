@@ -196,7 +196,11 @@ end
 
 Anulowanie `confirmed` odpala `promote_from_waitlist` — najstarszy `waitlist` (po `position`) staje się `confirmed`. Promocja wysyła `PromotionMailer` + `WebPushNotifier(:promotion)`. Wszystko w tej samej transakcji.
 
-**Priority reservations (ranked auto-invites):** przy tworzeniu nowego eventu `Event#after_create_commit :seed_reservations` woła `ReservationService.seed_on_create(event)` → rezerwuje `capacity` slotów dla top-N userów wg `title DESC, id ASC`, każdy z `reserved_until = now + 1h`. Każdy zaproszony dostaje `InvitationMailer#notify` + `WebPushNotifier(:invitation, ...)`. Na `/eventy/:id` widzi dedykowany banner + przyciski **Akceptuję** / **Odrzuć** — obsługiwane przez `ParticipationsController#accept` i `#decline`. Akceptacja flipuje `reserved → confirmed`. Odrzucenie → `cancelled` i `ReservationService.refill_one(event)` zaprasza następnego w rankingu; jeśli kandydatów brak — awans z waitlisty. `ReservationExpirationJob` (cron co minutę w dev i prod, `config/recurring.yml`) przegląda `Participation.reserved.where("reserved_until <= ?", Time.current)` i dla każdego wygaszonego wywołuje tę samą logikę co `decline`. Klasy: `app/services/reservation_service.rb`, `app/jobs/reservation_expiration_job.rb`, `app/mailers/invitation_mailer.rb`.
+**Priority reservations (ranked auto-invites):** przy tworzeniu nowego eventu `Event#after_create_commit :seed_reservations` woła `ReservationService.seed_on_create(event)` → rezerwuje sloty wyłącznie dla **aktualnie najwyższej dostępnej rangi** (nie kaskaduje w dół). Np. capacity 4 + tylko 1 user `master` → 1 rezerwacja, pozostałe 3 sloty zostają otwarte na regularny flow. Ordering w obrębie tej samej rangi: `id ASC` (kto pierwszy zarejestrowany). Każdy zaproszony dostaje `InvitationMailer#notify` + `WebPushNotifier(:invitation, ...)` + `reserved_until = now + 1h`.
+
+Na `/eventy/:id` widzi dedykowany banner + przyciski **Akceptuję** / **Odrzuć** — obsługiwane przez `ParticipationsController#accept` i `#decline` (przyciski mają `data-turbo-frame="_top"` żeby submisja wyszła z ramki i toast pokazał się bez F5). Akceptacja flipuje `reserved → confirmed`. Odrzucenie → `cancelled` + `ReservationService.refill_one(event)` z logiką **waitlist-first**: najpierw promuje osobę z waitlisty (tak chciał pierwotny wymóg „jesli nie to wskakuje osoba w kolejce"); dopiero gdy waitlista pusta, sięga po następnego użytkownika z rankingu. `ReservationExpirationJob` (cron co minutę w dev i prod, `config/recurring.yml`) przegląda `Participation.reserved.where("reserved_until <= ?", Time.current)` i wywołuje tę samą logikę co decline. Klasy: `app/services/reservation_service.rb`, `app/jobs/reservation_expiration_job.rb`, `app/mailers/invitation_mailer.rb`.
+
+**Model-level broadcasts:** `Participation#after_commit :broadcast_event_updates, on: %i[create update destroy]` wysyła `broadcast_replace_to [event, :roster]` + `[event, :counts]` przy każdej zmianie. Każda ścieżka (kontroler, service, job, `rails runner`, `rails console`) automatycznie odświeża otwarte przeglądarki — nie trzeba broadcastować ręcznie. Guard `Event.find_by(id: event_id)` chroni przed błędem przy kaskadowym destroy.
 
 ---
 
@@ -296,13 +300,16 @@ Anulowanie:
 
 # Turbo Streams
 
-| Stream name        | Kto subskrybuje                   | Co się dzieje                              |
-|--------------------|-----------------------------------|--------------------------------------------|
-| `[event, :counts]` | user event show                   | participation create/destroy               |
-| `[event, :roster]` | user + host event show            | participation create/destroy               |
-| `:events`          | user feed (`/`)                   | Event create/update/destroy                |
+| Stream name        | Kto subskrybuje                   | Co się dzieje                                           |
+|--------------------|-----------------------------------|---------------------------------------------------------|
+| `[event, :counts]` | user event show                   | Participation `after_commit` (model callback)           |
+| `[event, :roster]` | user + host event show            | Participation `after_commit` (model callback)           |
+| `:events`          | user feed (`/`)                   | Event create/update/destroy + broadcast `visit`         |
+| `[user, :events]`  | user feed (`/`)                   | user-scoped card replace przy rezerwacji (`invite!`)    |
 
-Feed broadcastuje synchronicznie z modelu `Event` (po commicie). Participation broadcasty — z `ParticipationsController#broadcast_event_updates`. Roster partial (`app/views/events/_roster.html.erb`) jest współdzielony między host a user — pokazuje tylko imiona + pozycje (bez emaili, prywatność).
+**Broadcasty z modelu:** `Participation#after_commit` odpala `broadcast_replace_to` na `[event, :roster]` + `[event, :counts]` przy każdym create/update/destroy — single source of truth. Każda ścieżka (kontroler, service, job, runner) odświeża UI automatycznie. Feed broadcasty z `Event` model callbacks — synchronicznie. Roster partial (`app/views/events/_roster.html.erb`) współdzielony między hostem a userem; avatar przez `_roster_avatar.html.erb` (zdjęcie lub inicjały). Brak numerków pozycji — licznik jest w nagłówku sekcji.
+
+**Custom Turbo Stream action `visit`:** zdefiniowane w `app/javascript/application.js` jako `Turbo.StreamActions.visit` — odpala `Turbo.visit(url)` po odebraniu `<turbo-stream action="visit" target="/path">`. Używane przez `Event#broadcast_visit_to_feed` żeby przenieść wszystkich userów na feedzie na stronę nowo utworzonego eventu.
 
 ---
 

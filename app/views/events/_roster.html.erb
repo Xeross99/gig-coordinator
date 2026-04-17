@@ -1,15 +1,15 @@
 <div id="<%= dom_id(event, :roster) %>" class="space-y-4">
-  <% reserved = event.participations.reserved.includes(:user).order(:position) %>
+  <% reserved = event.participations.reserved.includes(user: { photo_attachment: :blob }).order(:position) %>
   <% if reserved.any? %>
     <div>
       <h3 class="text-stone-500 text-xs uppercase tracking-wide mb-2">
-        Zaproszeni (<%= reserved.size %>)
+        Rezerwacje (<%= reserved.size %>)
       </h3>
       <ul class="space-y-2">
         <% reserved.each_with_index do |p, i| %>
           <li class="flex items-center gap-3 bg-indigo-50 rounded-lg px-3 py-2 text-sm animate-pop-in"
               style="animation-delay: <%= i * 40 %>ms">
-            <span class="w-6 text-stone-400 tabular-nums"><%= i + 1 %>.</span>
+            <%= render "events/roster_avatar", user: p.user %>
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="size-4 text-indigo-500 animate-spin shrink-0">
               <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 40"/>
             </svg>
@@ -26,13 +26,13 @@
       <%= t("events.confirmed_count") %>
       (<%= event.participations.confirmed.count %>/<%= event.capacity %>)
     </h3>
-    <% confirmed = event.participations.confirmed.includes(:user).order(:position) %>
+    <% confirmed = event.participations.confirmed.includes(user: { photo_attachment: :blob }).order(:position) %>
     <% if confirmed.any? %>
       <ul class="space-y-2">
         <% confirmed.each_with_index do |p, i| %>
           <li class="flex items-center gap-3 bg-emerald-50 rounded-lg px-3 py-2 text-sm animate-pop-in"
               style="animation-delay: <%= i * 40 %>ms">
-            <span class="w-6 text-stone-400 tabular-nums"><%= i + 1 %>.</span>
+            <%= render "events/roster_avatar", user: p.user %>
             <span class="font-medium text-stone-900"><%= p.user.display_name %></span>
           </li>
         <% end %>
@@ -47,13 +47,13 @@
       <%= t("events.waitlist_count") %>
       (<%= event.participations.waitlist.count %>)
     </h3>
-    <% waitlist = event.participations.waitlist.includes(:user).order(:position) %>
+    <% waitlist = event.participations.waitlist.includes(user: { photo_attachment: :blob }).order(:position) %>
     <% if waitlist.any? %>
       <ul class="space-y-2">
         <% waitlist.each_with_index do |p, i| %>
           <li class="flex items-center gap-3 bg-amber-50 rounded-lg px-3 py-2 text-sm animate-pop-in"
               style="animation-delay: <%= i * 40 %>ms">
-            <span class="w-6 text-stone-400 tabular-nums"><%= i + 1 %>.</span>
+            <%= render "events/roster_avatar", user: p.user %>
             <span class="font-medium text-stone-900"><%= p.user.display_name %></span>
           </li>
         <% end %>

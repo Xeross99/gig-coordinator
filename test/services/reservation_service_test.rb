@@ -26,29 +26,41 @@ class ReservationServiceTest < ActiveSupport::TestCase
     event
   end
 
-  test "seed_on_create reserves the top N users ordered by title desc" do
-    event = build_event(capacity: 2)
+  test "seed_on_create reserves ONLY users of the currently highest rank (no cascade)" do
+    event = build_event(capacity: 4)
     ReservationService.seed_on_create(event)
 
     reserved = event.participations.reserved.includes(:user).order(:position)
-    assert_equal 2, reserved.size
-    assert_equal [ users(:ala), users(:bartek) ], reserved.map(&:user)
-    reserved.each do |p|
-      assert p.reserved_until > Time.current
-      assert p.reserved_until <= 1.hour.from_now + 1.second
-    end
+    # Only ala is master — she's the lone top-tier user, so only she is reserved,
+    # even though capacity is 4. The remaining 3 slots stay open for the regular flow.
+    assert_equal 1, reserved.size
+    assert_equal users(:ala), reserved.first.user
+    assert reserved.first.reserved_until > Time.current
+    assert reserved.first.reserved_until <= 1.hour.from_now + 1.second
   end
 
-  test "seed_on_create reserves fewer slots when candidate pool is smaller than capacity" do
-    User.where.not(id: users(:ala).id).destroy_all
-    event = build_event(capacity: 5)
+  test "seed_on_create invites ALL users at the top tier (capped at capacity)" do
+    # Two users tied at master — both should get reservations.
+    users(:bartek).update!(title: :master)
+    event = build_event(capacity: 3)
+    ReservationService.seed_on_create(event)
+
+    reserved_users = event.participations.reserved.includes(:user).order(:position).map(&:user)
+    assert_equal 2, reserved_users.size
+    assert_equal [ users(:ala), users(:bartek) ].sort_by(&:id), reserved_users.sort_by(&:id)
+  end
+
+  test "seed_on_create reserves a lone candidate even if the top tier is the default rookie" do
+    User.where.not(id: users(:dominika).id).destroy_all  # only rookie remains
+    event = build_event(capacity: 3)
     ReservationService.seed_on_create(event)
     assert_equal 1, event.participations.reserved.count
-    assert_equal users(:ala), event.participations.reserved.first.user
+    assert_equal users(:dominika), event.participations.reserved.first.user
   end
 
   test "seed_on_create enqueues an InvitationMailer + WebPushNotifier per invitee" do
-    event = build_event(capacity: 2)
+    users(:bartek).update!(title: :master)  # 2 top-tier invitees
+    event = build_event(capacity: 3)
 
     assert_enqueued_emails 2 do
       assert_enqueued_with(job: WebPushNotifier) do
@@ -57,35 +69,53 @@ class ReservationServiceTest < ActiveSupport::TestCase
     end
   end
 
-  test "refill_one invites the next highest-rank user not already in the event" do
-    event = build_event(capacity: 2)
+  test "refill_one drops one tier at a time when the current top tier is exhausted" do
+    event = build_event(capacity: 1)
     ReservationService.seed_on_create(event)
-    # ala + bartek reserved. bartek declines → controller cancels. refill_one should invite cezary.
-    event.participations.reserved.find_by(user: users(:bartek))
+    # ala (master) reserved. She declines → cancelled. Refill should invite the
+    # next tier's first user (bartek, veteran), not skip ahead.
+    event.participations.reserved.find_by(user: users(:ala))
       .update!(status: :cancelled, reserved_until: nil)
 
     ReservationService.refill_one(event)
 
-    new_reservation = event.participations.reserved.find_by(user: users(:cezary))
-    assert new_reservation, "expected cezary to be invited as next in rank"
+    new_reservation = event.participations.reserved.find_by(user: users(:bartek))
+    assert new_reservation, "expected bartek (next tier down) to be invited"
     assert new_reservation.reserved_until > Time.current
   end
 
-  test "refill_one falls back to promoting from waitlist when the ranking pool is exhausted" do
+  test "refill_one promotes from waitlist FIRST, before inviting a new ranking candidate" do
+    # This is the "jesli nie to wskakuje osoba w kolejce" rule: a waitlisted user
+    # who already raised their hand must beat a never-invited higher-rank user.
     event = build_event(capacity: 2)
-    # All users already in the event — no ranking candidates remain.
+    # Two top-tier confirmed users already in the event. Cezary (veteran)
+    # is a candidate available for invite, BUT dominika is waiting on the waitlist.
     Participation.create!(event: event, user: users(:ala),      status: :confirmed, position: 1)
     Participation.create!(event: event, user: users(:bartek),   status: :confirmed, position: 2)
-    Participation.create!(event: event, user: users(:cezary),   status: :waitlist,  position: 1)
-    Participation.create!(event: event, user: users(:dominika), status: :waitlist,  position: 2)
-
+    Participation.create!(event: event, user: users(:dominika), status: :waitlist,  position: 1)
     # Free one confirmed slot.
     event.participations.find_by(user: users(:ala)).update!(status: :cancelled)
 
     ReservationService.refill_one(event)
 
-    assert_equal "confirmed", event.participations.find_by(user: users(:cezary)).status,
-                 "waitlist head should be promoted when no ranking candidates remain"
+    assert_equal "confirmed", event.participations.find_by(user: users(:dominika)).status,
+                 "waitlist head must be promoted before a fresh rank invite"
+    refute event.participations.find_by(user: users(:cezary))&.reserved?,
+           "cezary must NOT be reserved while someone is waiting"
+  end
+
+  test "refill_one falls back to ranking candidate only when no waitlist exists" do
+    event = build_event(capacity: 2)
+    # All slots blocked by confirmed users; no waitlist. refill_one must reach
+    # for the next ranking candidate (cezary, next tier down).
+    Participation.create!(event: event, user: users(:ala),    status: :confirmed, position: 1)
+    Participation.create!(event: event, user: users(:bartek), status: :confirmed, position: 2)
+    event.participations.find_by(user: users(:ala)).update!(status: :cancelled)
+
+    ReservationService.refill_one(event)
+
+    assert event.participations.reserved.find_by(user: users(:cezary)),
+           "with no waitlist, the next-tier user should get a reservation"
   end
 
   test "expire_stale! cancels expired reservations and refills" do

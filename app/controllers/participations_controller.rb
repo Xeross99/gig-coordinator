@@ -18,7 +18,6 @@ class ParticipationsController < ApplicationController
       # reserved/confirmed/waitlist — no-op (dedicated accept/decline actions handle those).
     end
 
-    broadcast_event_updates(@event)
     redirect_to event_path(@event)
   end
 
@@ -41,7 +40,6 @@ class ParticipationsController < ApplicationController
       PromotionMailer.with(participation: promoted).notify.deliver_later
       WebPushNotifier.perform_later(:promotion, participation_id: promoted.id)
     end
-    broadcast_event_updates(@event)
     redirect_to event_path(@event)
   end
 
@@ -59,7 +57,6 @@ class ParticipationsController < ApplicationController
       end
     end
 
-    ReservationService.broadcast(@event)
     redirect_to event_path(@event), notice: "Potwierdzone — do zobaczenia na łapaniu!"
   end
 
@@ -80,25 +77,6 @@ class ParticipationsController < ApplicationController
   end
 
   private
-
-  def broadcast_event_updates(event)
-    Turbo::StreamsChannel.broadcast_replace_to(
-      [ event, :roster ],
-      target: dom_id(event, :roster),
-      partial: "events/roster",
-      locals: { event: event.reload }
-    )
-    Turbo::StreamsChannel.broadcast_replace_to(
-      [ event, :counts ],
-      target: dom_id(event, :counts),
-      partial: "events/counts",
-      locals: { event: event.reload }
-    )
-  end
-
-  def dom_id(*args)
-    ActionView::RecordIdentifier.dom_id(*args)
-  end
 
   # Regular join (via "Akceptuję"/"Dołącz na listę rezerwową" button). Reserved
   # slots count toward capacity — a user picking up a manual slot only gets

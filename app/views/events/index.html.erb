@@ -23,10 +23,13 @@
 <% end %>
 
 <%= turbo_stream_from :events %>
+<%= turbo_stream_from current_user, :events %>
+
+<% pending_event_ids = Set.new(current_user.participations.reserved.where("reserved_until > ?", Time.current).pluck(:event_id)) %>
 
 <ul id="events_list" class="space-y-3">
   <% @events.each do |event| %>
-    <%= render "event_card", event: event %>
+    <%= render "event_card", event: event, pending_reservation: pending_event_ids.include?(event.id) %>
   <% end %>
 </ul>
 
