@@ -20,7 +20,7 @@ export default class extends Controller {
   }
 
   async #subscribe() {
-    const registration = await navigator.serviceWorker.register("/service-worker.js")
+    const registration = await navigator.serviceWorker.register("/service-worker")
     await navigator.serviceWorker.ready
 
     if (Notification.permission === "default") {

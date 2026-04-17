@@ -5,8 +5,14 @@ production:
   event_completion:
     class: EventCompletionJob
     schedule: every 5 minutes
+  reservation_expiration:
+    class: ReservationExpirationJob
+    schedule: every minute
 
 development:
   event_completion:
     class: EventCompletionJob
     schedule: every 5 minutes
+  reservation_expiration:
+    class: ReservationExpirationJob
+    schedule: every minute

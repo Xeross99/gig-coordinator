@@ -58,4 +58,33 @@ class EventTest < ActiveSupport::TestCase
     refute_includes Event.awaiting_completion, done
     refute_includes Event.awaiting_completion, future
   end
+
+  test "creating an upcoming event auto-reserves the top-ranked users up to capacity" do
+    users(:ala).update!(title:      :master)
+    users(:bartek).update!(title:   :veteran)
+    users(:cezary).update!(title:   :member)
+    users(:dominika).update!(title: :rookie)
+
+    event = Event.create!(valid_attrs(capacity: 2))
+
+    reserved_users = event.participations.reserved.includes(:user).order(:position).map(&:user)
+    assert_equal [ users(:ala), users(:bartek) ], reserved_users
+  end
+
+  test "creating an event in the past does not trigger reservations" do
+    # Bypass the `ends_at_after_scheduled_at` guard? No — validation still applies.
+    # Use a future event that we then manually backdate to simulate a never-upcoming one.
+    # Simpler: rely on `upcoming_now?` guard — Event with scheduled_at <= now should not seed.
+    event = Event.new(valid_attrs(scheduled_at: 5.minutes.ago, ends_at: 1.hour.from_now))
+    event.save!(validate: false)
+    event.run_callbacks(:commit)  # no-op guard check
+
+    assert_equal 0, event.participations.reserved.count
+  end
+
+  test "full? counts reserved + confirmed against capacity" do
+    users(:ala).update!(title: :master)
+    event = Event.create!(valid_attrs(capacity: 1))
+    assert event.full?, "single reserved slot should mark capacity 1 event as full"
+  end
 end

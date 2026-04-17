@@ -1,10 +1,13 @@
 class Event < ApplicationRecord
+  RESERVATION_WINDOW = 1.hour
+
   belongs_to :host
   has_many :participations, dependent: :destroy
   has_many :users, through: :participations
 
   after_create_commit  :broadcast_feed_append,        if: :upcoming_now?
   after_create_commit  :notify_new_event_subscribers, if: :upcoming_now?
+  after_create_commit  :seed_reservations,            if: :upcoming_now?
   after_update_commit  :broadcast_feed_replace
   after_destroy_commit :broadcast_feed_remove
 
@@ -30,12 +33,21 @@ class Event < ApplicationRecord
     participations.confirmed.count
   end
 
+  def reserved_count
+    participations.reserved.count
+  end
+
+  # Slots held against capacity — accepted + awaiting-response both block the slot.
+  def slots_taken
+    participations.holding_slot.count
+  end
+
   def waitlist_count
     participations.waitlist.count
   end
 
   def full?
-    confirmed_count >= capacity
+    slots_taken >= capacity
   end
 
   private
@@ -73,5 +85,9 @@ class Event < ApplicationRecord
 
   def notify_new_event_subscribers
     WebPushNotifier.perform_later(:new_event, event_id: id)
+  end
+
+  def seed_reservations
+    ReservationService.seed_on_create(self)
   end
 end

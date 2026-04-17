@@ -17,12 +17,20 @@ Rails.application.routes.draw do
   # Worker app (root = events feed)
   root "events#index"
   resources :events, only: %i[index show], path: "eventy" do
-    resource :participation, only: %i[create destroy], path: "uczestnictwo"
+    resource :participation, only: %i[create destroy], path: "uczestnictwo" do
+      post :accept
+      post :decline
+    end
   end
   resources :hosts,              only: :index,             path: "organizatorzy"
   resources :users,              only: :index,             path: "pracownicy"
   resource  :profile,            only: %i[edit update],    path: "profil"
   resources :push_subscriptions, only: %i[create destroy], path: "subskrypcje-push"
 
-  # PWA manifest + service worker are served from /public as static files.
+  # Render dynamic PWA files from app/views/pwa/*. `Rails::PwaController` inherits from
+  # `ActionController::Base` (not our `ApplicationController`), so it bypasses
+  # `allow_browser :modern` — push services/crawlers without a User-Agent still get the
+  # real manifest/service-worker instead of a "please upgrade" HTML page.
+  get "manifest"       => "rails/pwa#manifest",       as: :pwa_manifest,       defaults: { format: :json }
+  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker, defaults: { format: :js }
 end

@@ -153,18 +153,20 @@ Konkretna „robota" z datą startu/końca, stawką i liczbą miejsc.
 Wynik kliknięcia „Akceptuję" lub „Dołącz na listę rezerwową". Przechowuje stan + pozycję w kolejce.
 
 **Tabela `participations`:**
-| Kolumna   | Typ                 | Uwagi                                              |
-|-----------|---------------------|----------------------------------------------------|
-| id        | integer PK          |                                                    |
-| event_id  | integer FK, NOT NULL |                                                   |
-| user_id   | integer FK, NOT NULL |                                                   |
-| status    | integer, NOT NULL, default 0 | enum: `confirmed=0, waitlist=1, cancelled=2` |
-| position  | integer, NOT NULL, default 0 | pozycja w obrębie statusu                  |
-| timestamps |                    |                                                    |
+| Kolumna         | Typ                 | Uwagi                                                        |
+|-----------------|---------------------|--------------------------------------------------------------|
+| id              | integer PK          |                                                              |
+| event_id        | integer FK, NOT NULL |                                                             |
+| user_id         | integer FK, NOT NULL |                                                             |
+| status          | integer, NOT NULL, default 0 | enum: `confirmed=0, waitlist=1, cancelled=2, reserved=3` |
+| position        | integer, NOT NULL, default 0 | pozycja w obrębie statusu                           |
+| reserved_until  | datetime, nullable  | deadline rezerwacji (tylko dla `reserved`); nil poza tym     |
+| timestamps      |                     |                                                              |
 
 **Indexy:**
 - `unique(event_id, user_id)` — jeden user = jeden rekord per event (jakikolwiek status)
 - `(event_id, status, position)` — szybki lookup najstarszego na waitlist przy promocji
+- `reserved_until` — do szybkiego sweepa wygasłych rezerwacji
 
 **Relacje:**
 - `belongs_to :event`
@@ -172,7 +174,11 @@ Wynik kliknięcia „Akceptuję" lub „Dołącz na listę rezerwową". Przechow
 
 **Walidacje:** `user_id` unique scope `event_id`.
 
-**Scope'y:** `active` — wszystko poza `cancelled`.
+**Scope'y:**
+- `active` — wszystko poza `cancelled`
+- `holding_slot` — confirmed + reserved (blokują capacity)
+
+**Metody:** `reservation_expired?` — `reserved? && reserved_until <= now`.
 
 **Logika biznesowa — NIE W MODELU:** create/destroy wywołuje `ParticipationsController` pod **pessimistic lockiem** na Event:
 
@@ -189,6 +195,8 @@ end
 ```
 
 Anulowanie `confirmed` odpala `promote_from_waitlist` — najstarszy `waitlist` (po `position`) staje się `confirmed`. Promocja wysyła `PromotionMailer` + `WebPushNotifier(:promotion)`. Wszystko w tej samej transakcji.
+
+**Priority reservations (ranked auto-invites):** przy tworzeniu nowego eventu `Event#after_create_commit :seed_reservations` woła `ReservationService.seed_on_create(event)` → rezerwuje `capacity` slotów dla top-N userów wg `title DESC, id ASC`, każdy z `reserved_until = now + 1h`. Każdy zaproszony dostaje `InvitationMailer#notify` + `WebPushNotifier(:invitation, ...)`. Na `/eventy/:id` widzi dedykowany banner + przyciski **Akceptuję** / **Odrzuć** — obsługiwane przez `ParticipationsController#accept` i `#decline`. Akceptacja flipuje `reserved → confirmed`. Odrzucenie → `cancelled` i `ReservationService.refill_one(event)` zaprasza następnego w rankingu; jeśli kandydatów brak — awans z waitlisty. `ReservationExpirationJob` (cron co minutę w dev i prod, `config/recurring.yml`) przegląda `Participation.reserved.where("reserved_until <= ?", Time.current)` i dla każdego wygaszonego wywołuje tę samą logikę co `decline`. Klasy: `app/services/reservation_service.rb`, `app/jobs/reservation_expiration_job.rb`, `app/mailers/invitation_mailer.rb`.
 
 ---
 
@@ -370,7 +378,14 @@ Button press: `transition-transform active:scale-[0.97]` na przyciskach akceptac
 
 # PWA
 
-`public/manifest.webmanifest` i `public/service-worker.js` są **statyczne**, nie serwowane przez kontroler Rails. Wcześniejsza próba przez `PwaController` łapała się na `allow_browser :modern` i zwracała HTML dla non-UA klientów. Trzymaj statycznie.
+Manifest + service worker serwowane natywnie przez **`Rails::PwaController`** (wbudowany w railties). Routes:
+
+```ruby
+get "manifest"       => "rails/pwa#manifest",       as: :pwa_manifest,       defaults: { format: :json }
+get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker, defaults: { format: :js }
+```
+
+`Rails::PwaController` dziedziczy z `ActionController::Base` (nie z naszego `ApplicationController`), więc `allow_browser :modern` go nie dotyczy — klienci bez User-Agent dostają prawdziwy JSON/JS, nie HTML-a z „upgrade browser". Widoki w `app/views/pwa/manifest.json.erb` + `app/views/pwa/service-worker.js`. Layout linkuje `pwa_manifest_path`; Stimulus push rejestruje `/service-worker`.
 
 **Ikony** generowane z `public/icon.svg` (pixel-art kura, 20×20 viewBox, `shape-rendering: crispEdges`) przez `rsvg-convert`:
 

@@ -121,6 +121,46 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match I18n.t("events.waitlist_accept"), response.body
   end
 
+  test "POST accept flips a live reservation to confirmed" do
+    Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
+                          reserved_until: 1.hour.from_now)
+    post accept_event_participation_path(@event)
+    p = Participation.find_by(event: @event, user: users(:ala))
+    assert p.confirmed?, "expected reserved → confirmed after accept"
+    assert_nil p.reserved_until, "reserved_until cleared on acceptance"
+    assert_redirected_to event_path(@event)
+  end
+
+  test "POST accept on an expired reservation is a no-op (doesn't confirm)" do
+    p = Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
+                              reserved_until: 1.hour.from_now)
+    p.update_column(:reserved_until, 5.minutes.ago)
+    post accept_event_participation_path(@event)
+    assert p.reload.reserved?, "expired reservation must not be acceptable"
+  end
+
+  test "POST decline cancels the reservation and invites the next highest-rank user" do
+    users(:ala).update!(title: :master)        # will be invited first
+    users(:bartek).update!(title: :veteran)
+    users(:cezary).update!(title: :member)
+    users(:dominika).update!(title: :rookie)
+
+    # Ala starts with the reservation; cezary is next in line after bartek+dominika are
+    # unavailable. For this test, seed ala's reservation manually.
+    Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
+                          reserved_until: 1.hour.from_now)
+
+    post decline_event_participation_path(@event)
+
+    ala_p = Participation.find_by(event: @event, user: users(:ala))
+    assert ala_p.cancelled?, "expected ala to be cancelled after decline"
+
+    # Next invited user is the highest-rank candidate not yet in the event.
+    invited = @event.participations.reserved.first
+    assert invited, "expected a new reservation to fill the vacated slot"
+    assert_equal users(:bartek), invited.user
+  end
+
   test "concurrent creates do not exceed capacity" do
     users_list = 6.times.map do |i|
       User.create!(first_name: "Race#{i}", last_name: "User", email: "race#{i}@example.com")

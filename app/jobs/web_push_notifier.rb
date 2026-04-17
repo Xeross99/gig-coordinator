@@ -5,6 +5,7 @@ class WebPushNotifier < ApplicationJob
   #   perform(:completion, participation_id: 42)
   #   perform(:promotion,  participation_id: 42)
   #   perform(:new_event,  event_id: 7)
+  #   perform(:invitation, event_id: 7, user_id: 3)
   def perform(kind, **args)
     case kind.to_sym
     when :completion, :promotion
@@ -15,6 +16,11 @@ class WebPushNotifier < ApplicationJob
       event = Event.find(args.fetch(:event_id))
       payload = build_payload(:new_event, event: event)
       PushSubscription.find_each { |s| send_web_push(s, payload) }
+    when :invitation
+      event = Event.find(args.fetch(:event_id))
+      user  = User.find(args.fetch(:user_id))
+      payload = build_payload(:invitation, event: event)
+      user.push_subscriptions.find_each { |s| send_web_push(s, payload) }
     else
       raise ArgumentError, "unknown kind: #{kind}"
     end
@@ -41,6 +47,12 @@ class WebPushNotifier < ApplicationJob
       {
         title: "Nowy event: #{event.name}",
         body:  "#{event.host.display_name} · #{ActionController::Base.helpers.number_to_currency(event.pay_per_person, unit: "zł", format: "%n %u")} · #{event.capacity} miejsc",
+        url:   url_for.call(event)
+      }
+    when :invitation
+      {
+        title: "Zaproszenie: #{event.name}",
+        body:  "Masz godzinę na potwierdzenie. Kliknij, żeby otworzyć event.",
         url:   url_for.call(event)
       }
     else
