@@ -1,5 +1,7 @@
 # Gig Coordinator
 
+Produkcja: **https://your-domain.example.com** (Production VPS + Kamal 2).
+
 Rails 8.1 aplikacja do koordynacji pracy dorywczej w rolnictwie. **Organizatorzy (Hosts)** tworzą eventy typu „Wydarzenie"; **Pracownicy (Users)** akceptują je z mobilnej PWA. Polski UI, PL ścieżki URL, logowanie wyłącznie przez 5-cyfrowy kod dostarczany e-mailem (magic-linki wyrzucone — odnośnik tapnięty w mailu otwiera przeglądarkę systemową zamiast PWA i ciasteczko ląduje w złym kontekście), real-time przez Turbo Streams, web push przez VAPID.
 
 ## Stack
@@ -470,3 +472,42 @@ PUBLIC_HOST=<tunnel>.trycloudflare.com bin/login-code <email> # wygeneruj kod
 - Turbo Stream broadcasty są synchroniczne → testy nie potrzebują `perform_enqueued_jobs`.
 - Mailer + `WebPushNotifier` są async → `assert_enqueued_emails` / `assert_enqueued_with(job: WebPushNotifier)`.
 - Dla logiki modelu: `Participation.create!(..., status:, position:)` bezpośrednio, bez kontrolera.
+
+---
+
+# Deploy (Kamal + VPS)
+
+Produkcja stoi na VPS-ie VPS `your-vps.example.com` (1 GB RAM, 1 CPU, LXC, Ubuntu 24.04, Docker 29). SSH na porcie **10215**. Obraz w **`ghcr.io/your-username/gig-coordinator`**.
+
+**Publiczne URL-e:**
+- `https://your-domain.example.com` — VPS front-enduje TLS (Cloudflare) i forwarduje HTTP na `[IPv6]:20215`.
+- `http://your-vps.example.com:20215` — bezpośrednie IPv4 do Kamal Proxy (fallback, HTTP).
+
+**Kluczowe rzeczy w `config/deploy.yml`:**
+- `proxy.run.http_port: 20215` — VPS wypuszcza tylko 20215 i 30215, więc Kamal Proxy musi słuchać tam zamiast na 80.
+- `proxy.hosts:` zawiera oba hosty — `your-vps.example.com` i `your-domain.example.com` — żeby Proxy trafiał dla obu.
+- `WEB_CONCURRENCY=0` + `RAILS_MAX_THREADS=5`. Niższe `RAILS_MAX_THREADS` powoduje że Solid Queue in-Puma wali „connection pool too small" i demon idzie w boot/crash-loop.
+- `PUBLIC_HOST=your-domain.example.com`, `PUBLIC_PROTOCOL=https` — Rails `default_url_options` używa tych env-ów, więc mailer linki i absolutne URL-e generują się z HTTPS.
+- `assume_ssl = true` w `production.rb` — ufamy `X-Forwarded-Proto` od VPSa. `force_ssl` off żeby IPv4:20215 nadal działało.
+- `Dockerfile` ma dołożony `libssl-dev` (gem `openssl` → `web-push`).
+
+**Secrets:**
+- `RAILS_MASTER_KEY` czyta z `config/master.key` (gitignored).
+- `KAMAL_REGISTRY_PASSWORD` czyta z `.kamal/registry-password` (gitignored) — GitHub PAT z `write:packages`. Env-var nie przechodził przez subprocesy Kamala, plik rozwiązał.
+
+**Codzienne komendy:**
+
+```bash
+kamal deploy                                   # build + push + rolling update
+kamal app logs -f                              # tail aplikacji
+kamal console                                  # rails console w kontenerze
+kamal shell                                    # bash w kontenerze
+kamal redeploy                                 # bez builda, sama rotacja
+```
+
+**Seed prod:** `db/seeds.rb` ma gate `Rails.env.development?`, więc na prodzie nie chodzi. Seedowanie przez `kamal console` + wklejenie bloku z `db/seeds.rb`, albo `kamal app exec --reuse 'bin/rails runner "..."'`.
+
+**Porty pamiętaj:**
+- Dokerowy kontener aplikacji słucha na `:80` (Thruster).
+- Kamal Proxy na VPS na `:20215` (i przypadkiem `:443` — nikt tam nie stuka).
+- SSH: `:10215`.
