@@ -7,7 +7,7 @@
   <p>Gig Coordinator łączy organizatorów z pracownikami. Organizator wrzuca zlecenie (np. zwydarzenie na fermie), Ty decydujesz, czy się piszesz.</p>
 
   <h2>Logowanie</h2>
-  <p>Żadnych haseł. Wpisujesz maila, dostajesz link z kliknięciem. Link działa przez <strong>15 minut</strong>, potem trzeba poprosić o nowy.</p>
+  <p>Żadnych haseł. Wpisujesz maila, dostajesz <strong>5-cyfrowy kod</strong> w mailu i przepisujesz go w aplikacji. Kod jest ważny <strong>15 minut</strong> — potem trzeba poprosić o nowy. Masz 5 prób na poprawne wpisanie; po piątej kod przestaje działać i trzeba zamówić kolejny.</p>
 
   <h2>Rangi</h2>
   <p>Każdy pracownik ma rangę. Rangi nadaje admin. W kolejności od startowej do najwyższej:</p>
@@ -15,7 +15,7 @@
     <li><strong>Nowy</strong> — starter, każdy nowy tu zaczyna</li>
     <li><strong>Członek</strong></li>
     <li><strong>Weteran</strong></li>
-    <li><strong>Mistrz</strong></li>
+    <li><strong>Mistrz</strong> — najwyższa ranga, tylko oni mogą planować nowe łapania (przycisk <em>Zaplanuj wydarzenie</em> jest widoczny tylko dla Mistrzów Pióra)</li>
   </ul>
 
   <h2>Rezerwacje</h2>
@@ -36,6 +36,16 @@
 
   <h2>Anulowanie udziału</h2>
   <p>W dowolnej chwili możesz kliknąć <em>Anuluj</em>. Jeśli byłeś potwierdzony, Twoje miejsce przejmuje pierwsza osoba z listy rezerwowej. Jeśli byłeś w kolejce — po prostu znikasz z listy.</p>
+
+  <h2>Planowanie łapań (tylko Mistrz)</h2>
+  <p>Jeśli masz najwyższą rangę, w menu pojawia się opcja <em>Zaplanuj wydarzenie</em>. Wypełniasz krótki formularz: organizator, nazwa, data, początek, długość, stawka na osobę, liczba miejsc. Po zatwierdzeniu:</p>
+  <ul>
+    <li>Event od razu ląduje na feedzie wszystkich pracowników.</li>
+    <li>Wszyscy zalogowani zostają automatycznie przeniesieni na stronę nowego eventu — pierwsi klikają <em>Akceptuję</em>.</li>
+    <li>System rezerwuje tyle miejsc ile capacity — ale tylko dla osób z aktualnie najwyższą rangą w systemie. Pozostałe sloty są otwarte dla wszystkich.</li>
+    <li>Wszyscy userzy dostają powiadomienie push o nowym evencie.</li>
+  </ul>
+  <p>Członek, Weteran i Nowy nie mogą planować łapań — mogą tylko się zapisywać.</p>
 
   <h2>Powiadomienia</h2>
   <p>Dostajesz je na dwa sposoby:</p>

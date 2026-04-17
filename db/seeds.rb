@@ -10,7 +10,7 @@ if Rails.env.development?
 
   [
     { first_name: "Michał",   last_name: "Kowalska",  email: "admin@gigcoordinator.pl",       title: 3 },
-    { first_name: "Adam",     last_name: "Nowak",      email: "example@gigcoordinator.pl",     title: 3 },
+    { first_name: "Adam",     last_name: "Nowak",      email: "example1@gigcoordinator.pl",         title: 3 },
     { first_name: "Michał",   last_name: "Wiśniewski",  email: "example2@gigcoordinator.pl",    title: 0 },
     { first_name: "Marcin",   last_name: "Lewandowski",       email: "example3@gigcoordinator.pl",    title: 1 },
     { first_name: "Mateusz",  last_name: "Zieliński",  email: "example4@gigcoordinator.pl",    title: 2 },
