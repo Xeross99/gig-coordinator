@@ -91,7 +91,7 @@ Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje
 - `has_many :events, through: :participations` — eventy, w których bierze udział
 - `has_many :push_subscriptions, dependent: :destroy` — subskrypcje web push (1 user może mieć wiele urządzeń)
 - `has_many :sessions, as: :authenticatable, dependent: :destroy` — aktywne sesje
-- `has_one_attached :photo` — zdjęcie profilowe (Active Storage)
+- `has_one_attached :photo` — zdjęcie profilowe (Active Storage) z nazwanym variantem `:roster` (`resize_to_fill: [40, 40]`) używanym we wszystkich listach roster na `/eventy/:id`
 
 **Walidacje:** `first_name`, `last_name`, `email` (format + unikalność).
 
@@ -288,6 +288,16 @@ Wcześniej obie ścieżki używały `invalid_token`, co wprowadzało w błąd us
 
 **Brak rejestracji.** Host/User powstają tylko przez `rails console` lub `db/seeds.rb`. Dodanie signup controllera zmieniłoby security model (email staje się niezautentykowanym write vector).
 
+## Mailery
+
+Wszystkie transakcyjne maile dzielą ten sam wygląd: rounded biała karta z szarym nagłówkiem (ikonka kury + „Gig Coordinator"), centralny content i stopka. Chrome siedzi w `app/views/layouts/mailer.html.erb` (+ `.text.erb`) — każdy mailer dziedziczy przez `ApplicationMailer.layout "mailer"`.
+
+Cztery partials w `app/views/mailers/` do budowy treści: `_title`, `_paragraph` (przyjmuje `html:` → w razie potrzeby `safe_join([tag.strong(...), ...])`), `_cta_button` (label + url), `_raw_url` (fallback „jeśli przycisk nie działa"). Dodanie nowego maila sprowadza się do renderowania tych klocków.
+
+Aktualne mailery: `MagicLinkMailer` (login), `PromotionMailer` (awans z waitlisty), `InvitationMailer` (rezerwacja z 1h deadline). Nie ma `CompletedEventMailer` — po zakończeniu eventu wystarczy push (`WebPushNotifier(:completion)`).
+
+Mailer previews: `test/mailers/previews/`. Lista przykładów pod `/rails/mailers`. Dodanie nowego preview wymaga restartu `bin/dev`.
+
 ## Akceptacja eventu
 
 User klika „Akceptuję" → `ParticipationsController#create`:
@@ -322,6 +332,10 @@ Anulowanie:
 | `[user, :events]`  | user feed (`/`)                   | user-scoped card replace przy rezerwacji (`invite!`)    |
 
 **Broadcasty z modelu:** `Participation#after_commit` odpala `broadcast_replace_to` na `[event, :roster]` + `[event, :counts]` przy każdym create/update/destroy — single source of truth. Każda ścieżka (kontroler, service, job, runner) odświeża UI automatycznie. Feed broadcasty z `Event` model callbacks — synchronicznie. Roster partial (`app/views/events/_roster.html.erb`) współdzielony między hostem a userem; avatar przez `_roster_avatar.html.erb` (zdjęcie lub inicjały). Brak numerków pozycji — licznik jest w nagłówku sekcji.
+
+**Adapter cable:** `solid_cable` w dev i prod (wcześniej dev miał `async`, który nie działa między procesami — broadcast z `bin/rails runner` nie docierał do przeglądarki). W dev jest osobna baza `storage/development_cable.sqlite3` pod cable (multi-DB w `config/database.yml`, migracje w `db/cable_migrate`). Po klonie repo: `bin/rails db:prepare` tworzy obie bazy.
+
+**Active Storage w broadcastach:** `_roster_avatar.html.erb` używa `rails_representation_path(user.photo.variant(:roster), only_path: true)` — helper **path**, nie URL. Partial leci przez cable z dowolnego wątku (controller, service, job, runner), a tam `ActiveStorage::Current.url_options` jest nilem → przekazanie varianta wprost do `image_tag` wywalało się z "Cannot generate URL … please set ActiveStorage::Current.url_options" i podstawiało pusty `src`. Path helper nie próbuje budować absolutnego URL-a — przeglądarka dokleja host z bieżącej strony i trafia do `ActiveStorage::Representations::RedirectController`, gdzie `before_action` ustawia `Current.url_options` normalnie. Variant `:roster` (40×40 `resize_to_fill`) zdefiniowany bezpośrednio w modelu `User` przez `has_one_attached :photo do |attachable| attachable.variant :roster, ... end`.
 
 **Custom Turbo Stream action `visit`:** zdefiniowane w `app/javascript/application.js` jako `Turbo.StreamActions.visit` — odpala `Turbo.visit(url)` po odebraniu `<turbo-stream action="visit" target="/path">`. Używane przez `Event#broadcast_visit_to_feed` żeby przenieść wszystkich userów na feedzie na stronę nowo utworzonego eventu.
 
