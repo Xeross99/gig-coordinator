@@ -21,4 +21,15 @@ class User < ApplicationRecord
   def display_title
     I18n.t("user.titles.#{title}", default: title.to_s.humanize)
   end
+
+  TITLE_BADGE_COLORS = {
+    "rookie"         => "bg-gray-100 text-gray-600",       # lowest
+    "member"     => "bg-green-100 text-green-700",
+    "veteran" => "bg-purple-100 text-purple-700",
+    "master"       => "bg-yellow-100 text-yellow-800"    # highest (gold)
+  }.freeze
+
+  def title_badge_classes
+    TITLE_BADGE_COLORS.fetch(title, "bg-gray-100 text-gray-600")
+  end
 end

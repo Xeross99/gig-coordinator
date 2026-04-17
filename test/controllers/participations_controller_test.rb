@@ -178,14 +178,12 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     assert p.reload.reserved?, "expired reservation must not be acceptable"
   end
 
-  test "POST decline cancels the reservation and invites the next highest-rank user" do
-    users(:ala).update!(title: :master)        # will be invited first
-    users(:bartek).update!(title: :veteran)
-    users(:cezary).update!(title: :member)
+  test "POST decline cancels the reservation and invites another top-tier user when one exists" do
+    users(:ala).update!(title:    :master)
+    users(:bartek).update!(title: :master)        # another top-tier candidate
+    users(:cezary).update!(title: :veteran)
     users(:dominika).update!(title: :rookie)
 
-    # Ala starts with the reservation; cezary is next in line after bartek+dominika are
-    # unavailable. For this test, seed ala's reservation manually.
     Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
                           reserved_until: 1.hour.from_now)
 
@@ -194,10 +192,27 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     ala_p = Participation.find_by(event: @event, user: users(:ala))
     assert ala_p.cancelled?, "expected ala to be cancelled after decline"
 
-    # Next invited user is the highest-rank candidate not yet in the event.
     invited = @event.participations.reserved.first
-    assert invited, "expected a new reservation to fill the vacated slot"
+    assert invited, "expected a new reservation for bartek (same top tier)"
     assert_equal users(:bartek), invited.user
+    refute @event.participations.find_by(user: users(:cezary))&.reserved?,
+           "cezary is lower tier and must not be invited"
+  end
+
+  test "POST decline leaves the slot empty when no other top-tier user exists" do
+    users(:ala).update!(title:    :master)
+    users(:bartek).update!(title: :veteran)
+    users(:cezary).update!(title: :member)
+    users(:dominika).update!(title: :rookie)
+
+    Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1,
+                          reserved_until: 1.hour.from_now)
+
+    post decline_event_participation_path(@event)
+
+    assert Participation.find_by(event: @event, user: users(:ala)).cancelled?
+    assert_equal 0, @event.participations.reserved.count,
+                 "no other top-tier user → slot stays open, no cascade"
   end
 
   test "concurrent creates do not exceed capacity" do

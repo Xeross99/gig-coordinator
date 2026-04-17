@@ -16,7 +16,7 @@ module HostAdmin
     private
 
     def profile_params
-      params.expect(host: %i[first_name last_name email location lat lng photo])
+      params.expect(host: %i[first_name last_name email location photo])
     end
   end
 end

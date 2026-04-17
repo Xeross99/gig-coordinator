@@ -69,29 +69,49 @@ class ReservationServiceTest < ActiveSupport::TestCase
     end
   end
 
-  test "refill_one drops one tier at a time when the current top tier is exhausted" do
+  test "refill_one does NOT cascade down tiers — slot stays open when no top-tier user is available" do
     event = build_event(capacity: 1)
     ReservationService.seed_on_create(event)
-    # ala (master) reserved. She declines → cancelled. Refill should invite the
-    # next tier's first user (bartek, veteran), not skip ahead.
+    # ala (master) is the sole top-tier user. She declines → cancelled.
+    # No other user has title=master, so the slot must stay empty —
+    # NOT fall through to bartek (veteran).
     event.participations.reserved.find_by(user: users(:ala))
       .update!(status: :cancelled, reserved_until: nil)
 
     ReservationService.refill_one(event)
 
-    new_reservation = event.participations.reserved.find_by(user: users(:bartek))
-    assert new_reservation, "expected bartek (next tier down) to be invited"
-    assert new_reservation.reserved_until > Time.current
+    assert_equal 0, event.participations.reserved.count,
+                 "no top-tier user remains; slot must stay open (no cascade)"
+    refute event.participations.find_by(user: users(:bartek))&.reserved?,
+           "bartek is lower-tier and must not be invited"
   end
 
-  test "refill_one promotes from waitlist FIRST, before inviting a new ranking candidate" do
-    # This is the "jesli nie to wskakuje osoba w kolejce" rule: a waitlisted user
-    # who already raised their hand must beat a never-invited higher-rank user.
+  test "refill_one invites another top-tier user when one is still available" do
+    # Two users at master. One gets a reservation and cancels; refill_one
+    # must invite the OTHER top-tier user (not skip to a lower tier).
+    users(:bartek).update!(title: :master)
+    event = build_event(capacity: 1)
+    ReservationService.seed_on_create(event)
+
+    first = event.participations.reserved.first
+    first.update!(status: :cancelled, reserved_until: nil)
+
+    ReservationService.refill_one(event)
+
+    expected_next = [ users(:ala), users(:bartek) ].find { |u| u != first.user }
+    assert event.participations.reserved.find_by(user: expected_next),
+           "the other top-tier user (#{expected_next.first_name}) should take the vacated slot"
+    refute event.participations.find_by(user: users(:cezary))&.reserved?,
+           "cezary is lower tier and must not be invited"
+  end
+
+  test "refill_one promotes from waitlist FIRST, before inviting a new top-tier candidate" do
+    # "jesli nie to wskakuje osoba w kolejce" — a waitlisted user who already raised
+    # their hand must beat a never-invited top-rank user.
+    users(:bartek).update!(title: :master)  # make bartek a top-tier candidate
     event = build_event(capacity: 2)
-    # Two top-tier confirmed users already in the event. Cezary (veteran)
-    # is a candidate available for invite, BUT dominika is waiting on the waitlist.
     Participation.create!(event: event, user: users(:ala),      status: :confirmed, position: 1)
-    Participation.create!(event: event, user: users(:bartek),   status: :confirmed, position: 2)
+    Participation.create!(event: event, user: users(:cezary),   status: :confirmed, position: 2)
     Participation.create!(event: event, user: users(:dominika), status: :waitlist,  position: 1)
     # Free one confirmed slot.
     event.participations.find_by(user: users(:ala)).update!(status: :cancelled)
@@ -100,35 +120,34 @@ class ReservationServiceTest < ActiveSupport::TestCase
 
     assert_equal "confirmed", event.participations.find_by(user: users(:dominika)).status,
                  "waitlist head must be promoted before a fresh rank invite"
-    refute event.participations.find_by(user: users(:cezary))&.reserved?,
-           "cezary must NOT be reserved while someone is waiting"
+    refute event.participations.find_by(user: users(:bartek))&.reserved?,
+           "bartek must NOT be reserved while someone is waiting on the waitlist"
   end
 
-  test "refill_one falls back to ranking candidate only when no waitlist exists" do
+  test "refill_one invites a top-tier candidate when waitlist is empty and one is available" do
+    users(:bartek).update!(title: :master)
     event = build_event(capacity: 2)
-    # All slots blocked by confirmed users; no waitlist. refill_one must reach
-    # for the next ranking candidate (cezary, next tier down).
     Participation.create!(event: event, user: users(:ala),    status: :confirmed, position: 1)
-    Participation.create!(event: event, user: users(:bartek), status: :confirmed, position: 2)
+    Participation.create!(event: event, user: users(:cezary), status: :confirmed, position: 2)
     event.participations.find_by(user: users(:ala)).update!(status: :cancelled)
 
     ReservationService.refill_one(event)
 
-    assert event.participations.reserved.find_by(user: users(:cezary)),
-           "with no waitlist, the next-tier user should get a reservation"
+    assert event.participations.reserved.find_by(user: users(:bartek)),
+           "with no waitlist, another top-tier user should be invited"
   end
 
-  test "expire_stale! cancels expired reservations and refills" do
+  test "expire_stale! cancels expired reservations and does NOT cascade down tiers" do
     event = build_event(capacity: 1)
     ReservationService.seed_on_create(event)
     ala_res = event.participations.reserved.find_by(user: users(:ala))
-    # Manually backdate the reservation so it is expired.
     ala_res.update_column(:reserved_until, 5.minutes.ago)
 
     ReservationService.expire_stale!
 
     assert event.participations.find_by(user: users(:ala)).cancelled?
-    assert event.participations.reserved.find_by(user: users(:bartek)),
-           "next rank user (bartek) should be invited after ala's expiry"
+    assert_equal 0, event.participations.reserved.count,
+                 "no other top-tier user exists; no cascade to lower ranks"
+    refute event.participations.find_by(user: users(:bartek))&.reserved?
   end
 end

@@ -33,7 +33,7 @@
       <% me = current_user || current_host %>
       <% profile_href = current_host ? edit_host_profile_path : edit_profile_path %>
       <nav class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-stone-200 px-4 py-3">
-        <div class="flex items-center justify-between gap-4 max-w-md mx-auto">
+        <div class="flex items-center justify-between gap-4 max-w-lg mx-auto">
           <%= link_to profile_href, class: "flex items-start space-x-4 min-w-0" do %>
             <div class="shrink-0">
               <div class="relative">
@@ -50,9 +50,13 @@
             </div>
             <div class="pt-1 min-w-0">
               <h1 class="text-base font-semibold text-stone-900 truncate"><%= me.display_name %></h1>
-              <p class="text-xs font-medium text-stone-500 truncate">
-                <%= current_host ? t("host_panel.title") : me.display_title %>
-              </p>
+              <div class="text-xs font-medium truncate">
+                <% if current_host %>
+                  <span class="text-stone-500"><%= t("host_panel.title") %></span>
+                <% else %>
+                  <%= render "users/title_badge", user: me %>
+                <% end %>
+              </div>
             </div>
           <% end %>
 
@@ -125,7 +129,7 @@
     <%= render "shared/toast" %>
     <%= render "shared/turbo_confirm" %>
 
-    <main class="max-w-md mx-auto px-4 py-4">
+    <main class="max-w-lg mx-auto px-4 py-4">
       <%= yield %>
     </main>
   </body>

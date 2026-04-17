@@ -31,6 +31,7 @@ pl:
     send_link: "Wyślij link logowania"
     check_email: "Jeśli adres jest w systemie, wysłaliśmy link logowania."
     invalid_token: "Ten link wygasł lub jest nieprawidłowy."
+    login_required: "Zaloguj się, aby kontynuować."
     logout: "Wyloguj"
   events:
     upcoming: "Do złapania"

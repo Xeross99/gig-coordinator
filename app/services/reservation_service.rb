@@ -37,17 +37,18 @@ class ReservationService
 
   # --- internals ---
 
-  # Picks invitees from the currently-highest-rank tier of users who aren't
-  # already in the event. Deliberately NOT cascading through lower ranks on the
-  # initial seed — only the top rank gets pre-booked. Lower ranks only get a
-  # chance when a reservation is declined/expired (refill_one is called with a
-  # smaller pool and the next tier becomes the "top").
+  # Picks invitees from the GLOBALLY-highest-rank tier — never cascades down.
+  # If no one at the top tier is available (already in the event or doesn't
+  # exist), the slot stays open. Regular users can still grab it via the feed.
   def self.invite_candidates(event, limit:)
-    pool = User.where.not(id: event.participations.pluck(:user_id))
-    top_title = pool.maximum(:title)
-    return User.none if top_title.nil?
+    global_top = User.maximum(:title)
+    return User.none if global_top.nil?
 
-    pool.where(title: top_title).order(:id).limit(limit)
+    User
+      .where(title: global_top)
+      .where.not(id: event.participations.pluck(:user_id))
+      .order(:id)
+      .limit(limit)
   end
 
   def self.invite!(event, user)

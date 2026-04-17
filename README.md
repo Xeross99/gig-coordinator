@@ -53,9 +53,9 @@ Właściciel eventów. Zarządza nimi z panelu `/host/*`.
 | last_name   | string, NOT NULL         |                               |
 | email       | string, NOT NULL, UNIQUE | case-insensitive (normalized) |
 | location    | string, NOT NULL         | miejscowość/adres tekstowy    |
-| lat         | decimal(10,6)            | opcjonalnie                   |
-| lng         | decimal(10,6)            | opcjonalnie                   |
 | timestamps  |                          |                               |
+
+> Wcześniejsza migracja `CreateHosts` dodawała spekulacyjnie kolumny `lat` / `lng` (decimal, precision: 10, scale: 6) pod przyszłą geolokalizację — były nieużywane, więc zostały zdjęte w migracji `RemoveLatLngFromHosts`.
 
 **Relacje:**
 - `has_many :events, dependent: :destroy` — eventy, które stworzył
@@ -97,7 +97,9 @@ Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje
 
 **Enum `:title`:** 4 rangi (`rookie`, `member`, `veteran`, `master`). Default w bazie = 0 (`rookie`) — każdy nowy user zaczyna jako Nowy, promocja ręcznie przez konsolę. Labelki w `config/locales/pl.yml` pod `user.titles.*`; `user.display_title` zwraca przetłumaczony tekst.
 
-**Metody instancji:** `display_name`, `display_title`.
+**Badge rangi (UI):** `User::TITLE_BADGE_COLORS` + `#title_badge_classes` mapują rangę na parę `bg-*` / `text-*`: **szary** = Nowy (najniższa) → **zielony** = Członek → **fioletowy** = Weteran → **żółty/złoty** = Mistrz (najwyższa). Partial `app/views/users/_title_badge.html.erb` (locals: `user:`) renderuje kapsułkę `inline-flex ... rounded-md ... text-xs`. Używany wszędzie, gdzie pokazujemy użytkownika z rangą: `/pracownicy`, navbar usera, `/profil/edit`, każdy wiersz roster na `/eventy/:id`.
+
+**Metody instancji:** `display_name`, `display_title`, `title_badge_classes`.
 
 **Normalizacje:** `email` → strip + downcase.
 
@@ -197,9 +199,14 @@ end
 
 Anulowanie `confirmed` odpala `promote_from_waitlist` — najstarszy `waitlist` (po `position`) staje się `confirmed`. Promocja wysyła `PromotionMailer` + `WebPushNotifier(:promotion)`. Wszystko w tej samej transakcji.
 
-**Priority reservations (ranked auto-invites):** przy tworzeniu nowego eventu `Event#after_create_commit :seed_reservations` woła `ReservationService.seed_on_create(event)` → rezerwuje sloty wyłącznie dla **aktualnie najwyższej dostępnej rangi** (nie kaskaduje w dół). Np. capacity 4 + tylko 1 user `master` → 1 rezerwacja, pozostałe 3 sloty zostają otwarte na regularny flow. Ordering w obrębie tej samej rangi: `id ASC` (kto pierwszy zarejestrowany). Każdy zaproszony dostaje `InvitationMailer#notify` + `WebPushNotifier(:invitation, ...)` + `reserved_until = now + 1h`.
+**Priority reservations (ranked auto-invites):** przy tworzeniu nowego eventu `Event#after_create_commit :seed_reservations` woła `ReservationService.seed_on_create(event)` → rezerwuje sloty wyłącznie dla **globalnie najwyższej rangi w systemie** (`User.maximum(:title)`). Nigdy nie schodzi niżej — ani przy seedzie, ani przy refillu. Np. capacity 4 + tylko 1 user `master` → 1 rezerwacja, pozostałe 3 sloty zostają otwarte na regularny flow. Ordering w obrębie tej samej rangi: `id ASC`. Każdy zaproszony dostaje `InvitationMailer#notify` + `WebPushNotifier(:invitation, ...)` + `reserved_until = now + 1h`.
 
-Na `/eventy/:id` widzi dedykowany banner + przyciski **Akceptuję** / **Odrzuć** — obsługiwane przez `ParticipationsController#accept` i `#decline` (przyciski mają `data-turbo-frame="_top"` żeby submisja wyszła z ramki i toast pokazał się bez F5). Akceptacja flipuje `reserved → confirmed`. Odrzucenie → `cancelled` + `ReservationService.refill_one(event)` z logiką **waitlist-first**: najpierw promuje osobę z waitlisty (tak chciał pierwotny wymóg „jesli nie to wskakuje osoba w kolejce"); dopiero gdy waitlista pusta, sięga po następnego użytkownika z rankingu. `ReservationExpirationJob` (cron co minutę w dev i prod, `config/recurring.yml`) przegląda `Participation.reserved.where("reserved_until <= ?", Time.current)` i wywołuje tę samą logikę co decline. Klasy: `app/services/reservation_service.rb`, `app/jobs/reservation_expiration_job.rb`, `app/mailers/invitation_mailer.rb`.
+Na `/eventy/:id` widzi dedykowany banner + przyciski **Akceptuję** / **Odrzuć** — obsługiwane przez `ParticipationsController#accept` i `#decline` (przyciski mają `data-turbo-frame="_top"` żeby submisja wyszła z ramki i toast pokazał się bez F5). Akceptacja flipuje `reserved → confirmed`. Odrzucenie → `cancelled` + `ReservationService.refill_one(event)` z semantyką **waitlist-first, potem tylko top-tier**:
+
+1. Jeśli na waitliście ktoś czeka — promujemy go (spełnia regułę „jesli nie to wskakuje osoba w kolejce").
+2. Jeśli waitlista pusta — szukamy innego usera z globalną najwyższą rangą, który nie ma jeszcze participation na tym evencie. Jeśli nie istnieje, slot zostaje pusty. **Żaden user niższej rangi nigdy nie dostanie auto-rezerwacji**, nawet jeśli wszyscy z top tieru już odrzucili.
+
+`ReservationExpirationJob` (cron co minutę w dev i prod, `config/recurring.yml`) przegląda `Participation.reserved.where("reserved_until <= ?", Time.current)` i funneluje przez tę samą logikę co decline. Klasy: `app/services/reservation_service.rb`, `app/jobs/reservation_expiration_job.rb`, `app/mailers/invitation_mailer.rb`.
 
 **Model-level broadcasts:** `Participation#after_commit :broadcast_event_updates, on: %i[create update destroy]` wysyła `broadcast_replace_to [event, :roster]` + `[event, :counts]` przy każdej zmianie. Każda ścieżka (kontroler, service, job, `rails runner`, `rails console`) automatycznie odświeża otwarte przeglądarki — nie trzeba broadcastować ręcznie. Guard `Event.find_by(id: event_id)` chroni przed błędem przy kaskadowym destroy.
 
@@ -272,6 +279,12 @@ Przy błędzie `InvalidSubscription` / `Expired` subskrypcja jest usuwana. Wszys
 4. `#show` — weryfikuje token dla obu modeli, tworzy `Session`, podpisuje cookie, redirect:
    - Host → `/panel`
    - User → `/`
+
+**Dwa komunikaty — nie mylić ich:**
+- `auth.invalid_token` („Ten link wygasł lub jest nieprawidłowy.") — tylko gdy `MagicLinksController#show` odrzuca token (bogus/expired).
+- `auth.login_required` („Zaloguj się, aby kontynuować.") — gdy `require_user!` / `require_host!` z `ApplicationController` przekierowuje niezalogowanego.
+
+Wcześniej obie ścieżki używały `invalid_token`, co wprowadzało w błąd userów, którzy po prostu nie byli zalogowani.
 
 **Brak rejestracji.** Host/User powstają tylko przez `rails console` lub `db/seeds.rb`. Dodanie signup controllera zmieniłoby security model (email staje się niezautentykowanym write vector).
 
@@ -348,9 +361,9 @@ Dodając nowe kontrolery host-scoped, zachowaj ten wzorzec (`path:` PL, `as:`/mo
 
 # Layouty i partials
 
-- **`layouts/application.html.erb`** — aplikacja usera. Sticky navbar z avatarem (zdjęcie lub inicjały) + imię + ranga, plus **dropdown menu** (`<el-dropdown>` + `<el-menu popover>` z `@tailwindplus/elements`) z trzema oddzielonymi sekcjami: (1) Mój profil, (2) Wszyscy pracownicy + Wszyscy organizatorzy, (3) Wyloguj. `<main class="max-w-md mx-auto">`.
+- **`layouts/application.html.erb`** — aplikacja usera. Sticky navbar z avatarem (zdjęcie lub inicjały) + imię + **kolorowy badge rangi** (partial `users/_title_badge`), plus **dropdown menu** (`<el-dropdown>` + `<el-menu popover>` z `@tailwindplus/elements`) z trzema oddzielonymi sekcjami: (1) Mój profil, (2) Wszyscy pracownicy + Wszyscy organizatorzy, (3) Wyloguj. `<main class="max-w-lg mx-auto">` (poszerzone z `max-w-md` pod większe telefony).
 - **`layouts/host_admin.html.erb`** — panel hosta. Prosty header, `max-w-3xl`.
-- **`layouts/auth.html.erb`** — strony publiczne (login). Bez navbaru, bez `max-w-md` — pełen viewport. Używane przez `SessionsController#new` via `layout "auth", only: :new`.
+- **`layouts/auth.html.erb`** — strony publiczne (login). Bez navbaru, bez kontenera — pełen viewport. Używane przez `SessionsController#new` via `layout "auth", only: :new`.
 - **`shared/_toast.html.erb`** — flash jako dismissable toast (zielony check / czerwony x), auto-dismiss 5s przez Stimulus `toast_controller.js`.
 - **`shared/_breadcrumbs.html.erb`** — breadcrumbs wg Tailwind UI. Locals: `crumbs:` (tablica `[label, path]`, `path: nil` = current page), `home_path:` (domyślnie `root_path`, `host_root_path` na panel hosta).
 - **`shared/_turbo_confirm.html.erb`** — `<el-dialog>` modal zastępujący natywny `confirm()` dla `data-turbo-confirm`. Stimulus `turbo_confirm_controller.js` w `connect()` podmienia `Turbo.config.forms.confirm` na ten dialog. Locals: `title:`, `message:`, `confirm_label:`, `cancel_label:`. Etykiety przycisków ASCII-only (PL znaki w defaults miewały problem z encodingiem).
@@ -369,7 +382,9 @@ Każdy widok ustawia własny: `<% content_for(:title) { @event.name } %>`.
 
 Dwie listy dostępne z dropdown menu w navbarze, obie tylko dla zalogowanych **userów** (hosts → redirect na login):
 
-- **`/pracownicy`** (`UsersController#index`, `users_path`) — lista wszystkich pracowników, sortowana po randze **desc** (Mistrz na górze → Nowy na dole), w obrębie rangi alfabetycznie. Pokazuje avatar + imię + display_title + licznik 🐔 zaliczonych łapań (confirmed participations na eventach z `completed_at`). Liczniki z jednego dodatkowego `GROUP BY` query — zero N+1.
+- **`/pracownicy`** (`UsersController#index`, `users_path`) — lista wszystkich pracowników, sortowana po randze **desc** (Mistrz na górze → Nowy na dole), w obrębie rangi alfabetycznie. Pokazuje avatar + imię + **kolorowy badge rangi** + licznik 🐔 zaliczonych łapań (confirmed participations na eventach z `completed_at`). Liczniki z jednego dodatkowego `GROUP BY` query — zero N+1.
+
+**Roster eventu (`_roster.html.erb`)** ma **cztery** sekcje: (1) Rezerwacje (indigo), (2) Potwierdzeni (emerald), (3) Rezerwa (amber), (4) **Wszyscy pracownicy** — neutralne szare wiersze ze WSZYSTKIMI userami w systemie, każdy z avatarem, badge'em rangi i statusem po prawej (`oczekuje` / `zapisany` / `rezerwa` / `anulował`) jeśli mają participation na tym evencie. W trzech górnych sekcjach rangę renderujemy pod imieniem. Jeden `User.with_attached_photo.order(title: :desc, last_name: :asc)` query + `index_by(&:user_id)` lookup uniemożliwia N+1.
 - **`/organizatorzy`** (`HostsController#index`, `hosts_path`) — lista wszystkich organizatorów z avatarem, lokalizacją i licznikiem nadchodzących eventów.
 
 ---

@@ -20,12 +20,12 @@ class ApplicationController < ActionController::Base
 
   def require_user!
     return if current_user
-    redirect_to login_path, alert: I18n.t("auth.invalid_token")
+    redirect_to login_path, alert: I18n.t("auth.login_required")
   end
 
   def require_host!
     return if current_host
-    redirect_to login_path, alert: I18n.t("auth.invalid_token")
+    redirect_to login_path, alert: I18n.t("auth.login_required")
   end
 
   def sign_in!(authenticatable)
