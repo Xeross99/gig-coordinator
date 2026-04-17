@@ -5,7 +5,7 @@ class NewEventLiveFeedTest < ApplicationSystemTestCase
     host = hosts(:jan)
     user = users(:ala)
 
-    visit verify_magic_link_url(token: user.signed_id(purpose: :magic_link, expires_in: 15.minutes))
+    sign_in_as(user)
     assert_current_path root_path
     assert_text events(:gig-coordinators_tomorrow).name
 

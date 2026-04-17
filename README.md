@@ -1,6 +1,6 @@
 # Gig Coordinator
 
-Rails 8.1 aplikacja do koordynacji pracy dorywczej w rolnictwie. **Organizatorzy (Hosts)** tworzą eventy typu „Wydarzenie"; **Pracownicy (Users)** akceptują je z mobilnej PWA. Polski UI, PL ścieżki URL, logowanie wyłącznie przez magic-link, real-time przez Turbo Streams, web push przez VAPID.
+Rails 8.1 aplikacja do koordynacji pracy dorywczej w rolnictwie. **Organizatorzy (Hosts)** tworzą eventy typu „Wydarzenie"; **Pracownicy (Users)** akceptują je z mobilnej PWA. Polski UI, PL ścieżki URL, logowanie wyłącznie przez 5-cyfrowy kod dostarczany e-mailem (magic-linki wyrzucone — odnośnik tapnięty w mailu otwiera przeglądarkę systemową zamiast PWA i ciasteczko ląduje w złym kontekście), real-time przez Turbo Streams, web push przez VAPID.
 
 ## Stack
 
@@ -22,7 +22,7 @@ PORT=3001 bin/dev                    # inny port (gdy :3000 zajęty)
 bin/rails db:seed                    # sample hostów, userów i eventów
 bin/rails test                       # unit + integration
 bin/rails test:system                # Capybara + headless Chrome
-bin/login-link <email>               # wypisz URL magic-linka (honoruje PUBLIC_HOST + PORT)
+bin/login-code <email>               # wygeneruj i wypisz 5-cyfrowy kod logowania
 bin/ci                               # pełny CI run: setup, rubocop, gem audit, brakeman, testy, seedy
 ```
 
@@ -68,7 +68,7 @@ Właściciel eventów. Zarządza nimi z panelu `/host/*`.
 
 **Normalizacje:** `email` → strip + downcase (`normalizes :email`).
 
-**Uwierzytelnianie:** magic-link (`signed_id(purpose: :magic_link, expires_in: 15.minutes)`). Host loguje się na tym samym `/login` co User — `MagicLinksController` sprawdza najpierw `Host`, potem `User`.
+**Uwierzytelnianie:** 5-cyfrowy kod z tabeli `login_codes` (polimorficzny, 15-minutowa ważność, 5 prób). Host loguje się na tym samym `/logowanie` co User — `LoginCodesController#create` sprawdza najpierw `Host`, potem `User`.
 
 ---
 
@@ -103,7 +103,7 @@ Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje
 
 **Normalizacje:** `email` → strip + downcase.
 
-**Profil:** `/profil/edit` (`ProfilesController`) pozwala zmienić **tylko zdjęcie**. Imię, nazwisko, email i ranga są read-only w UI (edycja przez `rails console`) — decyzja projektowa: email jest kluczem magic-linka, zmiana z poziomu UI otwierałaby wektor ataku.
+**Profil:** `/profil/edit` (`ProfilesController`) pozwala zmienić **tylko zdjęcie**. Imię, nazwisko, email i ranga są read-only w UI (edycja przez `rails console`) — decyzja projektowa: email jest adresem, na który trafia kod logowania, zmiana z poziomu UI otwierałaby wektor ataku.
 
 ---
 
@@ -143,7 +143,9 @@ Konkretna „robota" z datą startu/końca, stawką i liczbą miejsc.
 
 **Callbacki (broadcasty feedu — synchroniczne):**
 - `after_create_commit :broadcast_feed_append` — prepend kartki do `events_list` w streamie `:events` (tylko jeśli `upcoming_now?`)
+- `after_create_commit :broadcast_visit_to_feed` — wysyła custom `visit` Turbo::StreamAction do streamu `:events` — przenosi wszystkich zalogowanych userów na stronę nowego eventu (subskrypcja globalna w `application.html.erb`, więc działa z każdej strony, nie tylko feedu)
 - `after_create_commit :notify_new_event_subscribers` — `WebPushNotifier.perform_later(:new_event, ...)` do wszystkich userów z push sub
+- `after_create_commit :seed_reservations` — `ReservationService.seed_on_create` dla userów z najwyższą rangą
 - `after_update_commit :broadcast_feed_replace` — replace kartki
 - `after_destroy_commit :broadcast_feed_remove` — remove z feedu
 
@@ -271,20 +273,22 @@ Przy błędzie `InvalidSubscription` / `Expired` subskrypcja jest usuwana. Wszys
 
 # Kluczowe flow'y
 
-## Logowanie (magic-link)
+## Logowanie (5-cyfrowy kod)
 
-1. `/logowanie` — jeden formularz dla Hosta i Usera (własny `auth` layout, pełen viewport bez navbaru).
-2. `MagicLinksController#create` — szuka emaila najpierw w `Host`, potem w `User`. Zawsze `redirect_to login_path, notice: t("auth.check_email")` (no enumeration). Flash pokazuje się jako dismissable toast (`shared/_toast.html.erb`). W **dev** dodatkowo robi `puts` URL-a do stdout — widać go w logu `bin/dev`, nie trzeba otwierać maila.
-3. Mail zawiera link z `signed_id(purpose: :magic_link, expires_in: 15.minutes)`.
-4. `#show` — weryfikuje token dla obu modeli, tworzy `Session`, podpisuje cookie, redirect:
-   - Host → `/panel`
-   - User → `/`
+Magic-linki wyrzucone — tapnięcie linku w aplikacji pocztowej otwierało domyślną przeglądarkę systemową (Safari/Chrome), nie zainstalowane PWA, więc ciasteczko sesyjne (`session_token`, `SameSite=Lax`) siadało w złym kontekście przeglądarki i user po powrocie do PWA dalej był niezalogowany. Zamiana: mail niesie tylko **5-cyfrowy kod**, user przepisuje go do formularza w PWA, sesja powstaje w tym samym kontekście co cookie.
+
+1. `/logowanie` (`SessionsController#new`) — formularz z polem e-mail (layout `auth`, pełen viewport).
+2. `POST /kody-logowania` (`LoginCodesController#create`) — szuka emaila najpierw w `Host`, potem w `User`. Jeśli trafi, woła `LoginCode.generate_for(record, request:)` (unieważnia wcześniejsze aktywne kody tego rekordu, tworzy nowy z `format("%05d", SecureRandom.random_number(100_000))`, `expires_at = 15.minutes.from_now`) i enqueuje `LoginCodeMailer.notify`. Zawsze zapisuje `session[:pending_login_email]` i redirectuje na `verify_login_path, notice: t("auth.code_sent")` — **neutralny komunikat także dla nieznanych emaili** (no-enumeration). W dev dodatkowo `puts`-uje kod do stdout.
+3. `GET /logowanie/weryfikacja` (`#new`) — gate na `session[:pending_login_email]` (brak → redirect na `/logowanie`). Renderuje 5 osobnych pól cyfrowych, obsługiwanych przez Stimulus `code_input_controller.js` (auto-focus w prawo po cyfrze, backspace wraca w lewo, wklejenie 5-cyfrowego ciągu rozrzuca cyfry, auto-submit po ostatniej). Link „Zmień adres e-mail" wraca do `/logowanie`.
+4. `POST /logowanie/weryfikacja` (`#verify`) — wywołuje `LoginCode.consume(record, submitted_code)`:
+   - trafienie: `used_at = now`, `sign_in!(record)`, `session.delete(:pending_login_email)`, redirect:
+     - Host → `/panel`
+     - User → `/`
+   - pudło: inkrementuje `attempts` na aktywnym kodzie; po `LoginCode::MAX_ATTEMPTS` (5) kod jest wypalany (`used_at` set). Błędny kod / brak aktywnego kodu / nieznany e-mail → ten sam neutralny `auth.invalid_code`.
 
 **Dwa komunikaty — nie mylić ich:**
-- `auth.invalid_token` („Ten link wygasł lub jest nieprawidłowy.") — tylko gdy `MagicLinksController#show` odrzuca token (bogus/expired).
+- `auth.invalid_code` („Nieprawidłowy lub wygasły kod.") — gdy `LoginCodesController#verify` nie trafia w aktywny `LoginCode`.
 - `auth.login_required` („Zaloguj się, aby kontynuować.") — gdy `require_user!` / `require_host!` z `ApplicationController` przekierowuje niezalogowanego.
-
-Wcześniej obie ścieżki używały `invalid_token`, co wprowadzało w błąd userów, którzy po prostu nie byli zalogowani.
 
 **Brak rejestracji.** Host/User powstają tylko przez `rails console` lub `db/seeds.rb`. Dodanie signup controllera zmieniłoby security model (email staje się niezautentykowanym write vector).
 
@@ -294,7 +298,7 @@ Wszystkie transakcyjne maile dzielą ten sam wygląd: rounded biała karta z sza
 
 Cztery partials w `app/views/mailers/` do budowy treści: `_title`, `_paragraph` (przyjmuje `html:` → w razie potrzeby `safe_join([tag.strong(...), ...])`), `_cta_button` (label + url), `_raw_url` (fallback „jeśli przycisk nie działa"). Dodanie nowego maila sprowadza się do renderowania tych klocków.
 
-Aktualne mailery: `MagicLinkMailer` (login), `PromotionMailer` (awans z waitlisty), `InvitationMailer` (rezerwacja z 1h deadline). Nie ma `CompletedEventMailer` — po zakończeniu eventu wystarczy push (`WebPushNotifier(:completion)`).
+Aktualne mailery: `LoginCodeMailer` (5-cyfrowy kod — bez CTA przycisku/linku, tylko duży monospace'owy blok z kodem), `PromotionMailer` (awans z waitlisty), `InvitationMailer` (rezerwacja z 1h deadline). Nie ma `CompletedEventMailer` — po zakończeniu eventu wystarczy push (`WebPushNotifier(:completion)`). Wspólne powitanie: `t("mailers.hello", name:)`.
 
 Mailer previews: `test/mailers/previews/`. Lista przykładów pod `/rails/mailers`. Dodanie nowego preview wymaga restartu `bin/dev`.
 
@@ -328,8 +332,8 @@ Anulowanie:
 |--------------------|-----------------------------------|---------------------------------------------------------|
 | `[event, :counts]` | user event show                   | Participation `after_commit` (model callback)           |
 | `[event, :roster]` | user + host event show            | Participation `after_commit` (model callback)           |
-| `:events`          | user feed (`/`)                   | Event create/update/destroy + broadcast `visit`         |
-| `[user, :events]`  | user feed (`/`)                   | user-scoped card replace przy rezerwacji (`invite!`)    |
+| `:events`          | każda strona workera (layout)     | Event create/update/destroy + broadcast `visit`         |
+| `[user, :events]`  | każda strona workera (layout)     | user-scoped card replace przy rezerwacji (`invite!`)    |
 
 **Broadcasty z modelu:** `Participation#after_commit` odpala `broadcast_replace_to` na `[event, :roster]` + `[event, :counts]` przy każdym create/update/destroy — single source of truth. Każda ścieżka (kontroler, service, job, runner) odświeża UI automatycznie. Feed broadcasty z `Event` model callbacks — synchronicznie. Roster partial (`app/views/events/_roster.html.erb`) współdzielony między hostem a userem; avatar przez `_roster_avatar.html.erb` (zdjęcie lub inicjały). Brak numerków pozycji — licznik jest w nagłówku sekcji.
 
@@ -337,7 +341,7 @@ Anulowanie:
 
 **Active Storage w broadcastach:** `_roster_avatar.html.erb` używa `rails_representation_path(user.photo.variant(:roster), only_path: true)` — helper **path**, nie URL. Partial leci przez cable z dowolnego wątku (controller, service, job, runner), a tam `ActiveStorage::Current.url_options` jest nilem → przekazanie varianta wprost do `image_tag` wywalało się z "Cannot generate URL … please set ActiveStorage::Current.url_options" i podstawiało pusty `src`. Path helper nie próbuje budować absolutnego URL-a — przeglądarka dokleja host z bieżącej strony i trafia do `ActiveStorage::Representations::RedirectController`, gdzie `before_action` ustawia `Current.url_options` normalnie. Variant `:roster` (40×40 `resize_to_fill`) zdefiniowany bezpośrednio w modelu `User` przez `has_one_attached :photo do |attachable| attachable.variant :roster, ... end`.
 
-**Custom Turbo Stream action `visit`:** zdefiniowane w `app/javascript/application.js` jako `Turbo.StreamActions.visit` — odpala `Turbo.visit(url)` po odebraniu `<turbo-stream action="visit" target="/path">`. Używane przez `Event#broadcast_visit_to_feed` żeby przenieść wszystkich userów na feedzie na stronę nowo utworzonego eventu.
+**Custom Turbo Stream action `visit`:** zdefiniowane w `app/javascript/application.js` jako `Turbo.StreamActions.visit` — odpala `Turbo.visit(url)` po odebraniu `<turbo-stream action="visit" target="/path">`. Używane przez `Event#broadcast_visit_to_feed` żeby przenieść wszystkich zalogowanych userów (niezależnie od strony) na stronę nowo utworzonego eventu. Subskrypcja strumienia `:events` + `[current_user, :events]` siedzi w layoucie `application.html.erb`, więc teleport działa z każdego widoku; akcje `append`/`replace`/`remove` targetujące `#events_list` na stronach innych niż feed po prostu no-opują (Turbo ignoruje brakujący target).
 
 ---
 
@@ -441,7 +445,7 @@ Regeneruj po edycji `icon.svg`.
 
 # Dev port
 
-`config/environments/development.rb` czyta `ENV["PORT"]` (fallback 3000) gdy `PUBLIC_HOST` nie jest ustawiony — magic-link URL-e idą na właściwy port. `bin/login-link` tak samo. Jeśli trzymasz kilka Rails apek lokalnie, eksportuj `PORT=3001 bin/dev` (i `PORT=3001 bin/login-link ...`) żeby link wygenerował się z portem 3001.
+`config/environments/development.rb` czyta `ENV["PORT"]` (fallback 3000) gdy `PUBLIC_HOST` nie jest ustawiony — URL-e generowane przez helpery idą na właściwy port. `bin/login-code` tak samo. Jeśli trzymasz kilka Rails apek lokalnie, eksportuj `PORT=3001 bin/dev` (i `PORT=3001 bin/login-code ...`) żeby wygenerować dane z portem 3001.
 
 ---
 
@@ -452,7 +456,7 @@ iOS web push wymaga HTTPS + PWA z Home Screen.
 ```bash
 cloudflared tunnel --url http://localhost:3000                # Terminal 1
 PUBLIC_HOST=<tunnel>.trycloudflare.com bin/dev                # Terminal 2
-PUBLIC_HOST=<tunnel>.trycloudflare.com bin/login-link <email> # wygeneruj link
+PUBLIC_HOST=<tunnel>.trycloudflare.com bin/login-code <email> # wygeneruj kod
 ```
 
 `config/environments/development.rb` whitelistuje `*.trycloudflare.com`, `*.ngrok-free.app`, `*.ngrok.io`, `*.lhr.life`, `*.localhost.run`, `*.serveo.net` (przez `config.hosts`), wyłącza `action_cable.request_forgery_protection`, i nadpisuje `default_url_options` na `https://<PUBLIC_HOST>` gdy env var jest ustawiony.
@@ -461,7 +465,7 @@ PUBLIC_HOST=<tunnel>.trycloudflare.com bin/login-link <email> # wygeneruj link
 
 # Testy
 
-- `test/support/auth_helpers.rb` → `sign_in_as(record)` dla integration + system (robi prawdziwy request do `/logowanie/weryfikacja`).
+- `test/support/auth_helpers.rb` → `sign_in_as(record)` w dwóch wariantach: **integration** (POSTuje e-mail + kod z DB przez dwa requesty do `LoginCodesController`) i **system** (`SystemAuthHelpers` — przechodzi przez UI: visit `/logowanie`, fill e-mail, odczyt `LoginCode.last.code`, wpisanie cyfr w 5 boksów, submit).
 - System testy w `test/system/`, `driven_by :selenium, using: :headless_chrome, screen_size: [390, 844]` (mobilny viewport).
 - Turbo Stream broadcasty są synchroniczne → testy nie potrzebują `perform_enqueued_jobs`.
 - Mailer + `WebPushNotifier` są async → `assert_enqueued_emails` / `assert_enqueued_with(job: WebPushNotifier)`.

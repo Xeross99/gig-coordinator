@@ -4,8 +4,8 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   test "GET /login renders login form" do
     get login_path
     assert_response :success
-    assert_select "form[action=?]", magic_links_path
-    assert_select "input[type=email][name='magic_link[email]']"
+    assert_select "form[action=?]", login_codes_path
+    assert_select "input[type=email][name='login_code[email]']"
   end
 
   test "DELETE /session destroys session and redirects to login" do

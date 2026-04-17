@@ -38,8 +38,10 @@ module HostAdmin
         post host_events_path, params: { event: {
           name: "Nowy event",
           event_date: date.to_s,
-          start_time: "08:00",
-          end_time:   "11:30",
+          start_hour:   8,
+          start_minute: 0,
+          duration_hours:   3,
+          duration_minutes: 30,
           pay_per_person: 100,
           capacity: 5
         } }
@@ -48,6 +50,7 @@ module HostAdmin
       assert_equal hosts(:jan), new_event.host
       assert_equal date, new_event.scheduled_at.to_date
       assert_equal date, new_event.ends_at.to_date
+      assert_equal 3.5 * 3600, (new_event.ends_at - new_event.scheduled_at).to_i
       assert_redirected_to host_event_path(new_event)
     end
 

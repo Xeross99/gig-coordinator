@@ -8,23 +8,23 @@
 
   <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
     <div class="bg-white px-6 py-12 shadow-sm sm:rounded-lg sm:px-12">
-      <%= form_with url: magic_links_path, scope: :magic_link, method: :post, local: true, class: "space-y-6" do |f| %>
+      <%= form_with url: login_codes_path, scope: :login_code, method: :post, local: true, class: "space-y-6" do |f| %>
         <div>
           <%= f.label :email, t("auth.email_label"), class: "block text-sm/6 font-medium text-stone-900" %>
           <div class="mt-2">
-            <%= f.email_field :email, id: "magic_link_email", required: true, autocomplete: "email",
+            <%= f.email_field :email, id: "login_code_email", required: true, autocomplete: "email",
                   class: "block w-full rounded-md bg-white px-3 py-1.5 text-base text-stone-900 outline-1 -outline-offset-1 outline-stone-300 placeholder:text-stone-400 focus:outline-2 focus:-outline-offset-2 focus:outline-stone-900 sm:text-sm/6" %>
           </div>
         </div>
 
         <div>
-          <%= f.submit t("auth.send_link"),
+          <%= f.submit t("auth.send_code"),
                 class: "flex w-full justify-center rounded-md bg-stone-900 px-3 py-2 text-sm/6 font-semibold text-white shadow-xs hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900 transition-transform active:scale-[0.98]" %>
         </div>
       <% end %>
 
       <p class="mt-8 text-center text-xs text-stone-500">
-        Logowanie odbywa się przez magic-link wysłany na Twój adres e-mail. Link wygasa po 15 minutach.
+        Wyślemy 5-cyfrowy kod logowania na Twój adres e-mail. Kod wygasa po 15 minutach.
       </p>
     </div>
   </div>

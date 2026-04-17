@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_17_105852) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_17_212618) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -62,6 +62,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_105852) do
     t.string "location", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_hosts_on_email", unique: true
+  end
+
+  create_table "login_codes", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
+    t.integer "authenticatable_id", null: false
+    t.string "authenticatable_type", null: false
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "ip_address"
+    t.datetime "updated_at", null: false
+    t.datetime "used_at"
+    t.string "user_agent"
+    t.index ["authenticatable_type", "authenticatable_id"], name: "index_login_codes_on_authenticatable"
+    t.index ["code"], name: "index_login_codes_on_code"
+    t.index ["expires_at"], name: "index_login_codes_on_expires_at"
   end
 
   create_table "participations", force: :cascade do |t|

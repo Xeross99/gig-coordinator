@@ -43,14 +43,23 @@ module HostAdmin
     end
 
     def event_params
-      raw = params.require(:event).permit(:name, :event_date, :start_time, :end_time, :pay_per_person, :capacity)
+      raw = params.require(:event).permit(:name, :event_date,
+                                          :start_hour, :start_minute,
+                                          :duration_hours, :duration_minutes,
+                                          :pay_per_person, :capacity)
 
-      date = raw.delete(:event_date)
-      start_time = raw.delete(:start_time)
-      end_time   = raw.delete(:end_time)
+      date         = raw.delete(:event_date)
+      start_hour   = raw.delete(:start_hour)
+      start_minute = raw.delete(:start_minute)
+      hours        = raw.delete(:duration_hours).to_i
+      minutes      = raw.delete(:duration_minutes).to_i
 
-      raw[:scheduled_at] = Time.zone.parse("#{date} #{start_time}") if date.present? && start_time.present?
-      raw[:ends_at]      = Time.zone.parse("#{date} #{end_time}")   if date.present? && end_time.present?
+      if date.present? && start_hour.present?
+        time_str  = format("%02d:%02d", start_hour.to_i, start_minute.to_i)
+        scheduled = Time.zone.parse("#{date} #{time_str}")
+        raw[:scheduled_at] = scheduled
+        raw[:ends_at]      = scheduled + hours.hours + minutes.minutes
+      end
 
       raw
     end

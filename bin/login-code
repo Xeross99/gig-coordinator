@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+# Usage: bin/login-code <email>
+#    or: bin/login-code (lists all hosts and users with fresh 5-digit codes)
+
+require_relative "../config/environment"
+
+def code_for(record)
+  LoginCode.generate_for(record)
+end
+
+def base_url
+  if (host = ENV["PUBLIC_HOST"]).present?
+    "https://#{host}"
+  else
+    "http://localhost:#{ENV.fetch('PORT', 3000)}"
+  end
+end
+
+if email = ARGV[0]
+  record = Host.find_by(email: email.downcase) || User.find_by(email: email.downcase)
+  abort "Nie znaleziono rekordu z emailem #{email}" unless record
+  code = code_for(record)
+  puts "#{record.class.name}: #{record.display_name} (#{record.email})"
+  puts "Kod: #{code.code} (ważny do #{code.expires_at.strftime('%H:%M')})"
+  puts "Wejdź na: #{base_url}/logowanie, wpisz e-mail, potem podaj kod."
+else
+  (Host.all.to_a + User.all.to_a).each do |r|
+    code = code_for(r)
+    puts "#{r.class.name.ljust(5)} #{r.display_name.ljust(22)} #{r.email.ljust(35)} kod: #{code.code}"
+  end
+end

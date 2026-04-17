@@ -8,7 +8,7 @@ class AcceptEventLiveUpdateTest < ApplicationSystemTestCase
 
     # Host session: visit own event show
     using_session("host") do
-      visit verify_magic_link_url(token: host.signed_id(purpose: :magic_link, expires_in: 15.minutes))
+      sign_in_as(host)
       assert_current_path host_root_path
       click_on event.name
       assert_text "Lapanie kur"
@@ -20,7 +20,7 @@ class AcceptEventLiveUpdateTest < ApplicationSystemTestCase
 
     # User session: accept the event
     using_session("user") do
-      visit verify_magic_link_url(token: user.signed_id(purpose: :magic_link, expires_in: 15.minutes))
+      sign_in_as(user)
       assert_current_path root_path
       click_on event.name
       click_on I18n.t("events.accept")

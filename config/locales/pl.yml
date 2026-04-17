@@ -28,9 +28,15 @@ pl:
   auth:
     login_title: "Zaloguj się"
     email_label: "Adres e-mail"
-    send_link: "Wyślij link logowania"
-    check_email: "Jeśli adres jest w systemie, wysłaliśmy link logowania."
-    invalid_token: "Ten link wygasł lub jest nieprawidłowy."
+    send_code: "Wyślij kod logowania"
+    code_sent: "Jeśli adres jest w systemie, wysłaliśmy kod logowania."
+    code_prompt: "Wpisz kod z e-maila"
+    code_intro_html: "Wysłaliśmy 5-cyfrowy kod na %{email}."
+    code_digits_label: "Kod z e-maila"
+    code_hint: "Kod wygasa po 15 minutach. Nie przyszedł? Sprawdź folder spam."
+    submit_code: "Zaloguj się"
+    change_email: "Zmień adres e-mail"
+    invalid_code: "Nieprawidłowy lub wygasły kod."
     login_required: "Zaloguj się, aby kontynuować."
     logout: "Wyloguj"
   events:
@@ -46,7 +52,12 @@ pl:
     pay_per_person: "Zapłata za osobę"
     starts_at: "Początek"
     ends_at: "Koniec"
+    duration: "Przewidywana długość"
     host: "Organizator"
+    host_label: "W imieniu organizatora"
+    new_event: "Zaplanuj wydarzenie"
+    new_event_forbidden: "Tylko Mistrz może planować łapania."
+    created: "Event dodany. Zaproszenia już poszły."
     open_in_maps: "Otwórz w Google Maps"
   host_panel:
     title: "Panel organizatora"
@@ -55,11 +66,9 @@ pl:
     profile: "Mój profil"
     roster: "Uczestnicy"
   mailers:
-    magic_link:
-      subject: "Twój link logowania"
-      hello: "Cześć %{name}!"
-      intro: "Kliknij poniższy link, aby zalogować się do aplikacji. Link wygaśnie za 15 minut."
-      button: "Zaloguj się"
+    hello: "Cześć %{name}!"
+    login_code:
+      subject: "Twój kod logowania"
     promotion:
       subject: "Awansowałeś na listę potwierdzonych"
       body: "Ktoś zrezygnował z eventu \"%{name}\". Jesteś teraz na liście potwierdzonych!"

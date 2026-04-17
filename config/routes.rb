@@ -1,11 +1,12 @@
 Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Auth (magic link) — paths PL, helpers stay English for view/test compatibility.
-  get    "logowanie",             to: "sessions#new",       as: :login
-  post   "linki-logowania",       to: "magic_links#create", as: :magic_links
-  get    "logowanie/weryfikacja", to: "magic_links#show",   as: :verify_magic_link
-  delete "sesja",                 to: "sessions#destroy",   as: :session
+  # Auth (5-digit code) — paths PL, helpers stay English for view/test compatibility.
+  get    "logowanie",             to: "sessions#new",        as: :login
+  post   "kody-logowania",        to: "login_codes#create",  as: :login_codes
+  get    "logowanie/weryfikacja", to: "login_codes#new",     as: :verify_login
+  post   "logowanie/weryfikacja", to: "login_codes#verify"
+  delete "sesja",                 to: "sessions#destroy",    as: :session
 
   # Host panel (URL /panel/..., controllers HostAdmin::*)
   namespace :host, path: "panel", module: "host_admin" do
@@ -16,7 +17,7 @@ Rails.application.routes.draw do
 
   # Worker app (root = events feed)
   root "events#index"
-  resources :events, only: %i[index show], path: "eventy" do
+  resources :events, only: %i[index show new create], path: "eventy", path_names: { new: "nowy" } do
     resource :participation, only: %i[create destroy], path: "uczestnictwo" do
       post :accept
       post :decline

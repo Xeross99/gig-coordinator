@@ -22,8 +22,8 @@
   <% end %>
 <% end %>
 
-<%= turbo_stream_from :events %>
-<%= turbo_stream_from current_user, :events %>
+<%# :events and [current_user, :events] streams are subscribed globally in
+    the application layout so the `visit` action reaches workers on any page. %>
 
 <% pending_event_ids = Set.new(current_user.participations.reserved.where("reserved_until > ?", Time.current).pluck(:event_id)) %>
 

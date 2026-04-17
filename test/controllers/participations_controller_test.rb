@@ -222,7 +222,7 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
 
     # Serialize via the same lock the controller uses — test semantic correctness (not race)
     users_list.each do |u|
-      get verify_magic_link_path(token: u.signed_id(purpose: :magic_link, expires_in: 15.minutes))
+      sign_in_as(u)
       post event_participation_path(@event)
     end
 

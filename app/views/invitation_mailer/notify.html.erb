@@ -1,4 +1,4 @@
-<h1><%= t("mailers.magic_link.hello", name: @user.first_name) %></h1>
+<h1><%= t("mailers.hello", name: @user.first_name) %></h1>
 <p><%= t("mailers.invitation.body", event: @event.name) %></p>
 <p>Start: <strong><%= l(@event.scheduled_at, format: :long) %></strong></p>
 <p>Potwierdź do: <strong><%= l(@deadline, format: :short) %></strong></p>

@@ -36,5 +36,5 @@ if Rails.env.development?
   end
 
   puts "Seeded: #{Host.count} hosts, #{User.count} users, #{Event.count} events."
-  puts "Log in with any seeded email — magic-link URL is printed to log/development.log."
+  puts "Log in with any seeded email — bin/login-code <email> prints a 5-digit code."
 end

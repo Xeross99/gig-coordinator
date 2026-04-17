@@ -1,0 +1,49 @@
+<% content_for(:title) { t("auth.code_prompt") } %>
+<div class="pt-10 pb-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <%= image_tag "/icon.svg", alt: "Gig Coordinator", class: "mx-auto h-16 w-16 rounded-xl shadow-sm" %>
+    <h1 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-stone-900"><%= t("auth.code_prompt") %></h1>
+    <p class="mt-2 text-center text-sm text-stone-600">
+      <%= t("auth.code_intro_html", email: tag.strong(@email)).html_safe %>
+    </p>
+  </div>
+
+  <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+    <div class="bg-white px-6 py-12 shadow-sm sm:rounded-lg sm:px-12">
+      <%= form_with url: verify_login_path, method: :post, local: true,
+            data: { controller: "code-input" },
+            class: "space-y-6" do |f| %>
+        <div>
+          <label class="block text-sm/6 font-medium text-stone-900 text-center mb-3">
+            <%= t("auth.code_digits_label") %>
+          </label>
+          <div class="flex justify-center gap-2 sm:gap-3">
+            <% 5.times do |i| %>
+              <input type="text"
+                     inputmode="numeric"
+                     pattern="[0-9]*"
+                     maxlength="1"
+                     autocomplete="<%= i.zero? ? "one-time-code" : "off" %>"
+                     data-code-input-target="digit"
+                     data-action="input->code-input#input keydown->code-input#keydown paste->code-input#paste"
+                     class="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl sm:text-3xl font-semibold rounded-md bg-white text-stone-900 outline-1 -outline-offset-1 outline-stone-300 focus:outline-2 focus:-outline-offset-2 focus:outline-stone-900" />
+            <% end %>
+          </div>
+          <input type="hidden" name="code" data-code-input-target="merged" />
+        </div>
+
+        <div>
+          <%= submit_tag t("auth.submit_code"),
+                class: "flex w-full justify-center rounded-md bg-stone-900 px-3 py-2 text-sm/6 font-semibold text-white shadow-xs hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900 transition-transform active:scale-[0.98]" %>
+        </div>
+      <% end %>
+
+      <div class="mt-8 text-center text-xs text-stone-500 space-y-2">
+        <p><%= t("auth.code_hint") %></p>
+        <p>
+          <%= link_to t("auth.change_email"), login_path, class: "font-medium text-stone-900 underline" %>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -35,6 +35,12 @@
            data-push-subscription-vapid-public-key-value="<%= Rails.application.credentials.dig(:vapid, :public_key) %>"
            data-push-subscription-endpoint-url-value="<%= push_subscriptions_path %>"
            data-push-subscription-csrf-token-value="<%= form_authenticity_token %>"></div>
+      <%# Global events stream — every signed-in worker (on any page) gets the
+          `visit` Turbo::StreamAction when a new event is broadcast, which
+          teleports them to the new event page. Append/replace/remove actions
+          targeting #events_list silently no-op on pages without that element. %>
+      <%= turbo_stream_from :events %>
+      <%= turbo_stream_from current_user, :events %>
     <% end %>
     <% if signed_in? %>
       <% me = current_user || current_host %>
@@ -93,6 +99,19 @@
                   Mój profil
                 <% end %>
               </div>
+
+              <% if current_user&.master? %>
+                <div class="py-1">
+                  <%= link_to new_event_path,
+                              class: "group/item flex items-center px-4 py-2 text-sm text-stone-700 focus:bg-stone-100 focus:text-stone-900 focus:outline-hidden" do %>
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
+                         class="mr-3 size-5 text-stone-400 group-focus/item:text-stone-500">
+                      <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" clip-rule="evenodd" fill-rule="evenodd"/>
+                    </svg>
+                    <%= t("events.new_event") %>
+                  <% end %>
+                </div>
+              <% end %>
 
               <% unless current_host %>
                 <div class="py-1">
