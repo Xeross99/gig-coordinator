@@ -20,11 +20,17 @@ ssh:
   port: 10215
   user: root
 
-# Kamal Proxy listens on the one public port VPS gives us (20215) and routes to
-# the Thruster/Rails container on its internal :80. SSL off — LE can't issue certs
-# without port 80 or 443 being externally reachable, and edge front-ends neither.
+# Two hosts are registered so Kamal Proxy matches both URLs:
+# - your-vps.example.com    → plain HTTP on :20215 (direct IPv4)
+# - your-domain.example.com → HTTPS on :443, terminated by edge reverse proxy
+#   (edge front-ends TLS and forwards HTTP to [IPv6]:20215).
+# SSL stays off on Kamal Proxy itself — LE would need port 80 or 443 externally
+# reachable, and edge front-ends neither on IPv4. production.rb sets
+# assume_ssl so Rails trusts X-Forwarded-Proto for the your-domain.example.com path.
 proxy:
-  host: your-vps.example.com
+  hosts:
+    - your-vps.example.com
+    - your-domain.example.com
   app_port: 80
   ssl: false
   run:
@@ -47,10 +53,11 @@ env:
     # Run Solid Queue inside Puma (no separate `job:` host, we only have one VPS).
     SOLID_QUEUE_IN_PUMA: true
 
-    # Host + port used by mailer URLs and route helpers generating absolute URLs.
-    PUBLIC_HOST: your-vps.example.com
-    PUBLIC_PORT: "20215"
-    PUBLIC_PROTOCOL: http
+    # Primary public URL — mailer links and absolute route helpers build on this.
+    # edge front-ends TLS and forwards to our IPv6:20215, so protocol is https
+    # and no port (default 443) is needed.
+    PUBLIC_HOST: your-domain.example.com
+    PUBLIC_PROTOCOL: https
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"

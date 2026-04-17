@@ -24,14 +24,11 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
-
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
-
-  # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  # edge front-ends TLS for your-domain.example.com and forwards HTTP to our
+  # IPv6:20215 — trust X-Forwarded-Proto so cookies are flagged Secure and
+  # generated URLs use https://. force_ssl stays off because direct IPv4
+  # access via http://your-vps.example.com:20215 must keep working too.
+  config.assume_ssl = true
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
@@ -89,9 +86,10 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Allow the configured PUBLIC_HOST for Rails' host authorization middleware.
-  # Without this, requests hit a DNS rebinding error before reaching the app.
+  # Allow both the edge subdomain (HTTPS-fronted) and the raw VPS host
+  # (HTTP on :20215) through Rails' host authorization middleware.
   config.hosts << ENV.fetch("PUBLIC_HOST", "localhost")
+  config.hosts << "your-vps.example.com"
 
   # Health checks come via Kamal Proxy's internal network → exclude.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
