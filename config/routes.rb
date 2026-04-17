@@ -19,6 +19,8 @@ Rails.application.routes.draw do
   resources :events, only: %i[index show], path: "eventy" do
     resource :participation, only: %i[create destroy], path: "uczestnictwo"
   end
+  resources :hosts,              only: :index,             path: "organizatorzy"
+  resources :users,              only: :index,             path: "pracownicy"
   resource  :profile,            only: %i[edit update],    path: "profil"
   resources :push_subscriptions, only: %i[create destroy], path: "subskrypcje-push"
 

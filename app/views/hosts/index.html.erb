@@ -1,0 +1,32 @@
+<% content_for(:title) { "Wszyscy organizatorzy" } %>
+<%= render "shared/breadcrumbs", crumbs: [["Wszyscy organizatorzy", nil]] %>
+
+<h1 class="text-2xl font-semibold mb-4">Wszyscy organizatorzy</h1>
+
+<% if @hosts.any? %>
+  <ul class="space-y-3">
+    <% @hosts.each do |host| %>
+      <% upcoming_count = @upcoming_counts[host.id] || 0 %>
+      <li class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4">
+        <% if host.photo.attached? %>
+          <%= image_tag host.photo.variant(resize_to_fill: [56, 56]),
+                        class: "size-14 rounded-full object-cover shrink-0" %>
+        <% else %>
+          <div class="size-14 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold shrink-0">
+            <%= host.first_name[0] %><%= host.last_name[0] %>
+          </div>
+        <% end %>
+        <div class="min-w-0 flex-1">
+          <div class="font-medium text-stone-900 truncate"><%= host.display_name %></div>
+          <div class="text-sm text-stone-500 truncate"><%= host.location %></div>
+        </div>
+        <div class="text-right text-xs shrink-0">
+          <div class="text-stone-900 font-semibold tabular-nums"><%= upcoming_count %></div>
+          <div class="text-stone-500"><%= upcoming_count == 1 ? "event" : "eventy" %></div>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <div class="text-stone-500 py-8 text-center">Brak organizatorów.</div>
+<% end %>

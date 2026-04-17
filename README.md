@@ -8,6 +8,7 @@ Rails 8.1 aplikacja do koordynacji pracy dorywczej w rolnictwie. **Organizatorzy
 - **SQLite** + Active Storage (zdjęcia hostów i userów)
 - **Hotwire** — Turbo + Stimulus
 - **Tailwind v4** (watcher w Procfile.dev, custom keyframes w `@theme`)
+- **`@tailwindplus/elements`** (dropdown web-components, pinned w importmap)
 - **Solid Queue / Solid Cache / Solid Cable** (in-DB, bez Redis)
 - **web-push** (VAPID)
 - **rails-i18n** (polska lokalizacja + transliteracja slugów)
@@ -75,13 +76,14 @@ Właściciel eventów. Zarządza nimi z panelu `/host/*`.
 Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje push.
 
 **Tabela `users`:**
-| Kolumna     | Typ                      | Uwagi                         |
-|-------------|--------------------------|-------------------------------|
-| id          | integer PK               |                               |
-| first_name  | string, NOT NULL         |                               |
-| last_name   | string, NOT NULL         |                               |
-| email       | string, NOT NULL, UNIQUE | case-insensitive (normalized) |
-| timestamps  |                          |                               |
+| Kolumna     | Typ                      | Uwagi                                                     |
+|-------------|--------------------------|-----------------------------------------------------------|
+| id          | integer PK               |                                                           |
+| first_name  | string, NOT NULL         |                                                           |
+| last_name   | string, NOT NULL         |                                                           |
+| email       | string, NOT NULL, UNIQUE | case-insensitive (normalized)                             |
+| title       | integer, DEFAULT 0, idx  | enum ranga: `rookie` (0) → `master` (3)         |
+| timestamps  |                          |                                                           |
 
 **Relacje:**
 - `has_many :participations, dependent: :destroy` — uczestnictwa (confirmed/waitlist/cancelled)
@@ -92,11 +94,13 @@ Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje
 
 **Walidacje:** `first_name`, `last_name`, `email` (format + unikalność).
 
-**Metody instancji:** `display_name`.
+**Enum `:title`:** 4 rangi (`rookie`, `member`, `veteran`, `master`). Default w bazie = 0 (`rookie`) — każdy nowy user zaczyna jako Nowy, promocja ręcznie przez konsolę. Labelki w `config/locales/pl.yml` pod `user.titles.*`; `user.display_title` zwraca przetłumaczony tekst.
+
+**Metody instancji:** `display_name`, `display_title`.
 
 **Normalizacje:** `email` → strip + downcase.
 
-**Profil:** `/profil/edit` (`ProfilesController`) pozwala zmienić **tylko zdjęcie**. Imię, nazwisko i email są read-only w UI (edycja przez `rails console`) — decyzja projektowa: email jest kluczem magic-linka, zmiana z poziomu UI otwierałaby wektor ataku.
+**Profil:** `/profil/edit` (`ProfilesController`) pozwala zmienić **tylko zdjęcie**. Imię, nazwisko, email i ranga są read-only w UI (edycja przez `rails console`) — decyzja projektowa: email jest kluczem magic-linka, zmiana z poziomu UI otwierałaby wektor ataku.
 
 ---
 
@@ -310,7 +314,7 @@ end
 resource  :profile, only: %i[edit update], path: "profil"
 ```
 
-Mapowania: `/login` → `/logowanie`, `/session` → `/sesja`, `/host` → `/panel`, `/events` → `/eventy`, `/profile` → `/profil`, `/push_subscriptions` → `/subskrypcje-push`, `/events/:id/participation` → `/eventy/:id/uczestnictwo`.
+Mapowania: `/login` → `/logowanie`, `/session` → `/sesja`, `/host` → `/panel`, `/events` → `/eventy`, `/profile` → `/profil`, `/push_subscriptions` → `/subskrypcje-push`, `/events/:id/participation` → `/eventy/:id/uczestnictwo`, `/hosts` → `/organizatorzy`, `/users` → `/pracownicy`.
 
 # Namespace Host panel
 
@@ -328,7 +332,7 @@ Dodając nowe kontrolery host-scoped, zachowaj ten wzorzec (`path:` PL, `as:`/mo
 
 # Layouty i partials
 
-- **`layouts/application.html.erb`** — aplikacja usera. Sticky navbar z avatarem (zdjęcie lub inicjały), linkiem do profilu i logoutem. `<main class="max-w-md mx-auto">`.
+- **`layouts/application.html.erb`** — aplikacja usera. Sticky navbar z avatarem (zdjęcie lub inicjały) + imię + ranga, plus **dropdown menu** (`<el-dropdown>` + `<el-menu popover>` z `@tailwindplus/elements`) z trzema oddzielonymi sekcjami: (1) Mój profil, (2) Wszyscy pracownicy + Wszyscy organizatorzy, (3) Wyloguj. `<main class="max-w-md mx-auto">`.
 - **`layouts/host_admin.html.erb`** — panel hosta. Prosty header, `max-w-3xl`.
 - **`layouts/auth.html.erb`** — strony publiczne (login). Bez navbaru, bez `max-w-md` — pełen viewport. Używane przez `SessionsController#new` via `layout "auth", only: :new`.
 - **`shared/_toast.html.erb`** — flash jako dismissable toast (zielony check / czerwony x), auto-dismiss 5s przez Stimulus `toast_controller.js`.
@@ -341,6 +345,15 @@ Dodając nowe kontrolery host-scoped, zachowaj ten wzorzec (`path:` PL, `as:`/mo
 ```
 
 Każdy widok ustawia własny: `<% content_for(:title) { @event.name } %>`.
+
+---
+
+# Widoki społecznościowe (user-facing)
+
+Dwie listy dostępne z dropdown menu w navbarze, obie tylko dla zalogowanych **userów** (hosts → redirect na login):
+
+- **`/pracownicy`** (`UsersController#index`, `users_path`) — lista wszystkich pracowników, sortowana po randze **desc** (Mistrz na górze → Nowy na dole), w obrębie rangi alfabetycznie. Pokazuje avatar + imię + display_title + licznik 🐔 zaliczonych łapań (confirmed participations na eventach z `completed_at`). Liczniki z jednego dodatkowego `GROUP BY` query — zero N+1.
+- **`/organizatorzy`** (`HostsController#index`, `hosts_path`) — lista wszystkich organizatorów z avatarem, lokalizacją i licznikiem nadchodzących eventów.
 
 ---
 

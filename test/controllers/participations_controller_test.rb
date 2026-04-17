@@ -60,6 +60,36 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     assert p.confirmed?, "expected re-join to land as confirmed when capacity available"
   end
 
+  test "cancelling a confirmed spot and re-joining lands at the END of the waitlist when event is full" do
+    @event.update!(capacity: 2)
+
+    # Start: ala + bartek confirmed (fill capacity), cezary + dominika on waitlist.
+    Participation.create!(event: @event, user: users(:ala),      status: :confirmed, position: 1)
+    Participation.create!(event: @event, user: users(:bartek),   status: :confirmed, position: 2)
+    Participation.create!(event: @event, user: users(:cezary),   status: :waitlist,  position: 1)
+    Participation.create!(event: @event, user: users(:dominika), status: :waitlist,  position: 2)
+
+    # Ala cancels → cezary gets promoted to confirmed; dominika still waitlist #2.
+    delete event_participation_path(@event)
+    assert users(:cezary).participations.find_by(event: @event).confirmed?,
+           "expected cezary to be promoted after ala cancels"
+    assert users(:dominika).participations.find_by(event: @event).waitlist?,
+           "expected dominika to stay on waitlist"
+
+    # Ala re-joins. Event is full (bartek + cezary). She must land at the END of the
+    # waitlist (after dominika), not skip ahead of people who were already waiting.
+    post event_participation_path(@event)
+
+    ala_p = users(:ala).participations.find_by(event: @event)
+    assert ala_p.waitlist?, "expected ala to land on waitlist when event is full"
+    assert_operator ala_p.position, :>, users(:dominika).participations.find_by(event: @event).position,
+                    "expected ala to land after dominika (end of waitlist)"
+
+    waitlist_order = @event.participations.waitlist.order(:position).map(&:user)
+    assert_equal [ users(:dominika), users(:ala) ], waitlist_order,
+                 "waitlist order should be [dominika, ala] — earlier waiters keep their spot"
+  end
+
   test "DELETE when not participating does nothing" do
     delete event_participation_path(@event)
     assert_redirected_to event_path(@event)

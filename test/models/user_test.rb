@@ -30,4 +30,19 @@ class UserTest < ActiveSupport::TestCase
     assert User.reflect_on_association(:participations)
     assert User.reflect_on_association(:push_subscriptions)
   end
+
+  test "title defaults to rookie (0)" do
+    user = User.create!(first_name: "A", last_name: "B", email: "fresh@example.com")
+    assert_equal "rookie", user.title
+  end
+
+  test "title enum exposes all four ranks" do
+    assert_equal %w[rookie member veteran master], User.titles.keys
+  end
+
+  test "display_title returns the i18n-translated label" do
+    user = User.new(title: :master)
+    assert_equal I18n.t("user.titles.master"), user.display_title
+    assert_equal "Mistrz", user.display_title
+  end
 end

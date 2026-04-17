@@ -3,7 +3,10 @@ class User < ApplicationRecord
   has_many :events, through: :participations
   has_many :push_subscriptions, dependent: :destroy
   has_many :sessions, as: :authenticatable, dependent: :destroy
+
   has_one_attached :photo
+
+  enum :title, { rookie: 0, member: 1, veteran: 2, master: 3 }
 
   normalizes :email, with: ->(v) { v.to_s.strip.downcase }
 
@@ -13,5 +16,9 @@ class User < ApplicationRecord
 
   def display_name
     "#{first_name} #{last_name}"
+  end
+
+  def display_title
+    I18n.t("user.titles.#{title}", default: title.to_s.humanize)
   end
 end

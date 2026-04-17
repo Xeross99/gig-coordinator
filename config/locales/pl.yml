@@ -19,6 +19,12 @@ pl:
         format: "%n %u"
         separator: ","
         delimiter: " "
+  user:
+    titles:
+      rookie:         "Nowy"
+      member:     "Członek"
+      veteran: "Weteran"
+      master:       "Mistrz"
   auth:
     login_title: "Zaloguj się"
     email_label: "Adres e-mail"
