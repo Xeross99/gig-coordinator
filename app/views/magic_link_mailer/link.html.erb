@@ -1,4 +1,97 @@
-<h1><%= t("mailers.magic_link.hello", name: @record.first_name) %></h1>
-<p><%= t("mailers.magic_link.intro") %></p>
-<p><a href="<%= @url %>" style="display:inline-block;padding:12px 20px;background:#111;color:#fff;text-decoration:none;border-radius:8px"><%= t("mailers.magic_link.button") %></a></p>
-<p style="color:#666;font-size:12px"><%= @url %></p>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body style="width:100%;background-color:#f5f5f4;margin:0;padding:0;-webkit-text-size-adjust:100%">
+  <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f5f5f4">
+    <tr>
+      <td style="padding:32px 16px">
+        <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden">
+
+          <!-- Header -->
+          <tr>
+            <td bgcolor="#f9fafb" style="background-color:#f9fafb;padding:20px 24px;border-bottom:1px solid #e7e5e4;border-top-left-radius:12px;border-top-right-radius:12px">
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-right:14px;vertical-align:middle">
+                    <img src="<%= root_url %>icon-192.png" width="44" height="44" alt="Gig Coordinator"
+                         style="display:block;border:0;border-radius:8px">
+                  </td>
+                  <td style="vertical-align:middle">
+                    <span style="font-size:22px;font-family:Georgia,'Times New Roman',serif;color:#0c0a09;font-weight:bold;letter-spacing:0.3px">
+                      Gig Coordinator
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Title -->
+          <tr>
+            <td style="padding:40px 20px 0;text-align:center">
+              <span style="font-size:30px;font-family:Georgia,'Times New Roman',serif;color:#0c0a09;font-weight:normal">
+                Cześć <%= @record.first_name %>!
+              </span>
+            </td>
+          </tr>
+
+          <!-- Subtitle -->
+          <tr>
+            <td style="padding:12px 40px 24px;text-align:center">
+              <span style="font-size:15px;font-family:Arial,Helvetica,sans-serif;color:#57534e;line-height:1.6">
+                Kliknij przycisk poniżej, żeby zalogować się do aplikacji.
+                <br>
+                Link wygaśnie za <strong style="color:#0c0a09">15 minut</strong>.
+              </span>
+            </td>
+          </tr>
+
+          <!-- Button -->
+          <tr>
+            <td style="padding:8px 40px 16px;text-align:center">
+              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto">
+                <tr>
+                  <td bgcolor="#0c0a09" style="background-color:#0c0a09;border-radius:8px">
+                    <a href="<%= @url %>" target="_blank"
+                       style="display:inline-block;padding:14px 36px;font-size:15px;font-family:Arial,Helvetica,sans-serif;color:#ffffff;text-decoration:none;font-weight:bold;letter-spacing:0.3px">
+                      Zaloguj się
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Raw URL fallback -->
+          <tr>
+            <td style="padding:16px 40px 32px;text-align:center">
+              <span style="font-size:12px;font-family:Arial,Helvetica,sans-serif;color:#a8a29e;line-height:1.5">
+                Jeśli przycisk nie działa, skopiuj ten adres do przeglądarki:
+                <br>
+                <a href="<%= @url %>" style="color:#78716c;word-break:break-all"><%= @url %></a>
+              </span>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td bgcolor="#f9fafb" style="background-color:#f9fafb;padding:24px 20px;text-align:center;border-top:1px solid #e7e5e4;border-bottom-left-radius:12px;border-bottom-right-radius:12px">
+              <span style="font-size:13px;font-family:Arial,Helvetica,sans-serif;font-weight:bold;color:#0c0a09">
+                Gig Coordinator
+              </span>
+              <br>
+              <span style="font-size:12px;font-family:Arial,Helvetica,sans-serif;color:#a8a29e">
+                Wydarzenie w wygodny sposób
+              </span>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

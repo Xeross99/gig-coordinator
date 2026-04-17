@@ -14,7 +14,8 @@ if Rails.env.development?
     { first_name: "Michał",   last_name: "Wiśniewski",  email: "example2@gigcoordinator.pl",    title: 0 },
     { first_name: "Marcin",   last_name: "Lewandowski",       email: "example3@gigcoordinator.pl",    title: 1 },
     { first_name: "Mateusz",  last_name: "Zieliński",  email: "example4@gigcoordinator.pl",    title: 2 },
-    { first_name: "Ksawery",  last_name: "Szymański",     email: "example5@gigcoordinator.pl",    title: 1 }
+    { first_name: "Ksawery",  last_name: "Szymański",     email: "example5@gigcoordinator.pl",    title: 1 },
+    { first_name: "Piotr",    last_name: "Dąbrowski",       email: "example6@gigcoordinator.pl",    title: 1 }
   ].each do |attrs|
     User.find_or_create_by!(email: attrs[:email]) do |u|
       u.first_name = attrs[:first_name]
@@ -24,19 +25,13 @@ if Rails.env.development?
   end
 
   unless host.events.exists?
+    next_thursday = Date.current.next_occurring(:thursday)
     host.events.create!(
-      name: "Lapanie kur",
-      scheduled_at: 2.days.from_now.change(hour: 8),
-      ends_at:      2.days.from_now.change(hour: 11),
+      name: "Kowalski 3 auta",
+      scheduled_at: next_thursday.to_time.change(hour: 19, min: 0),
+      ends_at:      next_thursday.to_time.change(hour: 22, min: 30),
       pay_per_person: 150.0,
       capacity: 4
-    )
-    host.events.create!(
-      name: "Zbieranie jabłek",
-      scheduled_at: 5.days.from_now.change(hour: 9),
-      ends_at:      5.days.from_now.change(hour: 17),
-      pay_per_person: 180.0,
-      capacity: 6
     )
   end
 
