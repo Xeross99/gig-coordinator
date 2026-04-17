@@ -23,6 +23,7 @@ bin/rails db:seed                    # sample hostów, userów i eventów
 bin/rails test                       # unit + integration
 bin/rails test:system                # Capybara + headless Chrome
 bin/login-link <email>               # wypisz URL magic-linka (honoruje PUBLIC_HOST + PORT)
+bin/ci                               # pełny CI run: setup, rubocop, gem audit, brakeman, testy, seedy
 ```
 
 Credentiale (patrz `CLAUDE.md`): Gmail SMTP + VAPID keys + deliverable `subject` mailto.
@@ -352,6 +353,7 @@ Dodając nowe kontrolery host-scoped, zachowaj ten wzorzec (`path:` PL, `as:`/mo
 - **`layouts/auth.html.erb`** — strony publiczne (login). Bez navbaru, bez `max-w-md` — pełen viewport. Używane przez `SessionsController#new` via `layout "auth", only: :new`.
 - **`shared/_toast.html.erb`** — flash jako dismissable toast (zielony check / czerwony x), auto-dismiss 5s przez Stimulus `toast_controller.js`.
 - **`shared/_breadcrumbs.html.erb`** — breadcrumbs wg Tailwind UI. Locals: `crumbs:` (tablica `[label, path]`, `path: nil` = current page), `home_path:` (domyślnie `root_path`, `host_root_path` na panel hosta).
+- **`shared/_turbo_confirm.html.erb`** — `<el-dialog>` modal zastępujący natywny `confirm()` dla `data-turbo-confirm`. Stimulus `turbo_confirm_controller.js` w `connect()` podmienia `Turbo.config.forms.confirm` na ten dialog. Locals: `title:`, `message:`, `confirm_label:`, `cancel_label:`. Etykiety przycisków ASCII-only (PL znaki w defaults miewały problem z encodingiem).
 
 **Tytuły stron** przez `content_for(:title)`:
 

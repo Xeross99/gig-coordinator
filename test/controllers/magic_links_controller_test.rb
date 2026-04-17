@@ -59,5 +59,4 @@ class MagicLinksControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to login_path
   end
-
 end

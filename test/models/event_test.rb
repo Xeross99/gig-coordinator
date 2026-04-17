@@ -45,7 +45,7 @@ class EventTest < ActiveSupport::TestCase
     past  = Event.create!(valid_attrs(scheduled_at: 3.days.ago,   ends_at: 3.days.ago + 2.hours, name: "past"))
     soon  = Event.create!(valid_attrs(scheduled_at: 1.day.from_now, ends_at: 1.day.from_now + 2.hours, name: "soon"))
     later = Event.create!(valid_attrs(scheduled_at: 5.days.from_now, ends_at: 5.days.from_now + 2.hours, name: "later"))
-    assert_equal [soon, later], Event.upcoming.to_a
+    assert_equal [ soon, later ], Event.upcoming.to_a
     refute_includes Event.upcoming, past
   end
 

@@ -29,7 +29,7 @@ class ParticipationTest < ActiveSupport::TestCase
     reserved  = Participation.create!(event: @event, user: users(:bartek),  status: :reserved,  position: 1,
                                       reserved_until: 1.hour.from_now)
     waitlist  = Participation.create!(event: @event, user: users(:cezary),  status: :waitlist,  position: 1)
-    cancelled = Participation.create!(event: @event, user: users(:dominika),status: :cancelled, position: 0)
+    cancelled = Participation.create!(event: @event, user: users(:dominika), status: :cancelled, position: 0)
 
     held = @event.participations.holding_slot
     assert_includes held, confirmed

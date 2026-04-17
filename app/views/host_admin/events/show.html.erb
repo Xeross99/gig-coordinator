@@ -20,12 +20,13 @@
     </div>
   </dl>
 
-  <div class="flex gap-2 mt-5">
+  <div class="grid grid-cols-2 gap-2 mt-5">
     <%= link_to "Edytuj", edit_host_event_path(@event),
-                class: "flex-1 text-center py-2 rounded-lg border border-stone-300 text-sm" %>
+                class: "text-center py-2 rounded-lg border border-stone-300 text-sm font-medium text-stone-800 hover:bg-stone-50 transition-transform active:scale-[0.98]" %>
     <%= button_to "Usuń", host_event_path(@event), method: :delete,
                   data: { turbo_confirm: "Na pewno?" },
-                  class: "flex-1 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-medium" %>
+                  form: { class: "contents" },
+                  class: "w-full py-2 rounded-lg bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition-transform active:scale-[0.98]" %>
   </div>
 </div>
 

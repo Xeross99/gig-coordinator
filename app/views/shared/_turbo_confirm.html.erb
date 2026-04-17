@@ -1,0 +1,45 @@
+<%# locals: (title: "Uwaga!", message: "Czy na pewno?", confirm_label: "Potwierdzam", cancel_label: "Anuluj") -%>
+<el-dialog data-controller="turbo-confirm">
+  <dialog data-turbo-confirm-target="dialog" data-action="close->turbo-confirm#onClose" aria-labelledby="turbo-confirm-title" aria-modal="true"
+          class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent">
+
+    <el-dialog-backdrop class="fixed inset-0 bg-stone-900/25 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"></el-dialog-backdrop>
+
+    <div tabindex="-1" class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+      <el-dialog-panel class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all
+                              data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in
+                              sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-6 text-red-600" aria-hidden="true">
+                <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              <h3 id="turbo-confirm-title" class="text-base font-semibold text-stone-900"><%= title %></h3>
+              <div class="mt-2">
+                <p class="text-sm text-stone-500" data-turbo-confirm-target="message">
+                  <%= message %>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-stone-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+          <button type="button" autofocus data-turbo-confirm-target="confirmButton" data-action="turbo-confirm#confirm"
+                  class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-red-500 sm:ml-3 sm:w-auto cursor-pointer">
+            <%= confirm_label %>
+          </button>
+
+          <button type="button" data-action="turbo-confirm#cancel"
+                  class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-stone-900 shadow-xs inset-ring inset-ring-stone-300 hover:bg-stone-50 sm:mt-0 sm:w-auto cursor-pointer">
+            <%= cancel_label %>
+          </button>
+        </div>
+      </el-dialog-panel>
+    </div>
+  </dialog>
+</el-dialog>
