@@ -60,8 +60,9 @@ Rails.application.configure do
     config.action_mailer.default_url_options = { host: public_host, protocol: "https" }
     Rails.application.routes.default_url_options = { host: public_host, protocol: "https" }
   else
-    config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
-    Rails.application.routes.default_url_options = { host: "localhost", port: 3000 }
+    port = ENV.fetch("PORT", 3000).to_i
+    config.action_mailer.default_url_options = { host: "localhost", port: port }
+    Rails.application.routes.default_url_options = { host: "localhost", port: port }
   end
 
   # Print deprecation notices to the Rails logger.

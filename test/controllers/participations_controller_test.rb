@@ -51,9 +51,44 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to event_path(@event)
   end
 
+  test "POST create after cancel re-activates the existing participation" do
+    Participation.create!(event: @event, user: users(:ala), status: :cancelled, position: 0)
+    assert_no_difference "Participation.count" do
+      post event_participation_path(@event)
+    end
+    p = Participation.find_by(event: @event, user: users(:ala))
+    assert p.confirmed?, "expected re-join to land as confirmed when capacity available"
+  end
+
   test "DELETE when not participating does nothing" do
     delete event_participation_path(@event)
     assert_redirected_to event_path(@event)
+  end
+
+  test "clicking Akceptuję on a stale page ends up on the waitlist when event filled up in the meantime" do
+    @event.update!(capacity: 1)
+
+    # Ala loads the event page — only 0/1 taken, button shows "Akceptuję".
+    get event_path(@event)
+    assert_response :success
+    assert_match I18n.t("events.accept"), response.body
+    assert_no_match I18n.t("events.waitlist_accept"), response.body
+
+    # Bartek grabs the last seat before Ala clicks.
+    Participation.create!(event: @event, user: users(:bartek), status: :confirmed, position: 1)
+
+    # Ala clicks what was "Akceptuję" — lock re-evaluates capacity, she lands on waitlist.
+    assert_difference "@event.participations.waitlist.count", 1 do
+      post event_participation_path(@event)
+    end
+    ala_participation = @event.participations.find_by(user: users(:ala))
+    assert ala_participation.waitlist?, "expected Ala to land on waitlist when event filled up"
+
+    # After redirect Ala sees the waitlist badge + cancel button, not the waitlist-accept CTA.
+    follow_redirect!
+    assert_match I18n.t("events.waitlist_badge"), response.body
+    assert_match I18n.t("events.cancel"), response.body
+    assert_no_match I18n.t("events.waitlist_accept"), response.body
   end
 
   test "concurrent creates do not exceed capacity" do

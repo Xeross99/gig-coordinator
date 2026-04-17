@@ -7,10 +7,11 @@
     <% confirmed = event.participations.confirmed.includes(:user).order(:position) %>
     <% if confirmed.any? %>
       <ul class="space-y-2">
-        <% confirmed.each do |p| %>
-          <li class="flex items-center justify-between bg-emerald-50 rounded-lg px-3 py-2 text-sm">
+        <% confirmed.each_with_index do |p, i| %>
+          <li class="flex items-center gap-3 bg-emerald-50 rounded-lg px-3 py-2 text-sm animate-pop-in"
+              style="animation-delay: <%= i * 40 %>ms">
+            <span class="w-6 text-stone-400 tabular-nums"><%= i + 1 %>.</span>
             <span class="font-medium text-stone-900"><%= p.user.display_name %></span>
-            <span class="text-stone-500 text-xs"><%= p.user.email %></span>
           </li>
         <% end %>
       </ul>
@@ -27,10 +28,11 @@
     <% waitlist = event.participations.waitlist.includes(:user).order(:position) %>
     <% if waitlist.any? %>
       <ul class="space-y-2">
-        <% waitlist.each do |p| %>
-          <li class="flex items-center justify-between bg-amber-50 rounded-lg px-3 py-2 text-sm">
+        <% waitlist.each_with_index do |p, i| %>
+          <li class="flex items-center gap-3 bg-amber-50 rounded-lg px-3 py-2 text-sm animate-pop-in"
+              style="animation-delay: <%= i * 40 %>ms">
+            <span class="w-6 text-stone-400 tabular-nums"><%= i + 1 %>.</span>
             <span class="font-medium text-stone-900"><%= p.user.display_name %></span>
-            <span class="text-stone-500 text-xs"><%= p.user.email %></span>
           </li>
         <% end %>
       </ul>

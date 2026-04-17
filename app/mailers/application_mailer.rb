@@ -5,7 +5,7 @@ class ApplicationMailer < ActionMailer::Base
   def self.sender_address
     google = Rails.application.credentials.google
     if google&.user_name.present?
-      "GigCoordinator <#{google.user_name}>"
+      "Gig Coordinator <#{google.user_name}>"
     else
       "no-reply@gig-coordinator.local"
     end

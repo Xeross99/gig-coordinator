@@ -12,14 +12,25 @@
     <%= f.text_field :name, required: true, class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div>
+    <%= label_tag "event_event_date", "Data", class: "block text-sm text-stone-700 mb-1" %>
+    <%= date_field_tag "event[event_date]", event.scheduled_at&.to_date, required: true,
+                       id: "event_event_date",
+                       class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :scheduled_at, t("events.starts_at"), class: "block text-sm text-stone-700 mb-1" %>
-      <%= f.datetime_local_field :scheduled_at, required: true, class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
+      <%= label_tag "event_start_time", t("events.starts_at"), class: "block text-sm text-stone-700 mb-1" %>
+      <%= time_field_tag "event[start_time]", event.scheduled_at&.strftime("%H:%M"), required: true,
+                         id: "event_start_time",
+                         class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
     </div>
     <div>
-      <%= f.label :ends_at, t("events.ends_at"), class: "block text-sm text-stone-700 mb-1" %>
-      <%= f.datetime_local_field :ends_at, required: true, class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
+      <%= label_tag "event_end_time", t("events.ends_at"), class: "block text-sm text-stone-700 mb-1" %>
+      <%= time_field_tag "event[end_time]", event.ends_at&.strftime("%H:%M"), required: true,
+                         id: "event_end_time",
+                         class: "w-full px-3 py-3 rounded-lg border border-stone-300" %>
     </div>
   </div>
 

@@ -23,11 +23,11 @@ pl:
     login_title: "Zaloguj się"
     email_label: "Adres e-mail"
     send_link: "Wyślij link logowania"
-    check_email: "Sprawdź swoją skrzynkę — jeżeli adres istnieje w systemie, wysłaliśmy tam link logowania."
+    check_email: "Jeśli adres jest w systemie, wysłaliśmy link logowania."
     invalid_token: "Ten link wygasł lub jest nieprawidłowy."
     logout: "Wyloguj"
   events:
-    upcoming: "Nadchodzące eventy"
+    upcoming: "Do złapania"
     accept: "Akceptuję"
     cancel: "Anuluj"
     waitlist_accept: "Dołącz na listę rezerwową"

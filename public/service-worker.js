@@ -1,4 +1,4 @@
-// GigCoordinator service worker
+// Gig Coordinator service worker
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -9,16 +9,16 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let payload = { title: "GigCoordinator", body: "" };
+  let payload = { title: "Gig Coordinator", body: "" };
   try { payload = event.data ? event.data.json() : payload; } catch (_) {
     payload.body = event.data ? event.data.text() : "";
   }
   const { title, body, url } = payload;
   event.waitUntil(
-    self.registration.showNotification(title || "GigCoordinator", {
+    self.registration.showNotification(title || "Gig Coordinator", {
       body: body || "",
-      icon: "/icon.png",
-      badge: "/icon.png",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       data: { url: url || "/" }
     })
   );

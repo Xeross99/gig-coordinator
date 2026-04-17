@@ -1,3 +1,4 @@
-<%= link_to "← wróć", host_events_path, class: "text-sm text-stone-500" %>
-<h1 class="text-2xl font-semibold my-4"><%= t("host_panel.new_event") %></h1>
+<% content_for(:title) { t("host_panel.new_event") } %>
+<%= render "shared/breadcrumbs", crumbs: [[t("host_panel.my_events"), host_events_path], [t("host_panel.new_event"), nil]], home_path: host_root_path %>
+<h1 class="text-2xl font-semibold mb-4"><%= t("host_panel.new_event") %></h1>
 <%= render "form", event: @event %>

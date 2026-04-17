@@ -8,9 +8,12 @@ class ParticipationsController < ApplicationController
     Event.transaction do
       @event.lock!
       existing = @event.participations.find_by(user_id: current_user.id)
-      unless existing
+      if existing.nil?
         status, position = next_slot_for(@event)
         @event.participations.create!(user: current_user, status: status, position: position)
+      elsif existing.cancelled?
+        status, position = next_slot_for(@event)
+        existing.update!(status: status, position: position)
       end
     end
 

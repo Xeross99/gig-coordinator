@@ -1,6 +1,7 @@
-<%= link_to "← " + t("host_panel.my_events"), host_events_path, class: "text-sm text-stone-500" %>
+<% content_for(:title) { @event.name } %>
+<%= render "shared/breadcrumbs", crumbs: [[t("host_panel.my_events"), host_events_path], [@event.name, nil]], home_path: host_root_path %>
 
-<div class="bg-white rounded-xl shadow-sm p-5 mt-4">
+<div class="bg-white rounded-xl shadow-sm p-5">
   <h1 class="text-2xl font-semibold text-stone-900"><%= @event.name %></h1>
   <div class="mt-1 text-sm text-stone-500">
     <%= l(@event.scheduled_at, format: :long) %>

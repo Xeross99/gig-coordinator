@@ -3,27 +3,27 @@ require "test_helper"
 class MagicLinksControllerTest < ActionDispatch::IntegrationTest
   include ActionMailer::TestHelper
 
-  test "POST /magic_links sends mail for existing user and shows neutral response" do
+  test "POST /magic_links sends mail for existing user and redirects with flash notice" do
     assert_emails 1 do
       post magic_links_path, params: { magic_link: { email: users(:ala).email } }
     end
-    assert_response :success
-    assert_match I18n.t("auth.check_email"), response.body
+    assert_redirected_to login_path
+    assert_equal I18n.t("auth.check_email"), flash[:notice]
   end
 
   test "POST /magic_links sends mail for existing host (case-insensitive)" do
     assert_emails 1 do
       post magic_links_path, params: { magic_link: { email: "JAN@EXAMPLE.COM" } }
     end
-    assert_response :success
+    assert_redirected_to login_path
   end
 
   test "POST /magic_links for unknown email still shows neutral response (no enumeration) and sends no mail" do
     assert_emails 0 do
       post magic_links_path, params: { magic_link: { email: "nobody@example.com" } }
     end
-    assert_response :success
-    assert_match I18n.t("auth.check_email"), response.body
+    assert_redirected_to login_path
+    assert_equal I18n.t("auth.check_email"), flash[:notice]
   end
 
   test "GET /login/verify with valid User token logs in and redirects to user home" do

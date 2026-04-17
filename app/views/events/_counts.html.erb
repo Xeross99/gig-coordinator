@@ -1,10 +1,10 @@
 <div id="<%= dom_id(event, :counts) %>" class="flex items-center justify-between mb-3">
   <div class="text-sm">
     <span class="text-stone-500"><%= t("events.confirmed_count") %>:</span>
-    <span class="font-semibold"><%= event.participations.confirmed.count %>/<%= event.capacity %></span>
+    <span class="font-semibold inline-block animate-bump"><%= event.participations.confirmed.count %>/<%= event.capacity %></span>
   </div>
   <div class="text-sm">
     <span class="text-stone-500"><%= t("events.waitlist_count") %>:</span>
-    <span class="font-semibold"><%= event.participations.waitlist.count %></span>
+    <span class="font-semibold inline-block animate-bump"><%= event.participations.waitlist.count %></span>
   </div>
 </div>

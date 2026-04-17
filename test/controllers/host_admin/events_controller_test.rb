@@ -33,17 +33,21 @@ module HostAdmin
     end
 
     test "POST create valid creates event and redirects to show" do
+      date = 1.day.from_now.to_date
       assert_difference "Event.count", 1 do
         post host_events_path, params: { event: {
           name: "Nowy event",
-          scheduled_at: 1.day.from_now,
-          ends_at: 1.day.from_now + 2.hours,
+          event_date: date.to_s,
+          start_time: "08:00",
+          end_time:   "11:30",
           pay_per_person: 100,
           capacity: 5
         } }
       end
       new_event = Event.order(:id).last
       assert_equal hosts(:jan), new_event.host
+      assert_equal date, new_event.scheduled_at.to_date
+      assert_equal date, new_event.ends_at.to_date
       assert_redirected_to host_event_path(new_event)
     end
 
@@ -68,8 +72,8 @@ module HostAdmin
     test "PATCH update with valid attributes updates and redirects" do
       event = events(:gig-coordinators_tomorrow)
       patch host_event_path(event), params: { event: { name: "Nowa nazwa" } }
-      assert_redirected_to host_event_path(event)
       assert_equal "Nowa nazwa", event.reload.name
+      assert_redirected_to host_event_path(event)
     end
 
     test "DELETE destroys own event" do

@@ -1,3 +1,5 @@
+<% content_for(:title) { t("host_panel.profile") } %>
+<%= render "shared/breadcrumbs", crumbs: [[t("host_panel.profile"), nil]], home_path: host_root_path %>
 <h1 class="text-2xl font-semibold mb-4"><%= t("host_panel.profile") %></h1>
 
 <%= form_with model: @host, url: host_profile_path, method: :patch, local: true, class: "space-y-4" do |f| %>

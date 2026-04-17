@@ -9,6 +9,6 @@ class MagicLinkMailerTest < ActionMailer::TestCase
     assert_equal [ user.email ], mail.to
     assert_equal I18n.t("mailers.magic_link.subject"), mail.subject
     assert_includes mail.body.encoded, user.first_name
-    assert_match(/\/login\/verify\?token=/, mail.body.encoded)
+    assert_match(%r{/logowanie/weryfikacja\?token=}, mail.body.encoded)
   end
 end

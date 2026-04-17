@@ -3,6 +3,7 @@ class User < ApplicationRecord
   has_many :events, through: :participations
   has_many :push_subscriptions, dependent: :destroy
   has_many :sessions, as: :authenticatable, dependent: :destroy
+  has_one_attached :photo
 
   normalizes :email, with: ->(v) { v.to_s.strip.downcase }
 

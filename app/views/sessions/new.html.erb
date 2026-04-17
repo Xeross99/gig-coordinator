@@ -1,21 +1,31 @@
-<div class="min-h-screen flex items-center justify-center px-6 bg-stone-50">
-  <div class="w-full max-w-sm bg-white rounded-2xl shadow-sm p-8">
-    <h1 class="text-2xl font-semibold text-stone-900 mb-1"><%= t("auth.login_title") %></h1>
-    <p class="text-sm text-stone-500 mb-6">GigCoordinator · panel pracy</p>
+<% content_for(:title) { t("auth.login_title") } %>
+<div class="pt-10 pb-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <%= image_tag "/icon.svg", alt: "Gig Coordinator", class: "mx-auto h-16 w-16 rounded-xl shadow-sm" %>
+    <h1 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-stone-900">Gig Coordinator</h1>
+    <p class="mt-1 text-center text-sm text-stone-500"><%= t("auth.login_title") %></p>
+  </div>
 
-    <% if flash[:alert] %>
-      <div class="mb-4 rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm"><%= flash[:alert] %></div>
-    <% end %>
-    <% if flash[:notice] %>
-      <div class="mb-4 rounded-lg bg-emerald-50 text-emerald-800 px-3 py-2 text-sm"><%= flash[:notice] %></div>
-    <% end %>
+  <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+    <div class="bg-white px-6 py-12 shadow-sm sm:rounded-lg sm:px-12">
+      <%= form_with url: magic_links_path, scope: :magic_link, method: :post, local: true, class: "space-y-6" do |f| %>
+        <div>
+          <%= f.label :email, t("auth.email_label"), class: "block text-sm/6 font-medium text-stone-900" %>
+          <div class="mt-2">
+            <%= f.email_field :email, id: "magic_link_email", required: true, autocomplete: "email",
+                  class: "block w-full rounded-md bg-white px-3 py-1.5 text-base text-stone-900 outline-1 -outline-offset-1 outline-stone-300 placeholder:text-stone-400 focus:outline-2 focus:-outline-offset-2 focus:outline-stone-900 sm:text-sm/6" %>
+          </div>
+        </div>
 
-    <%= form_with url: magic_links_path, scope: :magic_link, method: :post, local: true do |f| %>
-      <label class="block text-sm text-stone-700 mb-2" for="magic_link_email"><%= t("auth.email_label") %></label>
-      <%= f.email_field :email, id: "magic_link_email", required: true, autocomplete: "email",
-            class: "w-full px-3 py-3 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" %>
-      <%= f.submit t("auth.send_link"),
-            class: "mt-4 w-full py-3 rounded-lg bg-stone-900 text-white font-medium hover:bg-stone-800" %>
-    <% end %>
+        <div>
+          <%= f.submit t("auth.send_link"),
+                class: "flex w-full justify-center rounded-md bg-stone-900 px-3 py-2 text-sm/6 font-semibold text-white shadow-xs hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900 transition-transform active:scale-[0.98]" %>
+        </div>
+      <% end %>
+
+      <p class="mt-8 text-center text-xs text-stone-500">
+        Logowanie odbywa się przez magic-link wysłany na Twój adres e-mail. Link wygasa po 15 minutach.
+      </p>
+    </div>
   </div>
 </div>

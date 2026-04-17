@@ -5,8 +5,9 @@ class MagicLinksController < ApplicationController
     if record
       token = record.signed_id(purpose: :magic_link, expires_in: 15.minutes)
       MagicLinkMailer.with(record: record, token: token).link.deliver_later
+      log_dev_link(record, token)
     end
-    render :show
+    redirect_to login_path, notice: I18n.t("auth.check_email")
   end
 
   # GET /login/verify?token=...
@@ -27,5 +28,11 @@ class MagicLinksController < ApplicationController
     return nil if token.blank?
     Host.find_signed(token, purpose: :magic_link) ||
       User.find_signed(token, purpose: :magic_link)
+  end
+
+  def log_dev_link(record, token)
+    return unless Rails.env.development?
+    url = verify_magic_link_url(token: token)
+    puts "\n[magic-link] #{record.class.name} #{record.email}\n[magic-link] #{url}\n\n"
   end
 end

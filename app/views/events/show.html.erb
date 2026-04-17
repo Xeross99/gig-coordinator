@@ -1,6 +1,7 @@
-<%= link_to "← " + t("events.upcoming"), root_path, class: "text-sm text-stone-500" %>
+<% content_for(:title) { @event.name } %>
+<%= render "shared/breadcrumbs", crumbs: [[t("events.upcoming"), root_path], [@event.name, nil]] %>
 
-<div class="bg-white rounded-xl shadow-sm overflow-hidden mt-4">
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
   <div class="p-5">
     <h1 class="text-2xl font-semibold text-stone-900"><%= @event.name %></h1>
     <div class="mt-1 text-sm text-stone-500">
@@ -47,6 +48,13 @@
   </div>
 
   <div class="border-t border-stone-200 p-5">
-    <%= render "events/participation_button", event: @event %>
+    <%= turbo_frame_tag dom_id(@event, :participation) do %>
+      <%= render "events/participation_button", event: @event %>
+    <% end %>
+  </div>
+
+  <div class="border-t border-stone-200 p-5">
+    <%= turbo_stream_from @event, :roster %>
+    <%= render "events/roster", event: @event %>
   </div>
 </div>

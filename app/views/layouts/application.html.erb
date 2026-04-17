@@ -1,21 +1,22 @@
 <!DOCTYPE html>
 <html lang="pl">
   <head>
-    <title><%= content_for(:title) || "GigCoordinator" %></title>
+    <title><%= content_for?(:title) ? "#{content_for(:title)} — Gig Coordinator" : "Gig Coordinator" %></title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="GigCoordinator">
-    <meta name="theme-color" content="#111111">
+    <meta name="application-name" content="Gig Coordinator">
+    <meta name="apple-mobile-web-app-title" content="Gig Coordinator">
+    <meta name="theme-color" content="#d53838">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>
 
     <%= tag.link rel: "manifest", href: "/manifest.webmanifest" %>
-    <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
@@ -29,21 +30,43 @@
            data-push-subscription-csrf-token-value="<%= form_authenticity_token %>"></div>
     <% end %>
     <% if signed_in? %>
-      <nav class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-stone-200 px-4 py-3 flex items-center justify-between">
-        <%= link_to "GigCoordinator", root_path, class: "font-semibold" %>
-        <div class="flex items-center gap-3 text-sm">
-          <span class="text-stone-500"><%= (current_user || current_host)&.display_name %></span>
-          <%= button_to t("auth.logout"), session_path, method: :delete, class: "text-stone-600 hover:text-stone-900" %>
+      <% me = current_user || current_host %>
+      <% profile_href = current_host ? edit_host_profile_path : edit_profile_path %>
+      <nav class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-stone-200 px-4 py-3">
+        <div class="md:flex md:items-center md:justify-between md:space-x-5">
+          <%= link_to profile_href, class: "flex items-start space-x-4" do %>
+            <div class="shrink-0">
+              <div class="relative">
+                <% if me.photo.attached? %>
+                  <%= image_tag me.photo.variant(resize_to_fill: [64, 64]),
+                                class: "size-12 rounded-full object-cover" %>
+                <% else %>
+                  <div class="size-12 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold">
+                    <%= me.first_name[0] %><%= me.last_name[0] %>
+                  </div>
+                <% end %>
+                <span aria-hidden="true" class="absolute inset-0 rounded-full shadow-inner"></span>
+              </div>
+            </div>
+            <div class="pt-1">
+              <h1 class="text-base font-semibold text-stone-900"><%= me.display_name %></h1>
+              <p class="text-xs font-medium text-stone-500">
+                <%= current_host ? t("host_panel.title") : "Pracownik" %>
+              </p>
+            </div>
+          <% end %>
+
+          <div class="mt-4 flex flex-col-reverse justify-stretch space-y-3 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3">
+            <%= button_to t("auth.logout"), session_path, method: :delete,
+                          class: "inline-flex items-center justify-center rounded-md bg-stone-900 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900" %>
+            <%= link_to "Profil", profile_href,
+                        class: "inline-flex items-center justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-stone-900 shadow-xs inset-ring inset-ring-stone-300 hover:bg-stone-50" %>
+          </div>
         </div>
       </nav>
     <% end %>
 
-    <% if flash[:notice] %>
-      <div class="mx-4 my-3 rounded-lg bg-emerald-50 text-emerald-800 px-3 py-2 text-sm"><%= flash[:notice] %></div>
-    <% end %>
-    <% if flash[:alert] %>
-      <div class="mx-4 my-3 rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm"><%= flash[:alert] %></div>
-    <% end %>
+    <%= render "shared/toast" %>
 
     <main class="max-w-md mx-auto px-4 py-4">
       <%= yield %>

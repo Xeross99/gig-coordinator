@@ -43,7 +43,16 @@ module HostAdmin
     end
 
     def event_params
-      params.expect(event: %i[name scheduled_at ends_at pay_per_person capacity])
+      raw = params.require(:event).permit(:name, :event_date, :start_time, :end_time, :pay_per_person, :capacity)
+
+      date = raw.delete(:event_date)
+      start_time = raw.delete(:start_time)
+      end_time   = raw.delete(:end_time)
+
+      raw[:scheduled_at] = Time.zone.parse("#{date} #{start_time}") if date.present? && start_time.present?
+      raw[:ends_at]      = Time.zone.parse("#{date} #{end_time}")   if date.present? && end_time.present?
+
+      raw
     end
   end
 end

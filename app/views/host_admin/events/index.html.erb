@@ -1,3 +1,4 @@
+<% content_for(:title) { t("host_panel.my_events") } %>
 <div class="flex items-center justify-between mb-5">
   <h1 class="text-2xl font-semibold"><%= t("host_panel.my_events") %></h1>
   <%= link_to t("host_panel.new_event"), new_host_event_path, class: "px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-medium" %>

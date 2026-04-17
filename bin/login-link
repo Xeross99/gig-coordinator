@@ -9,9 +9,9 @@ def link_for(record)
   base = if (host = ENV["PUBLIC_HOST"]).present?
            "https://#{host}"
          else
-           "http://localhost:3000"
+           "http://localhost:#{ENV.fetch('PORT', 3000)}"
          end
-  "#{base}/login/verify?token=#{token}"
+  "#{base}/logowanie/weryfikacja?token=#{token}"
 end
 
 if email = ARGV[0]
