@@ -16,3 +16,20 @@
   40%  { transform: scale(1.15); }
   100% { transform: scale(1); }
 }
+
+.pull-to-refresh-indicator.ready,
+.pull-to-refresh-indicator.refreshing {
+  background: var(--color-stone-900);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.25), 0 4px 6px -4px rgba(0, 0, 0, 0.15);
+}
+.pull-to-refresh-indicator.ready svg,
+.pull-to-refresh-indicator.refreshing svg {
+  color: white;
+}
+.pull-to-refresh-indicator.refreshing svg {
+  animation: pull-spin 600ms linear infinite;
+}
+
+@keyframes pull-spin {
+  to { transform: rotate(360deg); }
+}
