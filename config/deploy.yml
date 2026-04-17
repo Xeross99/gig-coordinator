@@ -46,9 +46,11 @@ env:
   secret:
     - RAILS_MASTER_KEY
   clear:
-    # Tune Puma for 1 GB / 1 CPU — one process, a handful of threads.
+    # Tune Puma for 1 GB / 1 CPU — one process, 5 threads (the pool size needs
+    # to cover Solid Queue's workers running in-Puma; fewer threads → Solid
+    # Queue exits with "connection pool too small" and takes Puma down with it).
     WEB_CONCURRENCY: 0
-    RAILS_MAX_THREADS: 3
+    RAILS_MAX_THREADS: 5
 
     # Run Solid Queue inside Puma (no separate `job:` host, we only have one VPS).
     SOLID_QUEUE_IN_PUMA: true
