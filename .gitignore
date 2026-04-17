@@ -33,6 +33,9 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Kamal registry password (GHCR PAT) — local-only, never committed.
+/.kamal/registry-password
+
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
