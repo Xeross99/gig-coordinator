@@ -24,7 +24,14 @@
   </head>
 
   <body class="min-h-screen bg-stone-50 text-stone-900 antialiased" data-controller="pull-to-refresh">
-    <div data-pull-to-refresh-target="indicator"
+    <%# data-turbo-permanent — the indicator stays in the DOM across the
+        Turbo.visit triggered by pull-to-refresh, so the spinner keeps
+        rotating instead of vanishing mid-animation when body swaps. The
+        Stimulus controller's connect() catches the leftover .refreshing
+        class and fades it out smoothly once the new page is live. %>
+    <div id="pull-to-refresh-indicator"
+         data-turbo-permanent
+         data-pull-to-refresh-target="indicator"
          style="opacity:0;transform:translate(-50%,-40px) scale(0.5)"
          class="pull-to-refresh-indicator fixed top-0 left-1/2 pointer-events-none z-50 size-14 rounded-full bg-white shadow-xl ring-1 ring-stone-200/60 flex items-center justify-center">
       <svg data-pull-to-refresh-target="spinner" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-7 text-stone-700">

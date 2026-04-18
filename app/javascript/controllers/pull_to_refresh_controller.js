@@ -20,11 +20,17 @@ export default class extends Controller {
     this.onStart = this.start.bind(this)
     this.onMove  = this.move.bind(this)
     this.onEnd   = this.end.bind(this)
+    this.onLoad  = this.finishRefresh.bind(this)
 
     document.addEventListener("touchstart", this.onStart, { passive: true })
     document.addEventListener("touchmove",  this.onMove,  { passive: false })
     document.addEventListener("touchend",   this.onEnd,   { passive: true })
     document.addEventListener("touchcancel",this.onEnd,   { passive: true })
+    // data-turbo-permanent keeps the indicator element (and this controller
+    // instance) alive across Turbo.visit, so connect() won't re-fire after
+    // navigation. We listen to turbo:load ourselves to fade the spinner out
+    // once the fresh page is in place.
+    document.addEventListener("turbo:load", this.onLoad)
   }
 
   disconnect() {
@@ -32,6 +38,20 @@ export default class extends Controller {
     document.removeEventListener("touchmove",  this.onMove)
     document.removeEventListener("touchend",   this.onEnd)
     document.removeEventListener("touchcancel",this.onEnd)
+    document.removeEventListener("turbo:load", this.onLoad)
+  }
+
+  // Runs after Turbo swaps in the next page. If we were mid-refresh, give the
+  // user one rotation's worth of visible spinner, then smoothly fade + slide
+  // the indicator back up out of view.
+  finishRefresh() {
+    if (!this.indicatorTarget.classList.contains("refreshing")) return
+    this.indicatorTarget.classList.remove("refreshing")
+    this.indicatorTarget.style.transition = "transform 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 250ms ease-out"
+    this.indicatorTarget.style.transform  = "translate(-50%, -40px) scale(0.5)"
+    this.indicatorTarget.style.opacity    = "0"
+    if (this.hasSpinnerTarget) this.spinnerTarget.style.transform = "rotate(0deg)"
+    this.distance = 0
   }
 
   start(event) {
