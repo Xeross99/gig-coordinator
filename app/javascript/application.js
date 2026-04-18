@@ -33,3 +33,17 @@ document.addEventListener("turbo:visit", (event) => {
 document.addEventListener("turbo:load", () => {
   delete document.documentElement.dataset.transitionDirection
 })
+
+// Register the service worker as early as possible — even for anonymous
+// visitors on /logowanie — so the SWR cache starts populating on the very
+// first visit. push_subscription_controller also calls register() when a
+// signed-in user mounts, but register() is idempotent, so there's no clash.
+// The SW itself (app/views/pwa/service-worker.js) handles stale-while-revalidate
+// HTML caching + cache-first asset caching, making cold-starts feel instant.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker").catch((err) => {
+      console.warn("service worker register failed", err)
+    })
+  })
+}

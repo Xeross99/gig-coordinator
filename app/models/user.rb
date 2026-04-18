@@ -5,7 +5,11 @@ class User < ApplicationRecord
   has_many :sessions, as: :authenticatable, dependent: :destroy
 
   has_one_attached :photo do |attachable|
-    attachable.variant :roster, resize_to_fill: [ 40, 40 ]
+    attachable.variant :small,
+                       resize_to_limit: [ 100, 100 ],
+                       format: "webp",
+                       saver: { quality: 88 },
+                       preprocessed: true
   end
 
   enum :title, { rookie: 0, member: 1, veteran: 2, master: 3 }
@@ -33,5 +37,14 @@ class User < ApplicationRecord
 
   def title_badge_classes
     TITLE_BADGE_COLORS.fetch(title, "bg-gray-100 text-gray-600")
+  end
+
+  # Presence is inferred from the throttled last_seen_at stamp written by
+  # ApplicationController#touch_last_seen. Five minutes is a comfortable idle
+  # window — covers page refreshes, scrolling, short tab-switches.
+  ONLINE_WINDOW = 5.minutes
+
+  def online?
+    last_seen_at.present? && last_seen_at > ONLINE_WINDOW.ago
   end
 end

@@ -1,10 +1,15 @@
-<% if user.photo.attached? %>
-  <%= image_tag rails_representation_path(user.photo.variant(:roster), only_path: true),
-                alt: user.display_name,
-                class: "size-10 rounded-full object-cover shrink-0" %>
-<% else %>
-  <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 text-xs font-semibold shrink-0"
-       aria-hidden="true">
-    <%= user.first_name[0] %><%= user.last_name[0] %>
-  </div>
-<% end %>
+<div class="relative shrink-0">
+  <% if user.photo.attached? %>
+    <%= image_tag rails_representation_path(user.photo.variant(:small)),
+                  alt: user.display_name,
+                  class: "size-10 rounded-full object-cover" %>
+  <% else %>
+    <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 text-xs font-semibold"
+         aria-hidden="true">
+      <%= user.first_name[0] %><%= user.last_name[0] %>
+    </div>
+  <% end %>
+  <span aria-hidden="true"
+        title="<%= user.online? ? "Online" : "Offline" %>"
+        class="absolute bottom-0 right-0 block size-2.5 rounded-full ring-2 ring-white <%= user.online? ? "bg-emerald-500" : "bg-stone-300" %>"></span>
+</div>

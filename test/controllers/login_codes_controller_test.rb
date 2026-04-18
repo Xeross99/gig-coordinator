@@ -35,7 +35,8 @@ class LoginCodesControllerTest < ActionDispatch::IntegrationTest
     post login_codes_path, params: { login_code: { email: users(:ala).email } }
     follow_redirect!
     assert_response :success
-    assert_select "input[data-code-input-target='digit']", 5
+    assert_select "input[data-code-input-target='input'][autocomplete='one-time-code']"
+    assert_select "div[data-code-input-target='cell']", 5
   end
 
   test "POST /logowanie/weryfikacja with correct code signs in the user" do

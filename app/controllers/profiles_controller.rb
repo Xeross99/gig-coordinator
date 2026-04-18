@@ -3,6 +3,9 @@ class ProfilesController < ApplicationController
 
   def edit
     @user = current_user
+    sessions = current_user.sessions.order(created_at: :desc).to_a
+    current = sessions.find { |s| s.id == current_session.id }
+    @sessions = current ? [ current, *(sessions - [ current ]) ] : sessions
   end
 
   def update

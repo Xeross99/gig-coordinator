@@ -29,7 +29,7 @@
           <div class="shrink-0">
             <div class="relative">
               <% if me&.photo&.attached? %>
-                <%= image_tag me.photo.variant(resize_to_fill: [ 64, 64 ]),
+                <%= image_tag me.photo.variant(:small),
                               class: "size-12 rounded-full object-cover" %>
               <% else %>
                 <div class="size-12 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold">

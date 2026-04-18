@@ -1,93 +1,39 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Manages a 5-digit one-time code input split across separate <input> boxes.
-// On submit, digits are joined into the hidden "merged" target so the server
-// receives a single params[:code] = "12345".
+// Renders a 5-digit OTP as separate visual cells while keeping the interactive
+// surface a single <input> with autocomplete="one-time-code". This is the most
+// reliable pattern for iOS Safari OTP autofill — one input, one autocomplete
+// attribute, no focus-juggling. Stimulus just mirrors the value into the
+// visual cells on every input event and auto-submits when the 5th digit lands.
 export default class extends Controller {
-  static targets = ["digit", "merged", "form"]
+  static targets = ["input", "char", "cell"]
 
   connect() {
-    this.element.addEventListener("submit", this.merge)
-    // focus first empty digit on load
-    requestAnimationFrame(() => {
-      const first = this.digitTargets.find(d => !d.value) || this.digitTargets[0]
-      first?.focus()
+    requestAnimationFrame(() => this.inputTarget.focus())
+    this.render()
+  }
+
+  update() {
+    this.render()
+    if (this.digits.length === 5) {
+      this.element.closest("form")?.requestSubmit()
+    }
+  }
+
+  render() {
+    const digits = this.digits
+    if (this.inputTarget.value !== digits) this.inputTarget.value = digits
+    this.charTargets.forEach((el, i) => { el.textContent = digits[i] || "" })
+    this.cellTargets.forEach((cell, i) => {
+      const active = i === digits.length
+      cell.classList.toggle("ring-2", active)
+      cell.classList.toggle("ring-stone-900", active)
+      cell.classList.toggle("ring-1", !active)
+      cell.classList.toggle("ring-stone-300", !active)
     })
   }
 
-  disconnect() {
-    this.element.removeEventListener("submit", this.merge)
-  }
-
-  input(event) {
-    const input = event.target
-    // Keep only digits, max 1 char
-    const digits = input.value.replace(/\D/g, "")
-    input.value = digits.slice(-1)
-    if (digits.length >= 1) {
-      const idx = this.digitTargets.indexOf(input)
-      const next = this.digitTargets[idx + 1]
-      if (next) next.focus()
-    }
-    if (digits.length > 1) {
-      // user typed/pasted multiple digits into a single box — distribute
-      this.distribute(digits)
-    }
-    if (this.isComplete) this.submit()
-  }
-
-  keydown(event) {
-    if (event.key === "Backspace") {
-      const input = event.target
-      if (!input.value) {
-        const idx = this.digitTargets.indexOf(input)
-        const prev = this.digitTargets[idx - 1]
-        if (prev) {
-          prev.focus()
-          prev.value = ""
-          event.preventDefault()
-        }
-      }
-    } else if (event.key === "ArrowLeft") {
-      const idx = this.digitTargets.indexOf(event.target)
-      this.digitTargets[idx - 1]?.focus()
-    } else if (event.key === "ArrowRight") {
-      const idx = this.digitTargets.indexOf(event.target)
-      this.digitTargets[idx + 1]?.focus()
-    }
-  }
-
-  paste(event) {
-    const text = (event.clipboardData || window.clipboardData).getData("text")
-    const digits = text.replace(/\D/g, "")
-    if (digits.length) {
-      event.preventDefault()
-      this.distribute(digits)
-      if (this.isComplete) this.submit()
-    }
-  }
-
-  distribute(digits) {
-    const chars = digits.slice(0, this.digitTargets.length).split("")
-    this.digitTargets.forEach((el, i) => {
-      el.value = chars[i] || ""
-    })
-    const firstEmpty = this.digitTargets.find(el => !el.value)
-    if (firstEmpty) firstEmpty.focus()
-    else this.digitTargets[this.digitTargets.length - 1].focus()
-  }
-
-  get isComplete() {
-    return this.digitTargets.every(el => el.value.length === 1)
-  }
-
-  merge = () => {
-    const value = this.digitTargets.map(el => el.value || "").join("")
-    if (this.hasMergedTarget) this.mergedTarget.value = value
-  }
-
-  submit() {
-    this.merge()
-    if (this.element.tagName === "FORM") this.element.requestSubmit()
+  get digits() {
+    return this.inputTarget.value.replace(/\D/g, "").slice(0, 5)
   }
 }

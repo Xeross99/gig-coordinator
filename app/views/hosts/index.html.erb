@@ -9,7 +9,7 @@
       <% upcoming_count = @upcoming_counts[host.id] || 0 %>
       <li class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4">
         <% if host.photo.attached? %>
-          <%= image_tag host.photo.variant(resize_to_fill: [56, 56]),
+          <%= image_tag host.photo.variant(:small),
                         class: "size-14 rounded-full object-cover shrink-0" %>
         <% else %>
           <div class="size-14 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold shrink-0">

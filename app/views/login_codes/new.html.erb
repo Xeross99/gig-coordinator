@@ -10,29 +10,35 @@
 
   <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
     <div class="bg-white px-6 py-12 shadow-sm sm:rounded-lg sm:px-12">
-      <%= form_with url: verify_login_path, method: :post, local: true,
-            data: { controller: "code-input" },
-            class: "space-y-6" do |f| %>
-        <div>
-          <label class="block text-sm/6 font-medium text-stone-900 text-center mb-3">
-            <%= t("auth.code_digits_label") %>
-          </label>
-          <div class="flex justify-center gap-2 sm:gap-3">
-            <% 5.times do |i| %>
-              <%# no maxlength="1" — iOS autofill puts the full OTP into the
-                  first box (only box with autocomplete="one-time-code"), and
-                  maxlength would truncate that to a single digit. The Stimulus
-                  controller's `input` handler clamps and distributes. %>
-              <input type="text"
-                     inputmode="numeric"
-                     pattern="[0-9]*"
-                     autocomplete="<%= i.zero? ? "one-time-code" : "off" %>"
-                     data-code-input-target="digit"
-                     data-action="input->code-input#input keydown->code-input#keydown paste->code-input#paste"
-                     class="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl sm:text-3xl font-semibold rounded-md bg-white text-stone-900 outline-1 -outline-offset-1 outline-stone-300 focus:outline-2 focus:-outline-offset-2 focus:outline-stone-900" />
-            <% end %>
+      <%= form_with url: verify_login_path, method: :post, local: true, class: "space-y-6" do %>
+        <div data-controller="code-input">
+          <%= label_tag :login_code, t("auth.code_digits_label"),
+                class: "block text-sm/6 font-medium text-stone-900 text-center mb-3" %>
+          <%# One real <input> on top (transparent, autocomplete="one-time-code"
+              for iOS) + 5 decorative cells underneath. Clicks pass through the
+              pointer-events-none cells to the input, so tapping any cell
+              focuses the single input and iOS offers the OTP suggestion above
+              the keyboard. No focus-juggling = autofill actually works. %>
+          <div class="relative">
+            <div class="flex justify-center gap-2 sm:gap-3 pointer-events-none">
+              <% 5.times do %>
+                <div data-code-input-target="cell"
+                     class="w-12 h-14 sm:w-14 sm:h-16 rounded-md bg-white ring-1 ring-stone-300 flex items-center justify-center text-2xl sm:text-3xl font-semibold text-stone-900">
+                  <span data-code-input-target="char"></span>
+                </div>
+              <% end %>
+            </div>
+            <input type="text"
+                   id="login_code"
+                   name="code"
+                   inputmode="numeric"
+                   pattern="[0-9]{5}"
+                   maxlength="5"
+                   autocomplete="one-time-code"
+                   data-code-input-target="input"
+                   data-action="input->code-input#update"
+                   class="absolute inset-0 w-full h-full opacity-0 text-transparent caret-transparent outline-none" />
           </div>
-          <input type="hidden" name="code" data-code-input-target="merged" />
         </div>
 
         <div>

@@ -36,7 +36,7 @@
 
   <% if @user.photo.attached? %>
     <div class="flex items-center gap-3">
-      <%= image_tag @user.photo.variant(resize_to_fill: [64, 64]), alt: "#{@user.display_name} photo", class: "w-16 h-16 rounded-full object-cover" %>
+      <%= image_tag @user.photo.variant(:small), alt: "#{@user.display_name} photo", class: "size-16 rounded-full object-cover" %>
       <div class="text-sm text-stone-500">Obecne zdjęcie</div>
     </div>
   <% end %>
@@ -48,3 +48,38 @@
 
   <%= f.submit "Zapisz zdjęcie", class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium" %>
 <% end %>
+
+<div class="bg-white rounded-xl shadow-sm p-5 mt-4">
+  <h2 class="font-medium mb-1">Urządzenia i sesje</h2>
+  <p class="text-xs text-stone-500 mb-3">Tu widzisz każde urządzenie, z którego się logowałeś. Oznaczone „to urządzenie" to aktualna sesja.</p>
+  <ul class="divide-y divide-stone-100">
+    <% @sessions.each do |session| %>
+      <% is_current = session.id == current_session.id %>
+      <% os, browser = session_ua_labels(session.user_agent) %>
+      <li class="py-3 flex items-center gap-3">
+        <div class="shrink-0 size-10 rounded-full <%= is_current ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500" %> flex items-center justify-center">
+          <% if session_mobile?(session.user_agent) %>
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
+              <path fill-rule="evenodd" d="M8 2a1.5 1.5 0 0 0-1.5 1.5v13a1.5 1.5 0 0 0 1.5 1.5h4a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 12 2H8Zm1.75 13a.75.75 0 0 0 0 1.5h.5a.75.75 0 0 0 0-1.5h-.5Z" clip-rule="evenodd" />
+            </svg>
+          <% else %>
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
+              <path fill-rule="evenodd" d="M2 4.25A2.25 2.25 0 0 1 4.25 2h11.5A2.25 2.25 0 0 1 18 4.25v8.5A2.25 2.25 0 0 1 15.75 15h-3.105a3.501 3.501 0 0 0 1.1 1.667.75.75 0 0 1-.47 1.333h-6.55a.75.75 0 0 1-.47-1.333A3.5 3.5 0 0 0 7.355 15H4.25A2.25 2.25 0 0 1 2 12.75v-8.5Zm1.5 0a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 .75.75v7.5a.75.75 0 0 1-.75.75H4.25a.75.75 0 0 1-.75-.75v-7.5Z" clip-rule="evenodd" />
+            </svg>
+          <% end %>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-sm font-medium text-stone-900 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span><%= os %><% if browser %> · <%= browser %><% end %></span>
+            <% if is_current %>
+              <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">to urządzenie</span>
+            <% end %>
+          </div>
+          <div class="text-xs text-stone-500">
+            Zalogowano <%= time_ago_in_words(session.created_at) %> temu<% if session.ip_address.present? %> · <%= session.ip_address %><% end %>
+          </div>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+</div>

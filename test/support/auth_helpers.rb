@@ -14,7 +14,7 @@ module AuthHelpers
 end
 
 # System tests (Capybara/Selenium) walk through the UI: submit email, read the
-# freshly-generated LoginCode, fill the 5 digit inputs, submit.
+# freshly-generated LoginCode, fill the single OTP input, submit.
 module SystemAuthHelpers
   def sign_in_as(record)
     visit login_path
@@ -29,10 +29,6 @@ module SystemAuthHelpers
     ).order(created_at: :desc).first
     raise "No LoginCode generated for #{record.email}" unless code
 
-    # Re-find each iteration — the Stimulus controller mutates state on every
-    # keystroke and auto-submits when complete, which can stale-out a cached list.
-    code.code.chars.each_with_index do |digit, i|
-      all("input[data-code-input-target='digit']", count: 5)[i].send_keys(digit)
-    end
+    find("input[data-code-input-target='input']", visible: :all).send_keys(code.code)
   end
 end

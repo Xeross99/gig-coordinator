@@ -13,7 +13,7 @@
 
   <% if @host.photo.attached? %>
     <div class="flex items-center gap-3">
-      <%= image_tag @host.photo.variant(resize_to_fill: [64, 64]), class: "w-16 h-16 rounded-full object-cover" %>
+      <%= image_tag @host.photo.variant(:small), class: "size-16 rounded-full object-cover" %>
       <div class="text-sm text-stone-500">Obecne zdjęcie</div>
     </div>
   <% end %>

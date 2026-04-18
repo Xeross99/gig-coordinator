@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :load_current_session
+  before_action :touch_last_seen
 
   helper_method :current_session, :current_user, :current_host, :signed_in?
 
@@ -11,6 +12,16 @@ class ApplicationController < ActionController::Base
   def load_current_session
     token = cookies.signed[:session_token]
     Current.session = token ? Session.find_by(token: token) : nil
+  end
+
+  # Stamp the currently signed-in User with `last_seen_at` once per minute so
+  # the "online now" indicator + "ostatnio widziany" text in the UI stay fresh
+  # without writing to the DB on every request.
+  def touch_last_seen
+    return unless current_user
+    last = current_user.last_seen_at
+    return if last && last > 1.minute.ago
+    current_user.update_column(:last_seen_at, Time.current)
   end
 
   def current_session = Current.session
