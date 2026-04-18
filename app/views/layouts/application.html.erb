@@ -48,7 +48,11 @@
       <% profile_href = current_host ? edit_host_profile_path : edit_profile_path %>
       <nav class="app-navbar sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-stone-200 px-4 py-3">
         <div class="flex items-center justify-between gap-4 max-w-lg mx-auto">
-          <%= link_to profile_href, class: "flex items-start space-x-4 min-w-0" do %>
+          <%# data-turbo-permanent — avatar + name + rank don't change between
+              pages, so Turbo Drive keeps this subtree intact across navigation.
+              Skips the image re-paint/network lookup on every page load. %>
+          <%= link_to profile_href, id: "navbar-user", data: { turbo_permanent: true },
+                      class: "flex items-start space-x-4 min-w-0" do %>
             <div class="shrink-0">
               <div class="relative">
                 <% if me.photo.attached? %>

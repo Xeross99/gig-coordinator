@@ -25,7 +25,9 @@
     <% me = current_host %>
     <nav class="app-navbar sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-stone-200 px-4 py-3">
       <div class="flex items-center justify-between gap-4 max-w-3xl mx-auto">
-        <%= link_to edit_host_profile_path, class: "flex items-start space-x-4 min-w-0" do %>
+        <%# data-turbo-permanent — see note in application.html.erb. %>
+        <%= link_to edit_host_profile_path, id: "navbar-user", data: { turbo_permanent: true },
+                    class: "flex items-start space-x-4 min-w-0" do %>
           <div class="shrink-0">
             <div class="relative">
               <% if me&.photo&.attached? %>
