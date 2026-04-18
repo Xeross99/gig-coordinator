@@ -29,6 +29,14 @@ function navDepth(path) {
 document.addEventListener("turbo:visit", (event) => {
   const fromPath = window.location.pathname
   const toPath   = new URL(event.detail.url, window.location.origin).pathname
+
+  // Self-reload (pull-to-refresh) or a pre-set "none" should skip view
+  // transitions entirely — animating a page into itself stutters.
+  if (fromPath === toPath || document.documentElement.dataset.transitionDirection === "none") {
+    document.documentElement.dataset.transitionDirection = "none"
+    return
+  }
+
   const from = navDepth(fromPath)
   const to   = navDepth(toPath)
 

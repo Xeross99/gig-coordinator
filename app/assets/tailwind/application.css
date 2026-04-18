@@ -151,6 +151,15 @@ nav[aria-label="Breadcrumb"] {
   }
 }
 
+/* Pull-to-refresh opts out of the view-transition entirely — the spinner
+   freeze during the snapshot looked like a stutter on finger release. */
+html[data-transition-direction="none"]::view-transition-old(root),
+html[data-transition-direction="none"]::view-transition-new(root),
+html[data-transition-direction="none"]::view-transition-old(app-breadcrumb),
+html[data-transition-direction="none"]::view-transition-new(app-breadcrumb) {
+  animation: none;
+}
+
 /* Unified <select> appearance: strip native chevron, draw a stone-500 SVG chevron so selects match text/number inputs. */
 .form-select {
   appearance: none;

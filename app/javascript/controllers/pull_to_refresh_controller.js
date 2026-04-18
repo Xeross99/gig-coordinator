@@ -88,30 +88,54 @@ export default class extends Controller {
     this.active = false
     this.startY = null
 
-    // Re-enable transitions for the snap-back / trigger states.
-    this.indicatorTarget.style.transition = "transform 250ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease-out"
-    if (this.hasSpinnerTarget) this.spinnerTarget.style.transition = "transform 250ms cubic-bezier(0.22, 1, 0.36, 1)"
-
     if (triggered) {
-      // Snap the indicator to its resting pose + strip any inline rotation so
-      // the CSS keyframe animation can take over and spin freely until the new
-      // page replaces the DOM.
+      // Smooth snap back to the resting pose. We animate the indicator's
+      // transform (250ms ease-out) so the release feels nice, but the spinner
+      // itself drops its transition immediately — clearing its inline
+      // rotation while a transition is live would race the CSS keyframe
+      // (pull-spin) that's about to take over via the `.refreshing` class.
       this.distance = this.thresholdValue
       const y = this.thresholdValue - 20
-      this.indicatorTarget.style.transform = `translate(-50%, ${y}px) scale(1)`
-      this.indicatorTarget.style.opacity   = "1"
+      this.indicatorTarget.style.transition = "transform 250ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease-out"
+      this.indicatorTarget.style.transform  = `translate(-50%, ${y}px) scale(1)`
+      this.indicatorTarget.style.opacity    = "1"
       this.indicatorTarget.classList.add("refreshing")
-      if (this.hasSpinnerTarget) this.spinnerTarget.style.transform = ""
-
-      // Kick off navigation — Turbo.visit gives us a soft replace so the
-      // indicator keeps spinning in the current DOM until the fresh page
-      // swaps in. Fallback to a hard reload if Turbo isn't available.
-      if (window.Turbo) {
-        window.Turbo.visit(window.location.href, { action: "replace" })
-      } else {
-        window.location.reload()
+      if (this.hasSpinnerTarget) {
+        this.spinnerTarget.style.transition = "none"
+        this.spinnerTarget.style.transform  = ""
       }
+
+      // Skip the view-transition for this specific navigation. View-transitions
+      // freeze the real DOM for the duration of the snapshot, which would
+      // interrupt the snap-back animation mid-flight.
+      document.documentElement.dataset.transitionDirection = "none"
+
+      // Wait for the snap-back to finish before kicking off Turbo.visit —
+      // otherwise the view-transition snapshot lands mid-animation and
+      // either freezes it or jumps the indicator. One-shot transitionend,
+      // with a 350ms safety timeout in case the event never fires (reduced
+      // motion, element off-screen, etc.).
+      const startNav = () => {
+        if (window.Turbo) {
+          window.Turbo.visit(window.location.href, { action: "replace" })
+        } else {
+          window.location.reload()
+        }
+      }
+      let fired = false
+      const onDone = () => {
+        if (fired) return
+        fired = true
+        this.indicatorTarget.removeEventListener("transitionend", onDone)
+        startNav()
+      }
+      this.indicatorTarget.addEventListener("transitionend", onDone, { once: true })
+      setTimeout(onDone, 350)
     } else {
+      // Didn't pull past threshold — re-enable transitions so the indicator
+      // glides back up instead of jumping.
+      this.indicatorTarget.style.transition = "transform 250ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease-out"
+      if (this.hasSpinnerTarget) this.spinnerTarget.style.transition = "transform 250ms cubic-bezier(0.22, 1, 0.36, 1)"
       this.reset()
     }
   }
