@@ -4,6 +4,13 @@
 <h1 class="text-2xl font-semibold mb-4">Wszyscy pracownicy</h1>
 
 <% if @users.any? %>
+  <div class="flex items-center justify-between px-4 pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+    <span>Pracownik</span>
+    <span class="flex items-center gap-1">
+      <span aria-hidden="true">🐔</span>
+      <span>Zaliczone łapania</span>
+    </span>
+  </div>
   <ul class="space-y-3">
     <% @users.each do |user| %>
       <% catches = @catch_counts[user.id] || 0 %>

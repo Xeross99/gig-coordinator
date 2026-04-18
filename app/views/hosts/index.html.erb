@@ -7,23 +7,33 @@
   <ul class="space-y-3">
     <% @hosts.each do |host| %>
       <% upcoming_count = @upcoming_counts[host.id] || 0 %>
-      <li class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4">
-        <% if host.photo.attached? %>
-          <%= image_tag host.photo.variant(:small),
-                        class: "size-14 rounded-full object-cover shrink-0" %>
-        <% else %>
-          <div class="size-14 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold shrink-0">
-            <%= host.first_name[0] %><%= host.last_name[0] %>
+      <li class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="p-4 flex items-center gap-4">
+          <% if host.photo.attached? %>
+            <%= image_tag host.photo.variant(:small),
+                          class: "size-14 rounded-full object-cover shrink-0" %>
+          <% else %>
+            <div class="size-14 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold shrink-0">
+              <%= host.first_name[0] %><%= host.last_name[0] %>
+            </div>
+          <% end %>
+          <div class="min-w-0 flex-1">
+            <div class="font-medium text-stone-900 truncate"><%= host.display_name %></div>
+            <div class="text-sm text-stone-500 truncate"><%= host.location %></div>
           </div>
+          <div class="text-right text-xs shrink-0">
+            <div class="text-stone-900 font-semibold tabular-nums"><%= upcoming_count %></div>
+            <div class="text-stone-500"><%= upcoming_count == 1 ? "event" : "eventy" %></div>
+          </div>
+        </div>
+        <% if host.location.present? %>
+          <div class="border-t border-stone-200">
+            <%= render "shared/map_embed", location: host.location, height_class: "h-40" %>
+          </div>
+          <%= link_to t("events.open_in_maps"), google_maps_open_url(host.location),
+                      target: "_blank", rel: "noopener",
+                      class: "block text-center py-2 text-xs text-stone-600 hover:text-stone-900 border-t border-stone-100" %>
         <% end %>
-        <div class="min-w-0 flex-1">
-          <div class="font-medium text-stone-900 truncate"><%= host.display_name %></div>
-          <div class="text-sm text-stone-500 truncate"><%= host.location %></div>
-        </div>
-        <div class="text-right text-xs shrink-0">
-          <div class="text-stone-900 font-semibold tabular-nums"><%= upcoming_count %></div>
-          <div class="text-stone-500"><%= upcoming_count == 1 ? "event" : "eventy" %></div>
-        </div>
       </li>
     <% end %>
   </ul>
