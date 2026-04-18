@@ -3,9 +3,9 @@
      home_path: Path for the leading home icon (default root_path). %>
 <% home_path ||= root_path %>
 <% crumbs ||= [] %>
-<nav aria-label="Breadcrumb" class="flex mb-4">
-  <ol role="list" class="flex items-center space-x-4">
-    <li>
+<nav aria-label="Breadcrumb" class="flex mb-4 min-w-0">
+  <ol role="list" class="flex items-center space-x-4 min-w-0 w-full">
+    <li class="shrink-0">
       <div>
         <%= link_to home_path, class: "text-stone-400 hover:text-stone-600" do %>
           <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 shrink-0">
@@ -17,15 +17,15 @@
     </li>
     <% crumbs.each_with_index do |(label, path), i| %>
       <% is_last = i == crumbs.length - 1 %>
-      <li>
-        <div class="flex items-center">
+      <li class="<%= is_last ? "min-w-0 flex-1" : "shrink-0" %>">
+        <div class="flex items-center min-w-0">
           <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 shrink-0 text-stone-300">
             <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
           </svg>
           <% if path.present? && !is_last %>
             <%= link_to label, path, class: "ml-4 text-sm font-medium text-stone-500 hover:text-stone-700" %>
           <% else %>
-            <span aria-current="<%= "page" if is_last %>" class="ml-4 text-sm font-medium text-stone-700"><%= label %></span>
+            <span aria-current="<%= "page" if is_last %>" class="ml-4 text-sm font-medium text-stone-700 truncate block min-w-0"><%= label %></span>
           <% end %>
         </div>
       </li>

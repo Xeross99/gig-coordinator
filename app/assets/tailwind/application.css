@@ -34,6 +34,109 @@
   to { transform: rotate(360deg); }
 }
 
+/* Cross-page View Transitions (Turbo ships the meta opt-in; this styles the
+   default ::view-transition-* pseudos Chromium generates for the root element).
+   Direction is driven by `html[data-transition-direction="..."]`, set in
+   application.js on turbo:visit based on from/to path classification:
+   - "forward" (feed → event): new slides in from right, old exits to left
+   - "back"    (event → feed): new slides in from left,  old exits to right
+   - default  (everything else): subtle fade + vertical shift
+   Safari/Firefox without the API just skip the animation — no fallback needed. */
+@keyframes view-transition-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes view-transition-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+
+@keyframes view-transition-slide-in-right {
+  from { opacity: 0; transform: translateX(6%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes view-transition-slide-out-left {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-6%); }
+}
+
+@keyframes view-transition-slide-in-left {
+  from { opacity: 0; transform: translateX(-6%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes view-transition-slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(6%); }
+}
+
+::view-transition-old(root) {
+  animation: view-transition-fade-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: view-transition-fade-in 220ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+html[data-transition-direction="forward"]::view-transition-old(root) {
+  animation: view-transition-slide-out-left 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+html[data-transition-direction="forward"]::view-transition-new(root) {
+  animation: view-transition-slide-in-right 260ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+html[data-transition-direction="back"]::view-transition-old(root) {
+  animation: view-transition-slide-out-right 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+html[data-transition-direction="back"]::view-transition-new(root) {
+  animation: view-transition-slide-in-left 260ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+/* Opt the navbar out of the transition: give it its own view-transition-name
+   and disable the old/new animations so it stays visually static across pages.
+   Without this the whole root fades, which makes the sticky header flicker. */
+.app-navbar {
+  view-transition-name: app-navbar;
+}
+
+::view-transition-old(app-navbar),
+::view-transition-new(app-navbar) {
+  animation: none;
+}
+
+/* Breadcrumb gets its own view-transition so it never slides left/right with
+   the root. Still animated — just a plain cross-fade in place. */
+nav[aria-label="Breadcrumb"] {
+  view-transition-name: app-breadcrumb;
+}
+
+@keyframes view-transition-simple-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes view-transition-simple-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+::view-transition-old(app-breadcrumb) {
+  animation: view-transition-simple-fade-out 160ms ease-out both;
+}
+
+::view-transition-new(app-breadcrumb) {
+  animation: view-transition-simple-fade-in 220ms ease-in both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
 /* Unified <select> appearance: strip native chevron, draw a stone-500 SVG chevron so selects match text/number inputs. */
 .form-select {
   appearance: none;
