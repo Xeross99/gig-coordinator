@@ -11,21 +11,31 @@ Turbo.StreamActions.visit = function() {
   if (url) Turbo.visit(url)
 }
 
-// Directional view-transition flag. Before Turbo fires the navigation (and the
-// browser kicks off a view transition), we classify the jump based on the
-// from/to paths and set `data-transition-direction` on <html>. CSS then picks
-// different keyframes for "forward" (feed → event) and "back" (event → feed).
-// Everything else falls back to the default fade.
-const FEED_PATHS = new Set(["/", "/eventy"])
-const isEventShow = (path) => /^\/eventy\/[^/]+$/.test(path)
+// Directional view-transition flag. Before Turbo fires the navigation (and
+// the browser kicks off a view transition), we classify the jump by nav depth
+// and set `data-transition-direction` on <html>. CSS picks different keyframes
+// for "forward" (going deeper, e.g. feed → event → history) and "back" (going
+// shallower). Everything else falls back to the default fade.
+//   depth 0: feed (/, /eventy)
+//   depth 1: event show (/eventy/:slug)
+//   depth 2: event history (/eventy/:slug/historia)
+function navDepth(path) {
+  if (path === "/" || path === "/eventy") return 0
+  if (/^\/eventy\/[^/]+\/historia$/.test(path)) return 2
+  if (/^\/eventy\/[^/]+$/.test(path)) return 1
+  return null
+}
 
 document.addEventListener("turbo:visit", (event) => {
   const fromPath = window.location.pathname
-  const toPath = new URL(event.detail.url, window.location.origin).pathname
+  const toPath   = new URL(event.detail.url, window.location.origin).pathname
+  const from = navDepth(fromPath)
+  const to   = navDepth(toPath)
 
   let direction = "fade"
-  if (FEED_PATHS.has(fromPath) && isEventShow(toPath)) direction = "forward"
-  else if (isEventShow(fromPath) && FEED_PATHS.has(toPath)) direction = "back"
+  if (from !== null && to !== null && from !== to) {
+    direction = to > from ? "forward" : "back"
+  }
 
   document.documentElement.dataset.transitionDirection = direction
 })

@@ -18,6 +18,7 @@ Rails.application.routes.draw do
   # Worker app (root = events feed)
   root "events#index"
   resources :events, only: %i[index show new create], path: "eventy", path_names: { new: "nowy" } do
+    member { get :history, path: "historia" }
     resource :participation, only: %i[create destroy], path: "uczestnictwo" do
       post :accept
       post :decline

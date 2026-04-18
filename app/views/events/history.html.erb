@@ -1,0 +1,64 @@
+<% content_for(:title) { "Historia — #{@event.name}" } %>
+<%= render "shared/breadcrumbs", crumbs: [
+  [ t("events.upcoming"), root_path ],
+  [ @event.name, event_path(@event) ],
+  [ "Historia", nil ]
+] %>
+
+<h1 class="text-2xl font-semibold mb-1"><%= @event.name %></h1>
+<p class="text-sm text-stone-500 mb-6">Historia łapania - chronologicznie od utworzenia.</p>
+
+<div class="bg-white rounded-xl shadow-sm p-5">
+  <% if @entries.any? %>
+    <div class="flow-root">
+      <ul role="list" class="-mb-8">
+        <% @entries.each_with_index do |entry, i| %>
+          <% is_last = i == @entries.length - 1 %>
+          <% color, icon_path = history_entry_visuals(entry) %>
+          <li>
+            <%# All rows keep pb-8 so the ul's -mb-8 cancels the last one's
+                padding cleanly — without it the last timestamp slides below
+                the card border on tall two-line entries. %>
+            <div class="relative pb-8">
+              <% unless is_last %>
+                <span aria-hidden="true" class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-stone-200"></span>
+              <% end %>
+              <div class="relative flex space-x-3">
+                <div>
+                  <span class="flex size-8 items-center justify-center rounded-full <%= color %> ring-8 ring-white">
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 text-white">
+                      <path d="<%= icon_path %>" clip-rule="evenodd" fill-rule="evenodd" />
+                    </svg>
+                  </span>
+                </div>
+                <div class="flex min-w-0 flex-1 justify-between gap-4 pt-1.5">
+                  <div class="text-sm text-stone-600 min-w-0">
+                    <%= history_entry_text(entry) %>
+                  </div>
+                  <div class="text-right text-xs whitespace-nowrap text-stone-500 tabular-nums shrink-0">
+                    <time datetime="<%= entry[:at].iso8601 %>" class="flex flex-col items-end gap-0.5">
+                      <span class="inline-flex items-center gap-1">
+                        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-3.5 text-stone-400">
+                          <path fill-rule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clip-rule="evenodd" />
+                        </svg>
+                        <%= entry[:at].strftime("%d.%m") %>
+                      </span>
+                      <span class="inline-flex items-baseline gap-1 text-stone-400">
+                        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-3.5 self-center">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .199.079.39.22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78V5Z" clip-rule="evenodd" />
+                        </svg>
+                        <span><%= entry[:at].strftime("%H:%M:%S") %><span class="text-[9px] text-stone-300">.<%= entry[:at].strftime("%2N") %></span></span>
+                      </span>
+                    </time>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% else %>
+    <p class="text-stone-400 text-sm">Brak wpisów w historii.</p>
+  <% end %>
+</div>

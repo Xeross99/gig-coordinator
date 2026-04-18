@@ -79,9 +79,10 @@
       Wszyscy pracownicy (<%= all_users.size %>)
     </h3>
     <ul class="space-y-2">
-      <% all_users.each do |user| %>
+      <% all_users.each_with_index do |user, i| %>
         <% participation = participations_by_user[user.id] %>
-        <li class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm bg-stone-50">
+        <li class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm bg-stone-50 animate-pop-in"
+            style="animation-delay: <%= i * 40 %>ms">
           <%= render "events/roster_avatar", user: user %>
           <div class="min-w-0 flex-1">
             <div class="font-medium text-stone-900 truncate"><%= user.display_name %></div>

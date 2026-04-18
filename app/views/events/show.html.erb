@@ -3,7 +3,17 @@
 
 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
   <div class="p-5">
-    <h1 class="text-2xl font-semibold text-stone-900"><%= @event.name %></h1>
+    <div class="flex items-start justify-between gap-3">
+      <h1 class="text-2xl font-semibold text-stone-900 min-w-0"><%= @event.name %></h1>
+      <%= link_to history_event_path(@event),
+                  title: "Historia łapania",
+                  class: "shrink-0 inline-flex items-center justify-center size-9 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200" do %>
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .199.079.39.22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78V5Z" clip-rule="evenodd" />
+        </svg>
+        <span class="sr-only">Historia</span>
+      <% end %>
+    </div>
     <div class="mt-1 text-sm text-stone-500">
       <%= l(@event.scheduled_at, format: :long) %> - <%= l(@event.ends_at, format: :short) %>
     </div>

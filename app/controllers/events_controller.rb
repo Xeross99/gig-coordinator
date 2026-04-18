@@ -14,6 +14,15 @@ class EventsController < ApplicationController
     @host  = @event.host
   end
 
+  # Chronological timeline of what happened on this event — creation + every
+  # participation row (join, status change, cancel). We don't keep a dedicated
+  # audit log, so we lean on participations.created_at (original join) plus
+  # updated_at (last status change) as two separate timeline points.
+  def history
+    @event = Event.includes(:host).find(params[:id])
+    @entries = build_history_entries(@event)
+  end
+
   def new
     @event = Event.new(scheduled_at: 1.day.from_now.change(hour: 18, min: 0), capacity: 4)
     @hosts = Host.order(:last_name, :first_name)
@@ -30,6 +39,22 @@ class EventsController < ApplicationController
   end
 
   private
+
+  # Pair of timeline entries per participation: one for the initial join
+  # (created_at) and, if the row was touched later, one for the latest status
+  # change (updated_at). Plus a single entry for when the event was created.
+  def build_history_entries(event)
+    entries = [ { at: event.created_at, kind: :created, host: event.host } ]
+    event.participations.includes(user: { photo_attachment: :blob }).each do |p|
+      entries << { at: p.created_at, kind: :joined, participation: p }
+      if p.updated_at > p.created_at + 1.second
+        entries << { at: p.updated_at, kind: :status_change, participation: p }
+      end
+    end
+    # Newest first — reads like a feed: the latest action on top, event
+    # creation at the bottom.
+    entries.sort_by { |e| e[:at] }.reverse
+  end
 
   def require_master!
     return if current_user&.master?
