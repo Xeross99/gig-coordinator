@@ -15,7 +15,15 @@ class Host < ApplicationRecord
   validates :email, presence: true, uniqueness: { case_sensitive: false },
                     format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
 
+  after_create_commit :send_welcome_email
+
   def display_name
     "#{first_name} #{last_name}"
+  end
+
+  private
+
+  def send_welcome_email
+    WelcomeMailer.with(record: self).notify.deliver_later
   end
 end

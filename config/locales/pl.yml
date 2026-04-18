@@ -67,6 +67,8 @@ pl:
     roster: "Uczestnicy"
   mailers:
     hello: "Cześć %{name}!"
+    welcome:
+      subject: "Witaj w Gig Coordinator"
     login_code:
       subject: "Twój kod logowania"
     promotion:
