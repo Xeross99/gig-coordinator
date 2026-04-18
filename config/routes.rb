@@ -27,7 +27,8 @@ Rails.application.routes.draw do
   resources :users,              only: :index,             path: "pracownicy"
   resource  :profile,            only: %i[edit update],    path: "profil"
   resources :push_subscriptions, only: %i[create destroy], path: "subskrypcje-push"
-  get "informacje", to: "info#show", as: :info
+  get "informacje", to: "info#show",    as: :info
+  get "poradnik",   to: "info#install", as: :install_guide
 
   # Render dynamic PWA files from app/views/pwa/*. `Rails::PwaController` inherits from
   # `ActionController::Base` (not our `ApplicationController`), so it bypasses

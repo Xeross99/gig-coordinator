@@ -20,6 +20,15 @@
   <body class="h-full text-stone-900 antialiased">
     <%= render "shared/toast" %>
     <%= render "shared/turbo_confirm" %>
+    <% if request.path != install_guide_path %>
+      <%= link_to install_guide_path,
+                  class: "fixed top-4 right-4 z-20 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-stone-900 shadow-sm ring-1 ring-stone-200 hover:bg-stone-50" do %>
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4 text-stone-500">
+          <path d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clip-rule="evenodd" fill-rule="evenodd"/>
+        </svg>
+        Jak zacząć
+      <% end %>
+    <% end %>
     <%= yield %>
   </body>
 </html>

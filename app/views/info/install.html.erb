@@ -1,0 +1,60 @@
+<% content_for(:title) { "Jak zacząć" } %>
+
+<%# Anonymous visitors land here from the auth layout, which has no <main>
+    or padding — give them one. Signed-in users come through application.html
+    which already provides the max-width wrapper, so we skip it for them. %>
+<% if signed_in? %>
+  <%= render "shared/breadcrumbs", crumbs: [ [ "Jak zacząć", nil ] ] %>
+<% end %>
+<div class="<%= "mx-auto max-w-lg px-4 py-8" unless signed_in? %>">
+<article class="prose prose-stone max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h1:mb-4 prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-2 prose-p:text-stone-700 prose-li:text-stone-700 prose-strong:text-stone-900 prose-a:text-stone-900">
+  <h1>Jak zacząć</h1>
+  <p>Gig Coordinator działa jako PWA — <strong>nie ma jej w App Store ani Google Play</strong>. Dodajesz ją bezpośrednio z przeglądarki na ekran początkowy telefonu w 30 sekund. Bez instalacji część rzeczy nie zadziała (powiadomienia push, tryb pełnoekranowy), więc warto zrobić to na start.</p>
+
+  <h2>iPhone (Safari)</h2>
+  <p>Musi być <strong>Safari</strong> — Chrome na iOS nie potrafi zainstalować PWA, bo Apple mu nie pozwala.</p>
+  <ol>
+    <li>Otwórz <strong>your-domain.example.com</strong> w Safari.</li>
+    <li>Tapnij ikonkę <em>Udostępnij</em> (kwadrat ze strzałką w górę) na dolnym pasku.</li>
+    <li>Wybierz <em>Dodaj do ekranu początkowego</em>.</li>
+    <li>Potwierdź nazwę i tapnij <em>Dodaj</em> w prawym górnym rogu.</li>
+  </ol>
+
+  <%= render "install_screenshot", name: "ios-share", caption: "Safari → menu strony → Share" %>
+  <%= render "install_screenshot", name: "ios-add-to-home", caption: "Przewiń listę i wybierz Add to Home Screen" %>
+  <%= render "install_screenshot", name: "ios-confirm", caption: "Potwierdź nazwę i tapnij Add" %>
+
+  <h2>Android (Chrome)</h2>
+  <ol>
+    <li>Otwórz <strong>your-domain.example.com</strong> w Chrome.</li>
+    <li>Tapnij menu <em>⋮</em> w prawym górnym rogu.</li>
+    <li>Wybierz <em>Zainstaluj aplikację</em> (lub <em>Dodaj do ekranu głównego</em>).</li>
+    <li>Potwierdź.</li>
+  </ol>
+
+  <%= render "install_screenshot", name: "android-menu", caption: "Chrome → menu ⋮" %>
+  <%= render "install_screenshot", name: "android-install", caption: "Zainstaluj aplikację" %>
+
+  <h2>Powiadomienia push</h2>
+  <p>Po instalacji <strong>otwórz aplikację z ekranu początkowego</strong> (ikonka z kurczakiem, nie z zakładki w przeglądarce). Przy pierwszym uruchomieniu system zapyta, czy pozwolić na powiadomienia.</p>
+  <ul>
+    <li>Tapnij <strong>Zezwól</strong> — dzięki temu dostaniesz pingi o nowych łapaniach i zaproszeniach.</li>
+    <li>Jeśli odrzuciłeś przy pierwszym pytaniu, iOS nie zapyta ponownie. Trzeba ręcznie wejść w <em>Ustawienia → Gig Coordinator → Powiadomienia</em> i włączyć.</li>
+  </ul>
+
+  <%= render "install_screenshot", name: "notifications-prompt", caption: "Monit o powiadomienia przy pierwszym uruchomieniu" %>
+  <%= render "install_screenshot", name: "notifications-settings", caption: "iOS Ustawienia → Gig Coordinator → Powiadomienia (gdy odrzucone)" %>
+
+  <h2>Logowanie</h2>
+  <p>Wpisujesz maila, dostajesz <strong>5-cyfrowy kod</strong> w mailu i przepisujesz go w aplikacji. Kod ważny 15 minut, potem trzeba poprosić o nowy. Żadnych haseł.</p>
+
+  <% unless signed_in? %>
+    <div class="mt-10 not-prose">
+      <%= link_to login_path,
+                  class: "block text-center rounded-md bg-stone-900 px-4 py-3 text-sm font-semibold text-white shadow-xs hover:bg-stone-800" do %>
+        Wróć do logowania
+      <% end %>
+    </div>
+  <% end %>
+</article>
+</div>
