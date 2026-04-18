@@ -1,4 +1,11 @@
 class User < ApplicationRecord
+  include Titleable
+
+  # Presence is inferred from the throttled last_seen_at stamp written by
+  # ApplicationController#touch_last_seen. Five minutes is a comfortable idle
+  # window — covers page refreshes, scrolling, short tab-switches.
+  ONLINE_WINDOW = 5.minutes
+
   has_many :participations, dependent: :destroy
   has_many :events, through: :participations
   has_many :push_subscriptions, dependent: :destroy
@@ -12,8 +19,6 @@ class User < ApplicationRecord
                        preprocessed: true
   end
 
-  enum :title, { rookie: 0, member: 1, veteran: 2, master: 3 }
-
   normalizes :email, with: ->(v) { v.to_s.strip.downcase }
 
   validates :first_name, :last_name, presence: true
@@ -26,33 +31,11 @@ class User < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
-  def display_title
-    I18n.t("user.titles.#{title}", default: title.to_s.humanize)
-  end
-
-  TITLE_BADGE_COLORS = {
-    "rookie"         => "bg-gray-100 text-gray-600",       # lowest
-    "member"     => "bg-green-100 text-green-700",
-    "veteran" => "bg-purple-100 text-purple-700",
-    "master"       => "bg-yellow-100 text-yellow-800"    # highest (gold)
-  }.freeze
-
-  def title_badge_classes
-    TITLE_BADGE_COLORS.fetch(title, "bg-gray-100 text-gray-600")
-  end
-
-  # Presence is inferred from the throttled last_seen_at stamp written by
-  # ApplicationController#touch_last_seen. Five minutes is a comfortable idle
-  # window — covers page refreshes, scrolling, short tab-switches.
-  ONLINE_WINDOW = 5.minutes
-
   def online?
     last_seen_at.present? && last_seen_at > ONLINE_WINDOW.ago
   end
 
-  private
-
   def send_welcome_email
-    WelcomeMailer.with(record: self).notify.deliver_later
+    WelcomeMailer.notify(self).deliver_later
   end
 end

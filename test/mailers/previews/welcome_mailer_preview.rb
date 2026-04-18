@@ -1,11 +1,6 @@
 class WelcomeMailerPreview < ActionMailer::Preview
-  def notify_user
+  def notify
     user = User.first || OpenStruct.new(email: "ala@example.com", first_name: "Ala")
-    WelcomeMailer.with(record: user).notify
-  end
-
-  def notify_host
-    host = Host.first || OpenStruct.new(email: "organizator@example.com", first_name: "Jan")
-    WelcomeMailer.with(record: host).notify
+    WelcomeMailer.notify(user)
   end
 end

@@ -1,9 +1,8 @@
 class WelcomeMailer < ApplicationMailer
-  def notify
-    @record    = params[:record]
-    @is_host   = @record.is_a?(Host)
+  def notify(user)
+    @user      = user
     @url       = login_url
     @guide_url = install_guide_url
-    mail to: @record.email, subject: I18n.t("mailers.welcome.subject")
+    mail to: @user.email, subject: I18n.t("mailers.welcome.subject")
   end
 end
