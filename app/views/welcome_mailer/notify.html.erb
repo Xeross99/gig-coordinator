@@ -15,13 +15,14 @@
     " jest gotowe. Od teraz będziesz dostawać powiadomienia o nowych łapaniach kur u organizatorów."
   ]) %>
 
-  <%= render "mailers/paragraph", html: safe_join([
-    "Zaloguj się tym samym adresem e-mail — wyślemy Ci 5-cyfrowy kod. Im więcej łapań zaliczysz, tym wyższa ranga: ".html_safe,
-    tag.br,
-    tag.strong("Nowy → Członek → Weteran → Mistrz"),
-    "."
-  ]) %>
+  <%= render "mailers/paragraph", html: "Zaloguj się tym samym adresem e-mail — wyślemy Ci 5-cyfrowy kod." %>
 <% end %>
+
+<%= render "mailers/paragraph", html: safe_join([
+  "Nie wiesz jak zacząć? ".html_safe,
+  tag.a("Zobacz poradnik krok po kroku", href: @guide_url, style: "color:#0c0a09;text-decoration:underline"),
+  " — jak dodać aplikację do ekranu głównego i włączyć powiadomienia."
+]) %>
 
 <%= render "mailers/cta_button", label: "Otwórz aplikację", url: @url %>
 <%= render "mailers/raw_url", url: @url %>
