@@ -37,4 +37,30 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     assert_match hosts(:jan).display_name, response.body
     assert_select "iframe[src*='maps.google.com/maps'][src*='output=embed']"
   end
+
+  test "GET /eventy/:id/historia requires login" do
+    delete session_path
+    get history_event_path(events(:gig-coordinators_tomorrow))
+    assert_redirected_to login_path
+  end
+
+  test "GET /eventy/:id/historia renders event creation + participation entries" do
+    event = events(:gig-coordinators_tomorrow)
+    Participation.create!(event: event, user: users(:bartek), status: :confirmed, position: 1)
+    p = Participation.create!(event: event, user: users(:cezary), status: :waitlist, position: 1)
+    # Bump updated_at so the controller emits a separate status_change entry.
+    p.update!(status: :confirmed, position: 2, updated_at: 5.seconds.from_now)
+
+    get history_event_path(event)
+    assert_response :success
+
+    # Creation entry.
+    assert_match "Utworzono wydarzenie",            response.body
+    assert_match hosts(:jan).display_name,       response.body
+    # Join entries (verbs from participation_action_verb).
+    assert_match users(:bartek).display_name,    response.body
+    assert_match "dołączył jako potwierdzony",   response.body
+    # Status change entry.
+    assert_match "został potwierdzony",          response.body
+  end
 end

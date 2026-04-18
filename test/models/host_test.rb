@@ -1,6 +1,8 @@
 require "test_helper"
 
 class HostTest < ActiveSupport::TestCase
+  include ActionMailer::TestHelper
+
   test "valid host can be created" do
     host = Host.new(first_name: "Jan", last_name: "Kowalski",
                     email: "new-jan@example.com", location: "Warszawa")
@@ -32,5 +34,11 @@ class HostTest < ActiveSupport::TestCase
     assert Host.reflect_on_association(:events)
     host = Host.new
     assert_respond_to host, :photo
+  end
+
+  test "no welcome email is enqueued on create (hosts onboard via console)" do
+    assert_enqueued_emails 0 do
+      Host.create!(first_name: "New", last_name: "Host", email: "nh@example.com", location: "Somewhere")
+    end
   end
 end
