@@ -12,6 +12,13 @@ service: gig-coordinator
 # Image stored in GitHub Container Registry. Requires a PAT with write:packages.
 image: your-username/gig-coordinator
 
+# VPS is 1 CPU / 1 GB RAM and we keep Solid Queue in-Puma — cold boot +
+# db:prepare + bootsnap warm-up routinely lands around 35–50 s. Default 30 s
+# is too tight and kamal-proxy kills healthy-but-slow boots. These keys are
+# TOP-LEVEL in Kamal 2 (putting them under `proxy:` silently no-ops).
+deploy_timeout: 120
+drain_timeout: 30
+
 servers:
   web:
     - your-vps.example.com
@@ -35,6 +42,10 @@ proxy:
   ssl: false
   run:
     http_port: 20215
+  healthcheck:
+    path: /up
+    interval: 3
+    timeout: 5
 
 registry:
   server: ghcr.io
