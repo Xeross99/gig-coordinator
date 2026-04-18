@@ -101,19 +101,6 @@
                 <% end %>
               </div>
 
-              <% if current_user&.master? %>
-                <div class="py-1">
-                  <%= link_to new_event_path,
-                              class: "group/item flex items-center px-4 py-2 text-sm text-stone-700 focus:bg-stone-100 focus:text-stone-900 focus:outline-hidden" do %>
-                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
-                         class="mr-3 size-5 text-stone-400 group-focus/item:text-stone-500">
-                      <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" clip-rule="evenodd" fill-rule="evenodd"/>
-                    </svg>
-                    <%= t("events.new_event") %>
-                  <% end %>
-                </div>
-              <% end %>
-
               <% unless current_host %>
                 <div class="py-1">
                   <%= link_to users_path,
