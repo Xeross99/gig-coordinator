@@ -36,6 +36,9 @@
 # Kamal registry password (GHCR PAT) — local-only, never committed.
 /.kamal/registry-password
 
+# Claude Code worktrees — ephemeral, local-only.
+/.claude/worktrees
+
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
