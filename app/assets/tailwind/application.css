@@ -130,6 +130,20 @@ nav[aria-label="Breadcrumb"] {
   animation: view-transition-simple-fade-in 220ms ease-in both;
 }
 
+/* Give the pull-to-refresh indicator its own view-transition layer so the
+   spinner floats ABOVE the root snapshot during navigation instead of being
+   captured into it (where it ends up behind the breadcrumb + navbar named
+   layers). No animation — it manages its own fade-out via Stimulus on
+   turbo:load. */
+.pull-to-refresh-indicator {
+  view-transition-name: pull-to-refresh;
+}
+
+::view-transition-old(pull-to-refresh),
+::view-transition-new(pull-to-refresh) {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
