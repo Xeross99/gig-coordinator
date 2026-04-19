@@ -14,15 +14,17 @@ Turbo.StreamActions.visit = function() {
 // Directional view-transition flag. Before Turbo fires the navigation (and
 // the browser kicks off a view transition), we classify the jump by nav depth
 // and set `data-transition-direction` on <html>. CSS picks different keyframes
-// for "forward" (going deeper, e.g. feed → event → history) and "back" (going
-// shallower). Everything else falls back to the default fade.
-//   depth 0: feed (/, /eventy)
-//   depth 1: event show (/eventy/:slug)
-//   depth 2: event history (/eventy/:slug/historia)
+// for "forward" (going deeper, new slides in from right) and "back" (going
+// shallower, new slides in from left). Everything else falls back to fade.
+//
+//   depth 0: list/feed pages       (/, /eventy, /pracownicy, /organizatorzy)
+//   depth 1: detail pages          (/eventy/:slug, /pracownicy/:id)
+//   depth 2: sub-detail            (/eventy/:slug/historia)
 function navDepth(path) {
-  if (path === "/" || path === "/eventy") return 0
+  if (path === "/" || path === "/eventy" || path === "/pracownicy" || path === "/organizatorzy") return 0
   if (/^\/eventy\/[^/]+\/historia$/.test(path)) return 2
-  if (/^\/eventy\/[^/]+$/.test(path)) return 1
+  if (/^\/eventy\/[^/]+$/.test(path))           return 1
+  if (/^\/pracownicy\/[^/]+$/.test(path))      return 1
   return null
 }
 

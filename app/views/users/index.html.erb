@@ -14,7 +14,8 @@
   <ul class="space-y-3">
     <% @users.each do |user| %>
       <% catches = @catch_counts[user.id] || 0 %>
-      <li class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4">
+      <li class="bg-white rounded-xl shadow-sm">
+        <%= link_to user_path(user), class: "p-4 flex items-center gap-4 rounded-xl hover:bg-stone-50 active:bg-stone-100 transition-colors" do %>
         <div class="relative shrink-0">
           <% if user.photo.attached? %>
             <%= image_tag user.photo.variant(:small),
@@ -45,6 +46,7 @@
           <span class="text-lg leading-none" aria-hidden="true">🐔</span>
           <span class="text-sm font-semibold text-stone-900 tabular-nums"><%= catches %></span>
         </div>
+        <% end %>
       </li>
     <% end %>
   </ul>

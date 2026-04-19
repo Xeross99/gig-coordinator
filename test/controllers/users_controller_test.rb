@@ -58,4 +58,51 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert body.index(users(:ala).display_name) < body.index(users(:bartek).display_name)
     assert body.index(users(:bartek).display_name) < body.index(users(:cezary).display_name)
   end
+
+  # --- show action -----------------------------------------------------------
+
+  test "GET /pracownicy/:id requires login" do
+    get user_path(users(:ala))
+    assert_redirected_to login_path
+  end
+
+  test "GET /pracownicy/:id as host redirects (worker-facing area)" do
+    sign_in_as(hosts(:jan))
+    get user_path(users(:ala))
+    assert_redirected_to login_path
+  end
+
+  test "GET /pracownicy/:id shows the user's display_name, email, rank, and catches count" do
+    users(:ala).update!(title: :master)
+
+    # Seed one completed-event confirmed participation so the catches count is > 0.
+    done = Event.create!(host: hosts(:jan), name: "Zakonczone",
+                         scheduled_at: 2.days.ago, ends_at: 2.days.ago + 2.hours,
+                         pay_per_person: 100, capacity: 4,
+                         completed_at: 1.day.ago)
+    Participation.create!(event: done, user: users(:ala), status: :confirmed, position: 1)
+
+    sign_in_as(users(:bartek))
+    get user_path(users(:ala))
+    assert_response :success
+    assert_match users(:ala).display_name,            response.body
+    assert_match users(:ala).email,                   response.body
+    assert_match I18n.t("user.titles.master"),  response.body
+    assert_match "Zaliczone łapania",                 response.body
+  end
+
+  test "GET /pracownicy/:id lists upcoming participations" do
+    event = events(:gig-coordinators_tomorrow)
+    Participation.create!(event: event, user: users(:ala), status: :confirmed, position: 1)
+
+    sign_in_as(users(:bartek))
+    get user_path(users(:ala))
+    assert_match event.name, response.body
+  end
+
+  test "GET /pracownicy/:id 404s for a non-existent user" do
+    sign_in_as(users(:ala))
+    get user_path(id: 999_999)
+    assert_response :not_found
+  end
 end

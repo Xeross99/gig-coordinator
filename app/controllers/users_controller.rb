@@ -12,4 +12,14 @@ class UsersController < ApplicationController
       .group(:user_id)
       .count
   end
+
+  def show
+    @user = User.with_attached_photo.find(params[:id])
+
+    # Participations grouped into three sections for the page.
+    scope = @user.participations.includes(event: :host).order("events.scheduled_at DESC")
+    @past_confirmed = scope.confirmed.select { |p| p.event.completed? }
+    @upcoming       = scope.active.reject  { |p| p.event.completed? || p.event.scheduled_at < Time.current }
+    @catches_count  = @past_confirmed.size
+  end
 end

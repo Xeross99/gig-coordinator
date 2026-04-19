@@ -1,0 +1,110 @@
+<% content_for(:title) { @user.display_name } %>
+<%= render "shared/breadcrumbs", crumbs: [
+  ["Wszyscy pracownicy", users_path],
+  [@user.display_name, nil]
+] %>
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <%# Hero: original-resolution photo (no :small variant), falls back to initials. %>
+  <% if @user.photo.attached? %>
+    <div class="bg-stone-100">
+      <%= image_tag rails_blob_path(@user.photo, only_path: true),
+                    alt: @user.display_name,
+                    class: "w-full aspect-square object-cover" %>
+    </div>
+  <% else %>
+    <div class="w-full aspect-square bg-stone-200 flex items-center justify-center">
+      <span class="text-6xl font-semibold text-stone-500">
+        <%= @user.first_name[0] %><%= @user.last_name[0] %>
+      </span>
+    </div>
+  <% end %>
+
+  <div class="p-5">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-semibold text-stone-900 truncate"><%= @user.display_name %></h1>
+        <div class="mt-1 flex items-center gap-2 text-xs">
+          <% if @user.online? %>
+            <span class="inline-flex items-center gap-1 text-emerald-600 font-medium">
+              <span class="size-2 rounded-full bg-emerald-500"></span> Online teraz
+            </span>
+          <% elsif @user.last_seen_at.present? %>
+            <span class="inline-flex items-center gap-1 text-stone-500">
+              <span class="size-2 rounded-full bg-stone-300"></span>
+              Ostatnio <%= time_ago_in_words(@user.last_seen_at) %> temu
+            </span>
+          <% else %>
+            <span class="text-stone-400">Nigdy się nie logował</span>
+          <% end %>
+        </div>
+      </div>
+      <div class="shrink-0">
+        <%= render "users/title_badge", user: @user %>
+      </div>
+    </div>
+
+    <dl class="grid grid-cols-2 gap-3 mt-5 text-sm">
+      <div class="col-span-2">
+        <dt class="text-stone-500 text-xs uppercase tracking-wide">E-mail</dt>
+        <dd class="font-medium break-all"><%= @user.email %></dd>
+      </div>
+      <div>
+        <dt class="text-stone-500 text-xs uppercase tracking-wide">Ranga</dt>
+        <dd class="font-medium"><%= @user.display_title %></dd>
+      </div>
+      <div>
+        <dt class="text-stone-500 text-xs uppercase tracking-wide flex items-center gap-1">
+          <span aria-hidden="true">🐔</span> Zaliczone łapania
+        </dt>
+        <dd class="font-semibold text-lg tabular-nums"><%= @catches_count %></dd>
+      </div>
+      <div>
+        <dt class="text-stone-500 text-xs uppercase tracking-wide">Dołączył</dt>
+        <dd class="font-medium"><%= l(@user.created_at.to_date, format: :long) %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <% if @upcoming.any? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3">Nadchodzące łapania</h2>
+      <ul class="space-y-2">
+        <% @upcoming.each do |p| %>
+          <li class="flex items-center justify-between gap-3 text-sm">
+            <%= link_to p.event.name, event_path(p.event),
+                        class: "font-medium text-stone-900 hover:underline truncate min-w-0 flex-1" %>
+            <span class="shrink-0 text-xs text-stone-500 tabular-nums">
+              <%= l(p.event.scheduled_at, format: :short) %>
+            </span>
+            <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium
+                         <%= { 'confirmed' => 'bg-emerald-100 text-emerald-700',
+                               'waitlist'  => 'bg-amber-100 text-amber-700',
+                               'reserved'  => 'bg-indigo-100 text-indigo-700' }[p.status] %>">
+              <%= { 'confirmed' => 'zapisany',
+                    'waitlist'  => 'rezerwa',
+                    'reserved'  => 'oczekuje' }[p.status] %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @past_confirmed.any? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3">Historia zakończonych łapań</h2>
+      <ul class="space-y-2">
+        <% @past_confirmed.each do |p| %>
+          <li class="flex items-center justify-between gap-3 text-sm">
+            <%= link_to p.event.name, event_path(p.event),
+                        class: "font-medium text-stone-900 hover:underline truncate min-w-0 flex-1" %>
+            <span class="shrink-0 text-xs text-stone-500 tabular-nums">
+              <%= l(p.event.scheduled_at.to_date) %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</div>

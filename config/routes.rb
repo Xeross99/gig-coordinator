@@ -25,7 +25,7 @@ Rails.application.routes.draw do
     end
   end
   resources :hosts,              only: :index,             path: "organizatorzy"
-  resources :users,              only: :index,             path: "pracownicy"
+  resources :users,              only: %i[index show],     path: "pracownicy"
   resource  :profile,            only: %i[edit update],    path: "profil"
   resources :push_subscriptions, only: %i[create destroy], path: "subskrypcje-push"
   get "informacje", to: "info#show",    as: :info
