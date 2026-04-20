@@ -32,6 +32,10 @@ class User < ApplicationRecord
     master? || (captain? && managed_hosts.exists?)
   end
 
+  def event_creator_rank?
+    master? || captain?
+  end
+
   def online?
     last_seen_at.present? && last_seen_at > ONLINE_WINDOW.ago
   end

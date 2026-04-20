@@ -22,4 +22,15 @@ class InfoControllerTest < ActionDispatch::IntegrationTest
     get info_path
     assert_redirected_to login_path
   end
+
+  test "GET /informacje documents Kapitan event-creation rules" do
+    sign_in_as(users(:ala))
+    get info_path
+    assert_response :success
+    # The doc describes both ranks that can plan events and the disabled-button
+    # behavior when a komendant has no managed hosts.
+    assert_match I18n.t("user.titles.master"),        response.body
+    assert_match I18n.t("user.titles.captain"), response.body
+    assert_match "wyszarzony",                              response.body
+  end
 end

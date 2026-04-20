@@ -28,6 +28,18 @@ pl:
       master:        "Mistrz"
     manages: "Zarządza"
     manages_all: "Zarządza wszystkimi organizatorami"
+    rank_descriptions:
+      rookie:          "Witaj w obiekcie. Zapisuj się na łapania i zbieraj doświadczenie."
+      member:      "Nie jesteś już nowicjuszem - masz za sobą pierwsze łapania i budujesz reputację w systemie."
+      veteran:  "Weteran łapań - kurny respect. Dalej zapisujesz się na eventy, ale już z wyższym statusem."
+      captain: "Możesz teraz planować łapania dla organizatorów, do których zostałeś przypisany. Jeśli nie masz jeszcze żadnego przypisanego organizatora - poproś administratora o przypisanie."
+      master:        "Najwyższa ranga w systemie. Planujesz łapania dla dowolnego organizatora i dostajesz priorytetowe rezerwacje na nowych eventach."
+    rank_icons:
+      rookie:          "🐣"
+      member:      "🐤"
+      veteran:  "🐓"
+      captain: "🎖️"
+      master:        "👑"
   auth:
     login_title: "Zaloguj się"
     email_label: "Adres e-mail"
@@ -61,6 +73,7 @@ pl:
     host_label: "W imieniu organizatora"
     new_event: "Zaplanuj wydarzenie"
     new_event_forbidden: "Nie masz uprawnień do planowania łapań."
+    new_event_disabled_hint: "Nie masz jeszcze przypisanego organizatora."
     created: "Event dodany. Zaproszenia już poszły."
     open_in_maps: "Otwórz w Google Maps"
   host_panel:
@@ -81,6 +94,11 @@ pl:
     invitation:
       subject: "Zaproszenie na %{event} - masz godzinę na potwierdzenie"
       body: "Jako jeden z najwyższych w rankingu dostajesz slot na evencie \"%{event}\". Masz godzinę na potwierdzenie - jeśli nie zdążysz, miejsce przejdzie do kolejnej osoby z rankingu."
+    rank_promotion:
+      subject:  "Awans! Masz teraz rangę %{title}"
+      heading:  "Awans w obiekcie!"
+      intro:    "awansowałeś na rangę"
+      cta:      "Zobacz swój profil"
   hosts:
     commanders: "Komendanci"
     manager_count:

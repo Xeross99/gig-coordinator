@@ -191,4 +191,21 @@ class UserTest < ActiveSupport::TestCase
       refute user.can_create_events?, "#{title} powinien NIE móc tworzyć eventów"
     end
   end
+
+  test "event_creator_rank? is true for master" do
+    users(:ala).update!(title: :master)
+    assert users(:ala).event_creator_rank?
+  end
+
+  test "event_creator_rank? is true for captain regardless of managed_hosts" do
+    users(:ala).update!(title: :captain)
+    assert users(:ala).event_creator_rank?
+  end
+
+  test "event_creator_rank? is false for lower ranks" do
+    %i[rookie member veteran].each do |title|
+      users(:ala).update!(title: title)
+      refute users(:ala).event_creator_rank?, "#{title} nie powinien mieć rangi planisty"
+    end
+  end
 end

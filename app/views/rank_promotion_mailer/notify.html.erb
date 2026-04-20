@@ -1,0 +1,25 @@
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="padding:8px 20px 4px;text-align:center">
+      <div style="display:inline-block;width:96px;height:96px;line-height:96px;border-radius:50%;background:#fef3c7;font-size:56px;text-align:center">
+        <%= @icon %>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<%= render "mailers/title", text: t("mailers.rank_promotion.heading") %>
+
+<%= render "mailers/paragraph", html: safe_join([
+  t("mailers.hello", name: @user.first_name).html_safe,
+  " ".html_safe,
+  t("mailers.rank_promotion.intro").html_safe,
+  " ".html_safe,
+  tag.strong("#{@icon} #{@title_label}", style: "color:#0c0a09;white-space:nowrap"),
+  "."
+]) %>
+
+<%= render "mailers/paragraph", html: @description %>
+
+<%= render "mailers/cta_button", label: t("mailers.rank_promotion.cta"), url: @profile_url %>
+<%= render "mailers/raw_url", url: @profile_url %>

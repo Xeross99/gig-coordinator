@@ -168,9 +168,31 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     assert_match I18n.t("events.new_event"), response.body
   end
 
-  test "GET / does NOT show button for captain without managed_hosts" do
+  test "GET / shows a DISABLED 'Zaplanuj wydarzenie' button for captain without managed_hosts" do
     users(:ala).update!(title: :captain)
     get root_path
-    assert_no_match I18n.t("events.new_event"), response.body
+    assert_response :success
+    # Button visible, but as a non-link <span> with aria-disabled + explanation tooltip.
+    assert_select "span[aria-disabled='true']", text: /#{Regexp.escape(I18n.t("events.new_event"))}/
+    assert_match I18n.t("events.new_event_disabled_hint"), response.body
+    # And there's NO clickable link to the new-event form.
+    assert_select "a[href=?]", new_event_path, count: 0
+  end
+
+  test "GET / shows an ENABLED link for captain with at least one managed_host" do
+    users(:ala).update!(title: :captain)
+    users(:ala).managed_hosts << hosts(:jan)
+    get root_path
+    assert_response :success
+    assert_select "a[href=?]", new_event_path, text: /#{Regexp.escape(I18n.t("events.new_event"))}/
+    assert_select "span[aria-disabled='true']", false
+  end
+
+  test "GET / does NOT show any 'Zaplanuj wydarzenie' button for lower ranks" do
+    %i[rookie member veteran].each do |title|
+      users(:ala).update!(title: title)
+      get root_path
+      assert_no_match I18n.t("events.new_event"), response.body, "rank #{title} nie powinien widzieć przycisku"
+    end
   end
 end
