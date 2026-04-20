@@ -24,7 +24,7 @@ Rails.application.routes.draw do
       post :decline
     end
   end
-  resources :hosts,              only: :index,             path: "organizatorzy"
+  resources :hosts,              only: %i[index show],     path: "organizatorzy"
   resources :users,              only: %i[index show],     path: "pracownicy"
   resource  :profile,            only: %i[edit update],    path: "profil"
   resources :push_subscriptions, only: %i[create destroy], path: "subskrypcje-push"

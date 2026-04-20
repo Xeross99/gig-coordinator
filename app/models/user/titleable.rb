@@ -2,14 +2,21 @@ module User::Titleable
   extend ActiveSupport::Concern
 
   TITLE_BADGE_COLORS = {
-    "rookie"         => "bg-gray-100 text-gray-600",
-    "member"     => "bg-green-100 text-green-700",
-    "veteran" => "bg-purple-100 text-purple-700",
-    "master"       => "bg-yellow-100 text-yellow-800"
+    "rookie"          => "bg-gray-100 text-gray-600",
+    "member"      => "bg-green-100 text-green-700",
+    "veteran"  => "bg-blue-100 text-blue-700",
+    "captain" => "bg-purple-100 text-purple-700",
+    "master"        => "bg-yellow-100 text-yellow-800"
   }.freeze
 
   included do
-    enum :title, { rookie: 0, member: 1, veteran: 2, master: 3 }
+    enum :title, {
+      rookie:          0,
+      member:      1,
+      veteran:  2,
+      captain: 3,
+      master:        4
+    }
   end
 
   def title_badge_classes

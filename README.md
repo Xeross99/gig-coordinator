@@ -85,7 +85,7 @@ Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje
 | first_name  | string, NOT NULL         |                                                           |
 | last_name   | string, NOT NULL         |                                                           |
 | email       | string, NOT NULL, UNIQUE | case-insensitive (normalized)                             |
-| title       | integer, DEFAULT 0, idx  | enum ranga: `rookie` (0) → `master` (3)         |
+| title       | integer, DEFAULT 0, idx  | enum ranga: `rookie` (0) → `master` (4)         |
 | timestamps  |                          |                                                           |
 
 **Relacje:**
@@ -93,13 +93,21 @@ Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje
 - `has_many :events, through: :participations` — eventy, w których bierze udział
 - `has_many :push_subscriptions, dependent: :destroy` — subskrypcje web push (1 user może mieć wiele urządzeń)
 - `has_many :sessions, as: :authenticatable, dependent: :destroy` — aktywne sesje
+- `has_many :host_memberships, class_name: "HostManager"` + `has_many :managed_hosts, through:` — M:N wskazanie, którymi organizatorami ten user „zarządza" (patrz niżej)
 - `has_one_attached :photo` — zdjęcie profilowe (Active Storage) z nazwanym variantem `:roster` (`resize_to_fill: [40, 40]`) używanym we wszystkich listach roster na `/eventy/:id`
 
 **Walidacje:** `first_name`, `last_name`, `email` (format + unikalność).
 
-**Enum `:title`:** 4 rangi (`rookie`, `member`, `veteran`, `master`). Default w bazie = 0 (`rookie`) — każdy nowy user zaczyna jako Nowy, promocja ręcznie przez konsolę. Labelki w `config/locales/pl.yml` pod `user.titles.*`; `user.display_title` zwraca przetłumaczony tekst.
+**Enum `:title`:** 5 rang (`rookie` 0 → `member` 1 → `veteran` 2 → `captain` 3 → `master` 4). Default w bazie = 0 (`rookie`) — każdy nowy user zaczyna jako Nowy, promocja ręcznie przez konsolę. Labelki w `config/locales/pl.yml` pod `user.titles.*`; `user.display_title` zwraca przetłumaczony tekst.
 
-**Badge rangi (UI):** `User::TITLE_BADGE_COLORS` + `#title_badge_classes` mapują rangę na parę `bg-*` / `text-*`: **szary** = Nowy (najniższa) → **zielony** = Członek → **fioletowy** = Weteran → **żółty/złoty** = Mistrz (najwyższa). Partial `app/views/users/_title_badge.html.erb` (locals: `user:`) renderuje kapsułkę `inline-flex ... rounded-md ... text-xs`. Używany wszędzie, gdzie pokazujemy użytkownika z rangą: `/pracownicy`, navbar usera, `/profil/edit`, każdy wiersz roster na `/eventy/:id`.
+**Uprawnienia do tworzenia eventów (siedzą na randze, nie na osobnej kolumnie):**
+- `master` — może tworzyć eventy dla **każdego** hosta; na profilu widać sekcję „Zarządza wszystkimi organizatorami" z listą wszystkich hostów.
+- `captain` — może tworzyć eventy wyłącznie dla hostów w `user.managed_hosts` (M:N join `HostManager`). Dropdown organizatorów na `/eventy/nowy` jest scope'owany do tej listy; `EventsController#create` dodatkowo sprawdza, czy przesłane `host_id` mieści się w `allowed_hosts`. Komendant bez żadnego `managed_hosts` nie widzi przycisku „Zaplanuj wydarzenie" i dostaje forbidden na `#new`/`#create`.
+- niższe rangi — brak UI do tworzenia eventów.
+
+Jedno źródło prawdy: `User#can_create_events?` (`master? || (captain? && managed_hosts.exists?)`). Powiązania user↔host nadajemy wyłącznie z `rails console` (`u.managed_hosts << h; u.update!(title: :captain)`) — zgodnie z projektową konwencją „admin rzeczy przez konsolę" (brak signup-u i brak admin UI). Powiązanie jest widoczne na profilu usera (sekcja „Zarządza"), na `/organizatorzy/:id` (sekcja „Komendanci") i w `/organizatorzy` index (mała nota „N komendantów" pod lokalizacją hosta).
+
+**Badge rangi (UI):** `User::TITLE_BADGE_COLORS` + `#title_badge_classes` mapują rangę na parę `bg-*` / `text-*`: **szary** = Nowy (najniższa) → **zielony** = Członek → **niebieski** = Weteran → **fioletowy** = Kapitan → **żółty/złoty** = Mistrz (najwyższa; złoto zarezerwowane dla pojedynczego top tieru). Partial `app/views/users/_title_badge.html.erb` (locals: `user:`) renderuje kapsułkę `inline-flex ... rounded-md ... text-xs`. Używany wszędzie, gdzie pokazujemy użytkownika z rangą: `/pracownicy`, navbar usera, `/profil/edit`, każdy wiersz roster na `/eventy/:id`.
 
 **Metody instancji:** `display_name`, `display_title`, `title_badge_classes`.
 

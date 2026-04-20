@@ -21,10 +21,13 @@ pl:
         delimiter: " "
   user:
     titles:
-      rookie:         "Nowy"
-      member:     "Członek"
-      veteran: "Weteran"
-      master:       "Mistrz"
+      rookie:          "Nowy"
+      member:      "Członek"
+      veteran:  "Weteran"
+      captain: "Kapitan"
+      master:        "Mistrz"
+    manages: "Zarządza"
+    manages_all: "Zarządza wszystkimi organizatorami"
   auth:
     login_title: "Zaloguj się"
     email_label: "Adres e-mail"
@@ -56,7 +59,7 @@ pl:
     host: "Organizator"
     host_label: "W imieniu organizatora"
     new_event: "Zaplanuj wydarzenie"
-    new_event_forbidden: "Tylko Mistrz może planować łapania."
+    new_event_forbidden: "Nie masz uprawnień do planowania łapań."
     created: "Event dodany. Zaproszenia już poszły."
     open_in_maps: "Otwórz w Google Maps"
   host_panel:
@@ -77,3 +80,10 @@ pl:
     invitation:
       subject: "Zaproszenie na %{event} - masz godzinę na potwierdzenie"
       body: "Jako jeden z najwyższych w rankingu dostajesz slot na evencie \"%{event}\". Masz godzinę na potwierdzenie - jeśli nie zdążysz, miejsce przejdzie do kolejnej osoby z rankingu."
+  hosts:
+    commanders: "Komendanci"
+    manager_count:
+      one:   "1 komendant"
+      few:   "%{count} komendantów"
+      many:  "%{count} komendantów"
+      other: "%{count} komendantów"

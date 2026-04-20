@@ -7,7 +7,7 @@
   <p>Gig Coordinator łączy organizatorów z pracownikami. Organizator wrzuca zlecenie (np. zwydarzenie na fermie), Ty decydujesz, czy się piszesz.</p>
 
   <h2>Logowanie</h2>
-  <p>Żadnych haseł. Wpisujesz maila, dostajesz <strong>5-cyfrowy kod</strong> w mailu i przepisujesz go w aplikacji. Kod jest ważny <strong>15 minut</strong> - potem trzeba poprosić o nowy. Masz 5 prób na poprawne wpisanie; po piątej kod przestaje działać i trzeba zamówić kolejny.</p>
+  <p>Żadnych haseł. Wpisujesz maila, dostajesz <strong>5-cyfrowy kod</strong> w mailu i przepisujesz go w aplikacji. Kod jest ważny <strong>15 minut</strong> - potem trzeba poprosić o nowy. Masz 5 prób na poprawne wpisanie; po piątej kod przestaje działać i trzeba zamówić kolejny.</p>
 
   <h2>Rangi</h2>
   <p>Każdy pracownik ma rangę. Rangi nadaje admin. W kolejności od startowej do najwyższej:</p>
@@ -15,7 +15,8 @@
     <li><strong>Nowy</strong> - starter, każdy nowy tu zaczyna</li>
     <li><strong>Członek</strong></li>
     <li><strong>Weteran</strong></li>
-    <li><strong>Mistrz</strong> - najwyższa ranga, tylko oni mogą planować nowe łapania (przycisk <em>Zaplanuj wydarzenie</em> jest widoczny tylko dla Mistrzów Pióra)</li>
+    <li><strong>Kapitan</strong> - może planować łapania, ale tylko u przypisanych mu organizatorów</li>
+    <li><strong>Mistrz</strong> - najwyższa ranga, może planować łapania u <strong>dowolnego</strong> organizatora</li>
   </ul>
 
   <h2>Rezerwacje</h2>
@@ -37,21 +38,29 @@
   <h2>Anulowanie udziału</h2>
   <p>W dowolnej chwili możesz kliknąć <em>Anuluj</em>. Jeśli byłeś potwierdzony, Twoje miejsce przejmuje pierwsza osoba z listy rezerwowej. Jeśli byłeś w kolejce - po prostu znikasz z listy.</p>
 
-  <h2>Planowanie łapań (tylko Mistrz)</h2>
-  <p>Jeśli masz najwyższą rangę, w menu pojawia się opcja <em>Zaplanuj wydarzenie</em>. Wypełniasz krótki formularz: organizator, nazwa, data, początek, długość, stawka na osobę, liczba miejsc. Po zatwierdzeniu:</p>
+  <h2>Planowanie łapań (Mistrz i Kapitan)</h2>
+  <p>Jeśli masz odpowiednią rangę, w menu pojawia się opcja <em>Zaplanuj wydarzenie</em>. Wypełniasz krótki formularz: organizator, nazwa, data, początek, długość, stawka na osobę, liczba miejsc.</p>
+  <ul>
+    <li><strong>Mistrz</strong> - wybierasz z listy <strong>dowolnego</strong> organizatora w systemie.</li>
+    <li><strong>Kapitan</strong> - w dropdownie widzisz tylko tych organizatorów, do których zostałeś przypisany. Jeśli nie masz jeszcze żadnego przypisanego - przycisk <em>Zaplanuj wydarzenie</em> się nie pokaże.</li>
+  </ul>
+  <p>Po zatwierdzeniu:</p>
   <ul>
     <li>Event od razu ląduje na feedzie wszystkich pracowników.</li>
     <li>Wszyscy zalogowani zostają automatycznie przeniesieni na stronę nowego eventu - pierwsi klikają <em>Akceptuję</em>.</li>
     <li>System rezerwuje tyle miejsc ile capacity - ale tylko dla osób z aktualnie najwyższą rangą w systemie. Pozostałe sloty są otwarte dla wszystkich.</li>
     <li>Wszyscy userzy dostają powiadomienie push o nowym evencie.</li>
   </ul>
-  <p>Członek, Weteran i Nowy nie mogą planować łapań - mogą tylko się zapisywać.</p>
+  <p>Nowy, Członek i Weteran nie mogą planować łapań - mogą tylko się zapisywać.</p>
+
+  <h2>Zmiana liczby miejsc w evencie</h2>
+  <p>Organizator może w każdej chwili zwiększyć <em>capacity</em> w swoim panelu. Jeśli event ma już listę rezerwową, a zmieści się więcej osób - system sam awansuje najstarsze osoby z rezerwy na <em>Potwierdzonych</em> (zgodnie z kolejnością zgłoszeń). Dostają powiadomienie push + mail. Zmniejszanie capacity <strong>nie wyrzuca</strong> nikogo, kto już jest potwierdzony.</p>
 
   <h2>Powiadomienia</h2>
   <p>Dostajesz je na dwa sposoby:</p>
   <ul>
     <li><strong>E-mail</strong> - o zaproszeniach (1h deadline) i awansach z listy rezerwowej.</li>
-    <li><strong>Push</strong> na telefon - o nowych eventach, zaproszeniach i awansach. Żeby zadziałał, <strong>zainstaluj aplikację</strong> (patrz niżej) i pozwól na powiadomienia przy pierwszym wejściu.</li>
+    <li><strong>Push</strong> na telefon - o nowych eventach, zaproszeniach i awansach. Żeby zadziałał, <strong>zainstaluj aplikację</strong> (patrz niżej) i pozwól na powiadomienia przy pierwszym wejściu.</li>
   </ul>
 
   <h2>Instalacja na telefonie</h2>
@@ -60,6 +69,6 @@
     <li><strong>iPhone (Safari)</strong>: ikonka <em>Udostępnij</em> → <em>Dodaj do ekranu początkowego</em>.</li>
     <li><strong>Android (Chrome)</strong>: menu <em>⋮</em> → <em>Zainstaluj aplikację</em> / <em>Dodaj do ekranu głównego</em>.</li>
   </ul>
-  <p>Bez instalacji push nie zadziała na iPhonie - to ograniczenie Apple, nie nasze.</p>
+  <p>Bez instalacji push nie zadziała na iPhonie - to ograniczenie Apple, nie nasze ¯\_(ツ)_/¯</p>
 
 </article>

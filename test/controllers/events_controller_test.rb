@@ -63,4 +63,114 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     # Status change entry.
     assert_match "został potwierdzony",          response.body
   end
+
+  # ---- Authorization: who can see/hit the "new event" form ----
+
+  test "GET /eventy/nowy as rookie (no title) is forbidden" do
+    get new_event_path
+    assert_redirected_to root_path
+    follow_redirect!
+    assert_match I18n.t("events.new_event_forbidden"), response.body
+  end
+
+  test "GET /eventy/nowy as master is allowed and lists ALL hosts in dropdown" do
+    users(:ala).update!(title: :master)
+    get new_event_path
+    assert_response :success
+    assert_match hosts(:jan).display_name,  response.body
+    assert_match hosts(:anna).display_name, response.body
+  end
+
+  test "GET /eventy/nowy as captain WITHOUT managed_hosts is forbidden" do
+    users(:ala).update!(title: :captain)
+    get new_event_path
+    assert_redirected_to root_path
+  end
+
+  test "GET /eventy/nowy as captain WITH managed_hosts shows only his hosts" do
+    users(:ala).update!(title: :captain)
+    users(:ala).managed_hosts << hosts(:jan)
+
+    get new_event_path
+    assert_response :success
+    assert_match hosts(:jan).display_name,     response.body
+    assert_no_match hosts(:anna).display_name, response.body
+  end
+
+  # ---- Authorization: create ----
+
+  test "POST /eventy as captain rejects host_id outside managed_hosts" do
+    users(:ala).update!(title: :captain)
+    users(:ala).managed_hosts << hosts(:jan)
+
+    assert_no_difference "Event.count" do
+      post events_path, params: { event: {
+        name: "Próba", host_id: hosts(:anna).id,
+        event_date: 1.day.from_now.to_date.to_s,
+        start_hour: "18", start_minute: "0",
+        duration_hours: "2", duration_minutes: "0",
+        pay_per_person: 100, capacity: 4
+      } }
+    end
+    assert_redirected_to events_path
+    follow_redirect!
+    assert_match I18n.t("events.new_event_forbidden"), response.body
+  end
+
+  test "POST /eventy as captain accepts host_id from his managed_hosts" do
+    users(:ala).update!(title: :captain)
+    users(:ala).managed_hosts << hosts(:jan)
+
+    assert_difference "Event.count", 1 do
+      post events_path, params: { event: {
+        name: "OK event", host_id: hosts(:jan).id,
+        event_date: 1.day.from_now.to_date.to_s,
+        start_hour: "18", start_minute: "0",
+        duration_hours: "2", duration_minutes: "0",
+        pay_per_person: 100, capacity: 4
+      } }
+    end
+    assert_response :redirect
+    follow_redirect!
+    assert_match "OK event", response.body
+  end
+
+  test "POST /eventy as master accepts any host_id" do
+    users(:ala).update!(title: :master)
+
+    assert_difference "Event.count", 1 do
+      post events_path, params: { event: {
+        name: "Mistrz event", host_id: hosts(:anna).id,
+        event_date: 1.day.from_now.to_date.to_s,
+        start_hour: "18", start_minute: "0",
+        duration_hours: "2", duration_minutes: "0",
+        pay_per_person: 100, capacity: 4
+      } }
+    end
+    assert_response :redirect
+  end
+
+  test "GET / does NOT show 'Zaplanuj wydarzenie' button for rookie" do
+    get root_path
+    assert_no_match I18n.t("events.new_event"), response.body
+  end
+
+  test "GET / shows 'Zaplanuj wydarzenie' button for master" do
+    users(:ala).update!(title: :master)
+    get root_path
+    assert_match I18n.t("events.new_event"), response.body
+  end
+
+  test "GET / shows 'Zaplanuj wydarzenie' button for captain with managed_hosts" do
+    users(:ala).update!(title: :captain)
+    users(:ala).managed_hosts << hosts(:jan)
+    get root_path
+    assert_match I18n.t("events.new_event"), response.body
+  end
+
+  test "GET / does NOT show button for captain without managed_hosts" do
+    users(:ala).update!(title: :captain)
+    get root_path
+    assert_no_match I18n.t("events.new_event"), response.body
+  end
 end

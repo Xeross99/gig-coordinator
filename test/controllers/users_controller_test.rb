@@ -105,4 +105,32 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     get user_path(id: 999_999)
     assert_response :not_found
   end
+
+  test "GET /pracownicy/:id shows 'Zarządza' section with linked hosts for a komendant" do
+    users(:ala).update!(title: :captain)
+    users(:ala).managed_hosts << hosts(:jan)
+
+    sign_in_as(users(:bartek))
+    get user_path(users(:ala))
+    assert_response :success
+    assert_match I18n.t("user.manages"),     response.body
+    assert_match hosts(:jan).display_name,   response.body
+  end
+
+  test "GET /pracownicy/:id hides 'Zarządza' section when user has no managed_hosts" do
+    sign_in_as(users(:bartek))
+    get user_path(users(:ala))
+    assert_no_match I18n.t("user.manages"), response.body
+  end
+
+  test "GET /pracownicy/:id shows 'Zarządza wszystkimi' section with ALL hosts for master" do
+    users(:ala).update!(title: :master)
+
+    sign_in_as(users(:bartek))
+    get user_path(users(:ala))
+    assert_response :success
+    assert_match I18n.t("user.manages_all"),  response.body
+    assert_match hosts(:jan).display_name,    response.body
+    assert_match hosts(:anna).display_name,   response.body
+  end
 end

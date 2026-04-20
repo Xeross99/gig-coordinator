@@ -150,4 +150,111 @@ class ReservationServiceTest < ActiveSupport::TestCase
                  "no other top-tier user exists; no cascade to lower ranks"
     refute event.participations.find_by(user: users(:bartek))&.reserved?
   end
+
+  test "komendant is top-tier when no master exists" do
+    users(:ala).update!(title: :captain)
+    users(:ala).managed_hosts << hosts(:jan)
+
+    event = build_event(capacity: 2)
+    ReservationService.seed_on_create(event)
+
+    assert_equal :reserved, event.participations.find_by(user: users(:ala))&.status&.to_sym
+  end
+
+  test "master wygrywa z komendantem przy seed_on_create" do
+    users(:ala).update!(title: :master)
+    users(:bartek).update!(title: :captain)
+    users(:bartek).managed_hosts << hosts(:jan)
+
+    event = build_event(capacity: 2)
+    ReservationService.seed_on_create(event)
+
+    assert_equal :reserved, event.participations.find_by(user: users(:ala))&.status&.to_sym
+    assert_nil event.participations.find_by(user: users(:bartek))
+  end
+
+  # ---- Capacity increase → waitlist promotion -----------------------------
+
+  # Helper: build an event with N confirmed + M waitlist. Users are created on
+  # the fly as simple rookies so the existing fixture ranks don't interfere.
+  def event_with_roster(capacity:, confirmed:, waitlist:)
+    event = build_event(capacity: capacity)
+    confirmed.times do |i|
+      u = User.create!(first_name: "C#{i}", last_name: "User", email: "c#{i}@test.example")
+      event.participations.create!(user: u, status: :confirmed, position: i + 1)
+    end
+    waitlist.times do |i|
+      u = User.create!(first_name: "W#{i}", last_name: "User", email: "w#{i}@test.example")
+      event.participations.create!(user: u, status: :waitlist, position: i + 1)
+    end
+    event.reload
+  end
+
+  test "fill_open_slots promotes oldest waitlister when slot opens up" do
+    event = event_with_roster(capacity: 3, confirmed: 3, waitlist: 5)
+    event.update_column(:capacity, 4)
+
+    ReservationService.fill_open_slots(event)
+
+    assert_equal 4, event.participations.confirmed.count
+    assert_equal 4, event.participations.waitlist.count
+    assert_equal "W0 User", event.participations.confirmed.order(:updated_at).last.user.display_name
+  end
+
+  test "fill_open_slots promotes multiple waitlisters for larger capacity jump" do
+    event = event_with_roster(capacity: 3, confirmed: 3, waitlist: 5)
+    event.update_column(:capacity, 6)
+
+    ReservationService.fill_open_slots(event)
+
+    assert_equal 6, event.participations.confirmed.count
+    assert_equal 2, event.participations.waitlist.count
+  end
+
+  test "fill_open_slots is no-op when event is already full" do
+    event = event_with_roster(capacity: 3, confirmed: 3, waitlist: 2)
+
+    assert_no_changes -> { event.participations.confirmed.pluck(:id).sort } do
+      ReservationService.fill_open_slots(event)
+    end
+  end
+
+  test "fill_open_slots is no-op when waitlist is empty and no top-tier fallback available" do
+    event = event_with_roster(capacity: 3, confirmed: 2, waitlist: 0)
+    event.update_column(:capacity, 5)
+
+    ReservationService.fill_open_slots(event)
+
+    assert_equal 2, event.participations.confirmed.count
+    assert_equal 0, event.participations.waitlist.count
+  end
+
+  # ---- Event#after_update_commit auto-promotion ---------------------------
+
+  test "increasing event capacity triggers waitlist promotion via callback" do
+    event = event_with_roster(capacity: 3, confirmed: 3, waitlist: 5)
+
+    event.update!(capacity: 4)
+
+    assert_equal 4, event.participations.confirmed.count
+    assert_equal 4, event.participations.waitlist.count
+  end
+
+  test "editing event without capacity change does not touch participations" do
+    event = event_with_roster(capacity: 3, confirmed: 3, waitlist: 5)
+
+    event.update!(name: "New name")
+
+    assert_equal 3, event.participations.confirmed.count
+    assert_equal 5, event.participations.waitlist.count
+  end
+
+  test "decreasing capacity does NOT auto-demote confirmed participants" do
+    event = event_with_roster(capacity: 4, confirmed: 4, waitlist: 0)
+
+    event.update!(capacity: 2)
+
+    # Confirmed stays — we intentionally do not evict signed-up workers.
+    assert_equal 4, event.participations.confirmed.count
+  end
 end

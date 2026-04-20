@@ -41,4 +41,13 @@ class HostTest < ActiveSupport::TestCase
       Host.create!(first_name: "New", last_name: "Host", email: "nh@example.com", location: "Somewhere")
     end
   end
+
+  test "managers returns users via host_managers join" do
+    host = hosts(:jan)
+    host.managers << users(:ala)
+    host.managers << users(:bartek)
+    assert_equal 2, host.managers.count
+    assert_includes host.managers, users(:ala)
+    assert_includes host.managers, users(:bartek)
+  end
 end

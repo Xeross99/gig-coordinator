@@ -10,13 +10,11 @@ class User < ApplicationRecord
   has_many :events, through: :participations
   has_many :push_subscriptions, dependent: :destroy
   has_many :sessions, as: :authenticatable, dependent: :destroy
+  has_many :host_memberships, class_name: "HostManager", dependent: :destroy
+  has_many :managed_hosts, -> { order(:last_name, :first_name) }, through: :host_memberships, source: :host
 
   has_one_attached :photo do |attachable|
-    attachable.variant :small,
-                       resize_to_limit: [ 100, 100 ],
-                       format: "webp",
-                       saver: { quality: 88 },
-                       preprocessed: true
+    attachable.variant :small, resize_to_limit: [ 100, 100 ], format: "webp", saver: { quality: 88 }, preprocessed: true
   end
 
   normalizes :email, with: ->(v) { v.to_s.strip.downcase }
@@ -29,6 +27,10 @@ class User < ApplicationRecord
 
   def display_name
     "#{first_name} #{last_name}"
+  end
+
+  def can_create_events?
+    master? || (captain? && managed_hosts.exists?)
   end
 
   def online?

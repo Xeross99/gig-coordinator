@@ -57,4 +57,54 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     get hosts_path
     assert_match(/chytań\b/, response.body)
   end
+
+  test "GET /organizatorzy/:id requires login" do
+    get host_path(hosts(:jan))
+    assert_redirected_to login_path
+  end
+
+  test "GET /organizatorzy/:id renders host details" do
+    sign_in_as(users(:ala))
+    get host_path(hosts(:jan))
+    assert_response :success
+    assert_match hosts(:jan).display_name, response.body
+    assert_match hosts(:jan).location,     response.body
+  end
+
+  test "GET /organizatorzy/:id shows 'Komendanci' section when host has managers" do
+    hosts(:jan).managers << users(:ala)
+    users(:ala).update!(title: :captain)
+
+    sign_in_as(users(:bartek))
+    get host_path(hosts(:jan))
+    assert_match I18n.t("hosts.commanders"), response.body
+    assert_match users(:ala).display_name,   response.body
+  end
+
+  test "GET /organizatorzy/:id hides 'Komendanci' section when host has no managers" do
+    sign_in_as(users(:ala))
+    get host_path(hosts(:jan))
+    assert_no_match I18n.t("hosts.commanders"), response.body
+  end
+
+  test "GET /organizatorzy shows manager count next to hosts that have at least one commander" do
+    hosts(:jan).managers << users(:ala)
+    users(:ala).update!(title: :captain)
+
+    sign_in_as(users(:bartek))
+    get hosts_path
+    assert_match "1 komendant", response.body
+  end
+
+  test "GET /organizatorzy does not show 'komendant' text for hosts without managers" do
+    sign_in_as(users(:ala))
+    get hosts_path
+    assert_no_match(/komendant/, response.body)
+  end
+
+  test "GET /organizatorzy links each host to show page" do
+    sign_in_as(users(:ala))
+    get hosts_path
+    assert_select "a[href=?]", host_path(hosts(:jan))
+  end
 end

@@ -10,6 +10,7 @@ class Event < ApplicationRecord
   after_create_commit  :notify_new_event_subscribers, if: :upcoming_now?
   after_create_commit  :seed_reservations,            if: :upcoming_now?
   after_update_commit  :broadcast_feed_replace
+  after_update_commit  :refill_on_capacity_increase
   after_destroy_commit :broadcast_feed_remove
 
   validates :name, presence: true
@@ -100,5 +101,15 @@ class Event < ApplicationRecord
 
   def seed_reservations
     ReservationService.seed_on_create(self)
+  end
+
+  # Host bumped capacity → promote from waitlist (or invite top-tier) to fill
+  # the freshly-opened slots. No-op on decrease (we don't evict signed-up workers)
+  # or on updates that don't touch capacity.
+  def refill_on_capacity_increase
+    return unless saved_change_to_capacity?
+    old_cap, new_cap = saved_change_to_capacity
+    return unless new_cap.to_i > old_cap.to_i
+    ReservationService.fill_open_slots(self)
   end
 end

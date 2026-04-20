@@ -25,6 +25,25 @@ class ReservationService
     end
   end
 
+  # Fill every currently-open slot on the event, applying the same "waitlist
+  # first, then top-tier invite" rule as `refill_one`. Used when capacity
+  # increases mid-event (host bumps 3 → 4) so nobody on the waitlist keeps
+  # waiting unnecessarily.
+  def self.fill_open_slots(event)
+    with_lock(event) do
+      loop do
+        open = event.capacity - event.participations.holding_slot.count
+        break if open <= 0
+
+        next if promote_from_waitlist(event)
+
+        candidate = invite_candidates(event, limit: 1).first
+        break unless candidate
+        invite!(event, candidate)
+      end
+    end
+  end
+
   # Sweeper — finds expired reservations, cancels them, and refills each slot
   # with the same "waitlist first" rule. Called by ReservationExpirationJob.
   def self.expire_stale!

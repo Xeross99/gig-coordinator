@@ -2,7 +2,7 @@
 <%= render "shared/breadcrumbs", crumbs: [ [ t("events.upcoming"), nil ] ] %>
 <div class="mb-4 flex items-center justify-between gap-3">
   <h1 class="text-2xl font-semibold"><%= t("events.upcoming") %></h1>
-  <% if current_user&.master? %>
+  <% if current_user&.can_create_events? %>
     <%= link_to new_event_path,
                 class: "inline-flex items-center gap-1.5 rounded-md bg-stone-900 px-3 py-1.5 text-sm font-semibold text-white shadow-xs hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900" do %>
       <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4">

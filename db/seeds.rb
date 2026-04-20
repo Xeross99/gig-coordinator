@@ -9,13 +9,13 @@ if Rails.env.development?
   end
 
   [
-    { first_name: "Michał",   last_name: "Kowalska",  email: "admin@gigcoordinator.pl",       title: 3 },
-    { first_name: "Adam",     last_name: "Nowak",      email: "example1@gigcoordinator.pl",         title: 3 },
-    { first_name: "Michał",   last_name: "Wiśniewski",  email: "example2@gigcoordinator.pl",    title: 0 },
-    { first_name: "Marcin",   last_name: "Lewandowski",       email: "example3@gigcoordinator.pl",    title: 1 },
-    { first_name: "Mateusz",  last_name: "Zieliński",  email: "example4@gigcoordinator.pl",    title: 2 },
-    { first_name: "Ksawery",  last_name: "Szymański",     email: "example5@gigcoordinator.pl",    title: 1 },
-    { first_name: "Piotr",    last_name: "Dąbrowski",       email: "example6@gigcoordinator.pl",    title: 1 }
+    { first_name: "Michał",   last_name: "Kowalska",  email: "admin@gigcoordinator.pl",       title: :master },
+    { first_name: "Adam",     last_name: "Nowak",      email: "example1@gigcoordinator.pl",         title: :master },
+    { first_name: "Michał",   last_name: "Wiśniewski",  email: "example2@gigcoordinator.pl",    title: :rookie },
+    { first_name: "Marcin",   last_name: "Lewandowski",       email: "example3@gigcoordinator.pl",    title: :member },
+    { first_name: "Mateusz",  last_name: "Zieliński",  email: "example4@gigcoordinator.pl",    title: :veteran },
+    { first_name: "Ksawery",  last_name: "Szymański",     email: "example5@gigcoordinator.pl",    title: :member },
+    { first_name: "Piotr",    last_name: "Dąbrowski",       email: "example6@gigcoordinator.pl",    title: :member }
   ].each do |attrs|
     User.find_or_create_by!(email: attrs[:email]) do |u|
       u.first_name = attrs[:first_name]

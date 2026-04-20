@@ -1,6 +1,8 @@
 class Host < ApplicationRecord
   has_many :events, dependent: :destroy
   has_many :sessions, as: :authenticatable, dependent: :destroy
+  has_many :host_managers, dependent: :destroy
+  has_many :managers, through: :host_managers, source: :user
   has_one_attached :photo do |attachable|
     attachable.variant :small,
                        resize_to_limit: [ 100, 100 ],
