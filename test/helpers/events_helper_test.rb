@@ -14,6 +14,37 @@ class EventsHelperTest < ActionView::TestCase
     assert_match "query=", url
   end
 
+  test "seats_label returns 'miejsce' for exactly 1" do
+    assert_equal "miejsce", seats_label(1)
+  end
+
+  test "seats_label returns 'miejsca' for 2, 3, 4" do
+    [ 2, 3, 4 ].each { |n| assert_equal "miejsca", seats_label(n), "expected 'miejsca' for #{n}" }
+  end
+
+  test "seats_label returns 'miejsc' for 0 and 5..21" do
+    assert_equal "miejsc", seats_label(0)
+    (5..21).each { |n| assert_equal "miejsc", seats_label(n), "expected 'miejsc' for #{n}" }
+  end
+
+  test "seats_label returns 'miejsc' for the 12..14 exception" do
+    [ 12, 13, 14 ].each { |n| assert_equal "miejsc", seats_label(n), "expected 'miejsc' for #{n}" }
+    # Sanity check: 112, 113, 114 also fall into the exception (mod100 12..14)
+    [ 112, 113, 114 ].each { |n| assert_equal "miejsc", seats_label(n), "expected 'miejsc' for #{n}" }
+  end
+
+  test "seats_label returns 'miejsca' for 22, 23, 24, 32, 33, 34 (mod10 2..4, mod100 not 12..14)" do
+    [ 22, 23, 24, 32, 33, 34, 102, 103, 104 ].each do |n|
+      assert_equal "miejsca", seats_label(n), "expected 'miejsca' for #{n}"
+    end
+  end
+
+  test "seats_label returns 'miejsc' for 25..31 and other mod10 0,1,5..9" do
+    [ 25, 26, 27, 28, 29, 30, 31, 100, 101, 105 ].each do |n|
+      assert_equal "miejsc", seats_label(n), "expected 'miejsc' for #{n}"
+    end
+  end
+
   test "participation_action_verb maps each (status, phase) pair" do
     assert_equal "dołączył jako potwierdzony",       participation_action_verb("confirmed", :initial)
     assert_equal "został potwierdzony",              participation_action_verb("confirmed", :update)

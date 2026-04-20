@@ -16,6 +16,18 @@ module EventsHelper
     parts.join(" ")
   end
 
+  # Polish noun pluralization for "miejsce":
+  #   1           → miejsce
+  #   2-4 (mod10) → miejsca (except 12-14, which take "miejsc")
+  #   else        → miejsc
+  def seats_label(count)
+    n    = count.to_i
+    mod10, mod100 = n % 10, n % 100
+    return "miejsce" if n == 1
+    return "miejsca" if (2..4).include?(mod10) && !(12..14).include?(mod100)
+    "miejsc"
+  end
+
   # --- Event history timeline -------------------------------------------------
 
   # [bg-color-class, svg-path] pair keyed off the entry kind + participation

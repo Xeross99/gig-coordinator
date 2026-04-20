@@ -21,6 +21,7 @@ class Event < ApplicationRecord
 
   scope :upcoming, -> { where("scheduled_at > ?", Time.current).order(:scheduled_at) }
   scope :awaiting_completion, -> { where("ends_at < ? AND completed_at IS NULL", Time.current) }
+  scope :completed, -> { where.not(completed_at: nil).order(scheduled_at: :desc) }
 
   def to_param
     slug = name.to_s.parameterize

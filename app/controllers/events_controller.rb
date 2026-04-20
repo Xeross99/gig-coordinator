@@ -2,11 +2,11 @@ class EventsController < ApplicationController
   before_action :require_user!
   before_action :require_event_creator!, only: %i[new create]
 
+  FILTERS = %w[new completed].freeze
+
   def index
-    @events = Event.upcoming.includes(:host)
-    @events = @events.where(host_id: params[:host_id]) if params[:host_id].present?
-    @hosts = Host.order(:last_name, :first_name)
-    @selected_host_id = params[:host_id].presence&.to_i
+    @filter = FILTERS.include?(params[:filter]) ? params[:filter] : "new"
+    @events = (@filter == "completed" ? Event.completed : Event.upcoming).includes(:host)
   end
 
   def show

@@ -62,7 +62,6 @@ pl:
     waitlist_accept: "Dołącz na listę rezerwową"
     waitlist_badge: "Lista rezerwowa"
     confirmed_badge: "Potwierdzony"
-    seats: "miejsc"
     confirmed_count: "Potwierdzeni"
     waitlist_count: "Rezerwa"
     pay_per_person: "Zapłata za osobę"

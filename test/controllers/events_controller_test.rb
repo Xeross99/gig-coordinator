@@ -23,10 +23,29 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match past.name, response.body
   end
 
-  test "GET / filters by host_id" do
-    get root_path(host_id: hosts(:jan).id)
+  test "GET / defaults to 'new' filter and excludes completed events" do
+    done = Event.create!(host: hosts(:jan), name: "Zakonczone lapanie",
+                         scheduled_at: 3.days.ago, ends_at: 3.days.ago + 2.hours,
+                         completed_at: 2.days.ago, pay_per_person: 100, capacity: 3)
+    get root_path
     assert_match events(:gig-coordinators_tomorrow).name, response.body
-    assert_no_match events(:harvest_next_week).name, response.body
+    assert_no_match done.name, response.body
+  end
+
+  test "GET /?filter=completed lists completed events and hides upcoming" do
+    done = Event.create!(host: hosts(:jan), name: "Zakonczone lapanie",
+                         scheduled_at: 3.days.ago, ends_at: 3.days.ago + 2.hours,
+                         completed_at: 2.days.ago, pay_per_person: 100, capacity: 3)
+    get root_path(filter: "completed")
+    assert_response :success
+    assert_match done.name, response.body
+    assert_no_match events(:gig-coordinators_tomorrow).name, response.body
+  end
+
+  test "GET /?filter=bogus falls back to 'new'" do
+    get root_path(filter: "bogus")
+    assert_response :success
+    assert_match events(:gig-coordinators_tomorrow).name, response.body
   end
 
   test "GET /events/:id shows event with host details and map iframe" do

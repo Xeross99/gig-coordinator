@@ -13,7 +13,8 @@
   <%= render "shared/sort_toggle",
              options: [["name_asc", "Od A do Z"], ["name_desc", "Od Z do A"]],
              current: @sort,
-             path_helper: :hosts_path %>
+             path_helper: :hosts_path,
+             full_width: true %>
 </div>
 
 <% if @hosts.any? %>

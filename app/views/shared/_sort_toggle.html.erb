@@ -3,12 +3,16 @@
     options: Array of [value, label] pairs
     current: currently-selected value
     path_helper: symbol naming the path helper (e.g. :users_path)
+    param_name: optional query-param name (defaults to :sort)
+    full_width: optional bool — if true, the toggle stretches to fill its container and each pill gets equal width
 %>
-<div class="inline-flex items-center bg-stone-100 rounded-lg p-1 text-sm ring-1 ring-stone-200">
+<% param_name = local_assigns.fetch(:param_name, :sort) %>
+<% full_width = local_assigns.fetch(:full_width, false) %>
+<div class="<%= full_width ? "flex w-full" : "inline-flex" %> items-center bg-stone-100 rounded-lg p-1 text-sm ring-1 ring-stone-200">
   <% options.each do |value, label| %>
     <% active = current == value %>
-    <%= link_to label, send(path_helper, sort: value),
-                class: "px-3 py-1.5 rounded-md font-medium transition-colors #{active ? "sort-toggle-active bg-white text-stone-900 shadow-sm" : "text-stone-600 hover:text-stone-900"}",
+    <%= link_to label, send(path_helper, param_name => value),
+                class: "px-3 py-1.5 rounded-md font-medium transition-colors #{full_width ? "flex-1 text-center" : ""} #{active ? "sort-toggle-active bg-white text-stone-900 shadow-sm" : "text-stone-600 hover:text-stone-900"}",
                 aria: { current: active ? "true" : nil } %>
   <% end %>
 </div>
