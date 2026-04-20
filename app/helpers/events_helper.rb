@@ -7,6 +7,15 @@ module EventsHelper
     "https://www.google.com/maps/search/?api=1&query=#{CGI.escape(location.to_s)}"
   end
 
+  def event_duration_text(event)
+    total_minutes = ((event.ends_at - event.scheduled_at) / 60).round
+    hours, minutes = total_minutes.divmod(60)
+    parts = []
+    parts << "#{hours} godz." if hours.positive?
+    parts << "#{minutes} min" if minutes.positive?
+    parts.join(" ")
+  end
+
   # --- Event history timeline -------------------------------------------------
 
   # [bg-color-class, svg-path] pair keyed off the entry kind + participation
