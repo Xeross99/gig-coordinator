@@ -28,6 +28,46 @@ module EventsHelper
     "miejsc"
   end
 
+  # Compact Polish relative-time label for a given TimeWithZone — used on the
+  # feed so users can tell "za 3 dni" from "3 dni temu" at a glance. Uses
+  # floor/integer division everywhere to avoid weird "za 60 min" boundaries.
+  def relative_time_chip(time)
+    return nil if time.blank?
+
+    diff    = (time - Time.current).to_i
+    future  = diff >= 0
+    abs     = diff.abs
+    day_diff  = (time.to_date - Date.current).to_i
+    abs_days  = day_diff.abs
+
+    return (future ? "zaraz" : "przed chwilą") if abs < 60
+
+    if abs < 3600
+      m = abs / 60
+      return future ? "za #{m} min" : "#{m} min temu"
+    end
+
+    if abs < 86_400
+      h = abs / 3600
+      return future ? "za #{h} godz." : "#{h} godz. temu"
+    end
+
+    return "jutro"   if day_diff ==  1
+    return "wczoraj" if day_diff == -1
+
+    if abs_days < 14
+      return future ? "za #{abs_days} dni" : "#{abs_days} dni temu"
+    end
+
+    if abs_days < 30
+      w = abs_days / 7
+      return future ? "za #{w} tyg." : "#{w} tyg. temu"
+    end
+
+    months = abs_days / 30
+    future ? "za #{months} mies." : "#{months} mies. temu"
+  end
+
   # --- Event history timeline -------------------------------------------------
 
   # [bg-color-class, svg-path] pair keyed off the entry kind + participation

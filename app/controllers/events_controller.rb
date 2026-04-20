@@ -6,7 +6,8 @@ class EventsController < ApplicationController
 
   def index
     @filter = FILTERS.include?(params[:filter]) ? params[:filter] : "new"
-    @events = (@filter == "completed" ? Event.completed : Event.upcoming).includes(:host)
+    @events = (@filter == "completed" ? Event.completed : Event.upcoming)
+      .includes(host: { photo_attachment: :blob })
   end
 
   def show

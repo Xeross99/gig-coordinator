@@ -1,6 +1,8 @@
 require "test_helper"
 
 class EventsHelperTest < ActionView::TestCase
+  include ActiveSupport::Testing::TimeHelpers
+
   test "google_maps_embed_src URL-encodes the location" do
     src = google_maps_embed_src("Słoneczna 12, 00-001 Warszawa")
     assert_match "maps.google.com/maps", src
@@ -44,6 +46,74 @@ class EventsHelperTest < ActionView::TestCase
       assert_equal "miejsc", seats_label(n), "expected 'miejsc' for #{n}"
     end
   end
+
+  # --- relative_time_chip -----------------------------------------------------
+
+  test "relative_time_chip returns nil for blank input" do
+    assert_nil relative_time_chip(nil)
+  end
+
+  test "relative_time_chip returns 'zaraz' for <1 min in the future" do
+    travel_to Time.zone.local(2026, 4, 20, 12, 0, 0) do
+      assert_equal "zaraz", relative_time_chip(30.seconds.from_now)
+    end
+  end
+
+  test "relative_time_chip returns 'przed chwilą' for <1 min in the past" do
+    travel_to Time.zone.local(2026, 4, 20, 12, 0, 0) do
+      assert_equal "przed chwilą", relative_time_chip(30.seconds.ago)
+    end
+  end
+
+  test "relative_time_chip returns minutes for <1h" do
+    travel_to Time.zone.local(2026, 4, 20, 12, 0, 0) do
+      assert_equal "za 5 min",   relative_time_chip(5.minutes.from_now + 1.second)
+      assert_equal "10 min temu", relative_time_chip(10.minutes.ago - 1.second)
+    end
+  end
+
+  test "relative_time_chip returns hours for <24h" do
+    travel_to Time.zone.local(2026, 4, 20, 12, 0, 0) do
+      assert_equal "za 2 godz.",   relative_time_chip(2.hours.from_now + 1.second)
+      assert_equal "3 godz. temu", relative_time_chip(3.hours.ago - 1.second)
+    end
+  end
+
+  test "relative_time_chip returns 'jutro' when the event is on the next calendar day (>24h ahead)" do
+    travel_to Time.zone.local(2026, 4, 20, 12, 0, 0) do
+      assert_equal "jutro", relative_time_chip(Time.zone.local(2026, 4, 21, 18, 0))
+    end
+  end
+
+  test "relative_time_chip returns 'wczoraj' when the event was on the previous calendar day (>24h ago)" do
+    travel_to Time.zone.local(2026, 4, 20, 12, 0, 0) do
+      assert_equal "wczoraj", relative_time_chip(Time.zone.local(2026, 4, 19, 6, 0))
+    end
+  end
+
+  test "relative_time_chip returns days (2..13) in both directions" do
+    travel_to Time.zone.local(2026, 4, 20, 12, 0, 0) do
+      assert_equal "za 3 dni",   relative_time_chip(Time.zone.local(2026, 4, 23, 12, 0))
+      assert_equal "5 dni temu", relative_time_chip(Time.zone.local(2026, 4, 15, 12, 0))
+      assert_equal "za 13 dni",  relative_time_chip(Time.zone.local(2026, 5,  3, 12, 0))
+    end
+  end
+
+  test "relative_time_chip returns weeks for 14..29 days out" do
+    travel_to Time.zone.local(2026, 4, 20, 12, 0, 0) do
+      assert_equal "za 2 tyg.",   relative_time_chip(Time.zone.local(2026, 5,  4, 12, 0))
+      assert_equal "2 tyg. temu", relative_time_chip(Time.zone.local(2026, 4,  6, 12, 0))
+    end
+  end
+
+  test "relative_time_chip returns months for 30+ days" do
+    travel_to Time.zone.local(2026, 4, 20, 12, 0, 0) do
+      assert_equal "za 2 mies.",   relative_time_chip(Time.zone.local(2026, 6, 19, 12, 0))
+      assert_equal "2 mies. temu", relative_time_chip(Time.zone.local(2026, 2, 19, 12, 0))
+    end
+  end
+
+  # --- participation_action_verb ----------------------------------------------
 
   test "participation_action_verb maps each (status, phase) pair" do
     assert_equal "dołączył jako potwierdzony",       participation_action_verb("confirmed", :initial)

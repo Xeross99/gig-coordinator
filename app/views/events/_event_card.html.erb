@@ -1,6 +1,9 @@
 <% pending = local_assigns[:pending_reservation] %>
+<% completed = event.completed? %>
+<% chip_text = relative_time_chip(event.scheduled_at) %>
+<% chip_classes = completed ? "bg-stone-200 text-stone-600" : "bg-emerald-100 text-emerald-700" %>
 <li id="<%= dom_id(event) %>"
-    class="bg-white rounded-xl shadow-sm overflow-hidden relative <%= 'ring-2 ring-indigo-400' if pending %>">
+    class="rounded-xl shadow-sm overflow-hidden relative <%= completed ? 'bg-stone-100' : 'bg-white' %> <%= 'ring-2 ring-indigo-400' if pending %>">
   <% if pending %>
     <span aria-hidden="true"
           class="absolute top-2 right-2 z-10 flex size-3">
@@ -11,14 +14,31 @@
   <%= link_to event_path(event), class: "block p-4" do %>
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
-        <div class="font-medium text-stone-900 truncate"><%= event.name %></div>
+        <div class="flex items-center flex-wrap gap-x-2 gap-y-1">
+          <span class="font-medium text-stone-900 truncate"><%= event.name %></span>
+          <% if chip_text %>
+            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium <%= chip_classes %>"><%= chip_text %></span>
+          <% end %>
+        </div>
         <div class="flex items-center gap-1.5 text-sm text-stone-500 mt-0.5">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 shrink-0">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
           </svg>
-          <%= l(event.scheduled_at, format: :long) %>
+          <span><%= l(event.scheduled_at, format: :long) %></span>
         </div>
-        <div class="text-xs text-stone-500 mt-1"><%= t("events.host") %>: <%= event.host.display_name %></div>
+        <div class="flex items-center gap-1.5 text-xs text-stone-500 mt-1">
+          <% host = event.host %>
+          <% if host.photo.attached? %>
+            <%= image_tag rails_representation_path(host.photo.variant(:tiny), only_path: true),
+                          alt: "", class: "size-4 rounded-full object-cover shrink-0" %>
+          <% else %>
+            <span aria-hidden="true"
+                  class="size-4 rounded-full bg-stone-200 flex items-center justify-center text-[9px] font-semibold text-stone-600 shrink-0">
+              <%= host.first_name[0] %><%= host.last_name[0] %>
+            </span>
+          <% end %>
+          <span class="truncate"><%= t("events.host") %>: <%= host.display_name %></span>
+        </div>
         <% if pending %>
           <div class="text-xs text-indigo-600 mt-1 font-medium">Rezerwacja oczekuje na Twoje potwierdzenie</div>
         <% end %>
