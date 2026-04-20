@@ -51,7 +51,7 @@
     <dl class="grid grid-cols-2 gap-3 mt-5 text-sm">
       <div class="col-span-2">
         <dt class="text-stone-500 text-xs uppercase tracking-wide">E-mail</dt>
-        <dd class="font-medium break-all"><%= @user.email %></dd>
+        <dd class="font-medium break-all"><%= link_to @user.email, "mailto:#{@user.email}", class: "text-stone-900 hover:underline" %></dd>
       </div>
       <% if @user.phone.present? %>
         <div class="col-span-2">

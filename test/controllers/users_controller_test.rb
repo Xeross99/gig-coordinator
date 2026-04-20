@@ -286,4 +286,11 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_no_match "Telefon", response.body
   end
+
+  test "GET /pracownicy/:id renders email as mailto: link" do
+    sign_in_as(users(:cezary))
+    get user_path(users(:bartek))
+    assert_response :success
+    assert_select "a[href=?]", "mailto:#{users(:bartek).email}", text: users(:bartek).email
+  end
 end

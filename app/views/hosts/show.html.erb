@@ -32,7 +32,11 @@
       <div>
         <dt class="text-stone-500 text-xs uppercase tracking-wide">E-mail</dt>
         <dd class="font-medium break-all <%= "text-stone-400" if @host.email.blank? %>">
-          <%= @host.email.presence || "brak" %>
+          <% if @host.email.present? %>
+            <%= link_to @host.email, "mailto:#{@host.email}", class: "text-stone-900 hover:underline" %>
+          <% else %>
+            brak
+          <% end %>
         </dd>
       </div>
       <% if @host.phone.present? %>

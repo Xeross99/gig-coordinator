@@ -233,4 +233,20 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_no_match "Telefon", response.body
   end
+
+  test "GET /organizatorzy/:id renders email as mailto: link when present" do
+    sign_in_as(users(:bartek))
+    get host_path(hosts(:jan))
+    assert_response :success
+    assert_select "a[href=?]", "mailto:#{hosts(:jan).email}", text: hosts(:jan).email
+  end
+
+  test "GET /organizatorzy/:id shows 'brak' instead of mailto when host has no email" do
+    hosts(:jan).update!(email: nil)
+    sign_in_as(users(:bartek))
+    get host_path(hosts(:jan))
+    assert_response :success
+    assert_match "brak", response.body
+    assert_select "a[href^=?]", "mailto:", count: 0
+  end
 end
