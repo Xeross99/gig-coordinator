@@ -12,12 +12,9 @@
       <span class="text-xs text-stone-400">Wczytywanie mapy…</span>
     </div>
   </div>
-  <iframe src="<%= google_maps_embed_src(location) %>"
-          width="100%"
-          style="border:0"
-          loading="lazy"
-          allow="fullscreen"
-          onload="this.style.opacity=1"
-          referrerpolicy="no-referrer-when-downgrade"
-          class="relative w-full <%= height_class %> opacity-0 transition-opacity duration-300"></iframe>
+  <iframe src="<%= google_maps_embed_src(location) %>" width="100%" style="border:0" title="Position map" loading="lazy"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen *"
+    allowfullscreen onload="this.style.opacity=1" referrerpolicy="no-referrer-when-downgrade"
+    class="relative w-full <%= height_class %> opacity-0 transition-opacity duration-300">
+  </iframe>
 </div>
