@@ -1,18 +1,15 @@
 class Host < ApplicationRecord
+  include Avatarable
+
   has_many :events, dependent: :destroy
   has_many :sessions, as: :authenticatable, dependent: :destroy
-  has_one_attached :photo do |attachable|
-    attachable.variant :small,
-                       resize_to_limit: [ 100, 100 ],
-                       format: "webp",
-                       saver: { quality: 88 },
-                       preprocessed: true
-  end
 
-  normalizes :email, with: ->(v) { v.to_s.strip.downcase }
+  normalizes :email, with: ->(v) { v.to_s.strip.downcase.presence }
 
-  validates :first_name, :last_name, :location, presence: true
-  validates :email, presence: true, uniqueness: { case_sensitive: false },
+  validates :last_name, :location, presence: true
+  validates :first_name, presence: true, uniqueness: { scope: :last_name, case_sensitive: false }
+
+  validates :email, uniqueness: { case_sensitive: false, allow_blank: true },
                     format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
 
   def display_name

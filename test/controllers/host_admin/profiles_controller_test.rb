@@ -18,7 +18,7 @@ module HostAdmin
     end
 
     test "PATCH update invalid re-renders edit" do
-      patch host_profile_path, params: { host: { email: "" } }
+      patch host_profile_path, params: { host: { email: "nie-email" } }
       assert_response :unprocessable_content
     end
 

@@ -81,6 +81,19 @@ class UserTest < ActiveSupport::TestCase
     assert User.reflect_on_association(:push_subscriptions)
   end
 
+  test "has :photo attachment with :small variant declared" do
+    reflection = User.reflect_on_attachment(:photo)
+    assert reflection, ":photo attachment should be defined via Avatarable"
+    assert reflection.named_variants.key?(:small), ":small variant should be declared"
+  end
+
+  test ":photo can resolve the :small variant on an attached blob" do
+    user = users(:ala)
+    user.photo.attach(io: StringIO.new("fake"), filename: "avatar.png", content_type: "image/png")
+    assert user.photo.attached?
+    assert_nothing_raised { user.photo.variant(:small) }
+  end
+
   test "title defaults to rookie (0)" do
     user = User.create!(first_name: "A", last_name: "B", email: "fresh@example.com")
     assert_equal "rookie", user.title
