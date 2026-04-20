@@ -7,11 +7,11 @@ class ParticipationPromotionTest < ActionDispatch::IntegrationTest
 
   def fill_event_and_queue_waitlist(waitlist_size: 2)
     confirmed = 4.times.map do |i|
-      u = User.create!(first_name: "C#{i}", last_name: "C", email: "c#{i}@example.com")
+      u = User.create!(first_name: "Confirmed#{i}", last_name: "Conf#{i}", email: "c#{i}@example.com")
       Participation.create!(event: @event, user: u, status: :confirmed, position: i + 1)
     end
     waitlist = waitlist_size.times.map do |i|
-      u = User.create!(first_name: "W#{i}", last_name: "W", email: "w#{i}@example.com")
+      u = User.create!(first_name: "Waiter#{i}", last_name: "Wait#{i}", email: "w#{i}@example.com")
       Participation.create!(event: @event, user: u, status: :waitlist, position: i + 1)
     end
     [ confirmed, waitlist ]

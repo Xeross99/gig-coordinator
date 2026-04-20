@@ -7,10 +7,10 @@ class ParticipationsController < ApplicationController
 
     Event.transaction do
       @event.lock!
-      existing = @event.participations.find_by(user_id: current_user.id)
+      existing = @event.participations.find_by(user_id: Current.user.id)
       if existing.nil?
         status, position = next_slot_for(@event)
-        @event.participations.create!(user: current_user, status: status, position: position)
+        @event.participations.create!(user: Current.user, status: status, position: position)
       elsif existing.cancelled?
         status, position = next_slot_for(@event)
         existing.update!(status: status, position: position)
@@ -28,7 +28,7 @@ class ParticipationsController < ApplicationController
 
     Event.transaction do
       @event.lock!
-      participation = @event.participations.active.find_by(user_id: current_user.id)
+      participation = @event.participations.active.find_by(user_id: Current.user.id)
       if participation
         was_confirmed = participation.confirmed?
         participation.update!(status: :cancelled, reserved_until: nil)
@@ -50,7 +50,7 @@ class ParticipationsController < ApplicationController
 
     Event.transaction do
       @event.lock!
-      p = @event.participations.reserved.find_by(user_id: current_user.id)
+      p = @event.participations.reserved.find_by(user_id: Current.user.id)
       if p && !p.reservation_expired?
         pos = (@event.participations.confirmed.maximum(:position) || 0) + 1
         p.update!(status: :confirmed, position: pos, reserved_until: nil)
@@ -68,7 +68,7 @@ class ParticipationsController < ApplicationController
 
     Event.transaction do
       @event.lock!
-      p = @event.participations.reserved.find_by(user_id: current_user.id)
+      p = @event.participations.reserved.find_by(user_id: Current.user.id)
       p&.update!(status: :cancelled, reserved_until: nil)
     end
 

@@ -9,7 +9,7 @@ if Rails.env.development?
   end
 
   [
-    { first_name: "Michał",   last_name: "Kowalska",  email: "admin@gigcoordinator.pl",       title: 3 },
+    { first_name: "Michał",   last_name: "Kowalska",  email: "admin@gigcoordinator.pl",       title: 3, admin: true },
     { first_name: "Adam",     last_name: "Nowak",      email: "example1@gigcoordinator.pl",         title: 3 },
     { first_name: "Michał",   last_name: "Wiśniewski",  email: "example2@gigcoordinator.pl",    title: 0 },
     { first_name: "Marcin",   last_name: "Lewandowski",       email: "example3@gigcoordinator.pl",    title: 1 },
@@ -17,11 +17,15 @@ if Rails.env.development?
     { first_name: "Ksawery",  last_name: "Szymański",     email: "example5@gigcoordinator.pl",    title: 1 },
     { first_name: "Piotr",    last_name: "Dąbrowski",       email: "example6@gigcoordinator.pl",    title: 1 }
   ].each do |attrs|
-    User.find_or_create_by!(email: attrs[:email]) do |u|
+    user = User.find_or_create_by!(email: attrs[:email]) do |u|
       u.first_name = attrs[:first_name]
       u.last_name  = attrs[:last_name]
       u.title      = attrs[:title]
+      u.admin      = attrs.fetch(:admin, false)
     end
+    # Idempotent admin flip: if the user already existed, ensure the flag matches seed intent.
+    desired = attrs.fetch(:admin, false)
+    user.update!(admin: desired) if user.admin != desired
   end
 
   unless host.events.exists?

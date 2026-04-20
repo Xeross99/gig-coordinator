@@ -3,8 +3,17 @@ require "test_helper"
 class UserTest < ActiveSupport::TestCase
   include ActionMailer::TestHelper
 
+  test "newly built user has admin=false by default" do
+    assert_equal false, User.new.admin
+  end
+
+  test "persisting without admin defaults to false" do
+    u = User.create!(first_name: "T", last_name: "T", email: "t@t.pl")
+    assert_equal false, u.reload.admin
+  end
+
   test "valid user can be created" do
-    user = User.new(first_name: "Ala", last_name: "Nowak", email: "new-ala@example.com")
+    user = User.new(first_name: "Zofia", last_name: "Kwiatkowska", email: "zofia@example.com")
     assert user.valid?, user.errors.full_messages.inspect
   end
 
@@ -23,9 +32,36 @@ class UserTest < ActiveSupport::TestCase
     assert dup.errors.of_kind?(:email, :taken)
   end
 
+  test "first_name is unique case-insensitively" do
+    User.create!(first_name: "Adam", last_name: "Nowak", email: "first@example.com")
+    dup = User.new(first_name: "adam", last_name: "Kowalski", email: "second@example.com")
+    refute dup.valid?
+    assert dup.errors.of_kind?(:first_name, :taken)
+  end
+
+  test "last_name is unique case-insensitively" do
+    User.create!(first_name: "Adam", last_name: "Nowak", email: "first2@example.com")
+    dup = User.new(first_name: "Piotr", last_name: "NOWAK", email: "second2@example.com")
+    refute dup.valid?
+    assert dup.errors.of_kind?(:last_name, :taken)
+  end
+
   test "email normalized" do
     user = User.create!(first_name: "A", last_name: "B", email: "  UPPER@X.COM ")
     assert_equal "upper@x.com", user.email
+  end
+
+  test "email format is validated" do
+    user = User.new(first_name: "A", last_name: "B", email: "not-an-email")
+    refute user.valid?
+    assert user.errors.of_kind?(:email, :invalid)
+  end
+
+  test "updating own record does not conflict with itself on name uniqueness" do
+    user = User.create!(first_name: "Self", last_name: "Update", email: "self@example.com")
+    user.first_name = "Self"
+    user.last_name  = "Update"
+    assert user.valid?, user.errors.full_messages.inspect
   end
 
   test "has_many participations and push_subscriptions" do

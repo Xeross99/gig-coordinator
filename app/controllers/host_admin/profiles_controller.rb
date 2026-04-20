@@ -1,11 +1,11 @@
 module HostAdmin
   class ProfilesController < BaseController
     def edit
-      @host = current_host
+      @host = Current.host
     end
 
     def update
-      @host = current_host
+      @host = Current.host
       if @host.update(profile_params)
         redirect_to edit_host_profile_path, notice: "Zapisano"
       else

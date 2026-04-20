@@ -1,14 +1,20 @@
 <% content_for(:title) { "Wszyscy organizatorzy" } %>
 <%= render "shared/breadcrumbs", crumbs: [["Wszyscy organizatorzy", nil]] %>
 
-<h1 class="text-2xl font-semibold mb-4">Wszyscy organizatorzy</h1>
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold">Wszyscy organizatorzy</h1>
+  <% if admin_signed_in? %>
+    <%= link_to t("admin.hosts.add_button"), new_host_path,
+                class: "shrink-0 px-3 py-2 rounded-lg bg-stone-900 text-white text-sm font-medium" %>
+  <% end %>
+</div>
 
 <% if @hosts.any? %>
   <ul class="space-y-3">
     <% @hosts.each do |host| %>
       <% upcoming_count = @upcoming_counts[host.id] || 0 %>
       <li class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="p-4 flex items-center gap-4">
+        <%= link_to host_path(host), class: "p-4 flex items-center gap-4 hover:bg-stone-50 active:bg-stone-100 transition-colors" do %>
           <% if host.photo.attached? %>
             <%= image_tag host.photo.variant(:small),
                           class: "size-14 rounded-full object-cover shrink-0" %>
@@ -30,7 +36,7 @@
                   else "chytań" end %>
             </div>
           </div>
-        </div>
+        <% end %>
         <% if host.location.present? %>
           <div class="border-t border-stone-200">
             <%= render "shared/map_embed", location: host.location, height_class: "h-40" %>

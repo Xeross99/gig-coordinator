@@ -57,7 +57,8 @@ class EventsController < ApplicationController
   end
 
   def require_master!
-    return if current_user&.master?
+    return if Current.user&.master?
+
     redirect_to root_path, alert: I18n.t("events.new_event_forbidden")
   end
 

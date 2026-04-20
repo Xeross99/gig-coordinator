@@ -3,10 +3,10 @@
 <%# Anonymous visitors land here from the auth layout, which has no <main>
     or padding - give them one. Signed-in users come through application.html
     which already provides the max-width wrapper, so we skip it for them. %>
-<% if signed_in? %>
+<% if Current.session.present? %>
   <%= render "shared/breadcrumbs", crumbs: [ [ "Jak zacząć", nil ] ] %>
 <% end %>
-<div class="<%= "mx-auto max-w-lg px-4 py-8" unless signed_in? %>">
+<div class="<%= "mx-auto max-w-lg px-4 py-8" unless Current.session.present? %>">
 <article class="prose prose-stone max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h1:mb-4 prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-2 prose-p:text-stone-700 prose-li:text-stone-700 prose-strong:text-stone-900 prose-a:text-stone-900">
   <h1>Jak zacząć</h1>
   <p>Gig Coordinator działa jako PWA - <strong>nie ma jej w App Store ani Google Play</strong>. Dodajesz ją bezpośrednio z przeglądarki na ekran początkowy telefonu w 30 sekund. Bez instalacji część rzeczy nie zadziała (powiadomienia push, tryb pełnoekranowy), więc warto zrobić to na start.</p>

@@ -54,7 +54,7 @@
   <p class="text-xs text-stone-500 mb-3">Tu widzisz każde urządzenie, z którego się logowałeś. Oznaczone „to urządzenie" to aktualna sesja.</p>
   <ul class="divide-y divide-stone-100">
     <% @sessions.each do |session| %>
-      <% is_current = session.id == current_session.id %>
+      <% is_current = session.id == Current.session.id %>
       <% os, browser = session_ua_labels(session.user_agent) %>
       <li class="py-3 flex items-center gap-3">
         <div class="shrink-0 size-10 rounded-full <%= is_current ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500" %> flex items-center justify-center">
