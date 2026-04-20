@@ -51,14 +51,24 @@
     <dl class="grid grid-cols-2 gap-3 mt-5 text-sm">
       <div class="col-span-2">
         <dt class="text-stone-500 text-xs uppercase tracking-wide">E-mail</dt>
-        <dd class="font-medium break-all"><%= link_to @user.email, "mailto:#{@user.email}", class: "text-stone-900 hover:underline" %></dd>
+        <dd class="font-medium break-all <%= "text-stone-400" if @user.email.blank? %>">
+          <% if @user.email.present? %>
+            <%= link_to @user.email, "mailto:#{@user.email}", class: "text-stone-900 hover:underline" %>
+          <% else %>
+            Nie podano
+          <% end %>
+        </dd>
       </div>
-      <% if @user.phone.present? %>
-        <div class="col-span-2">
-          <dt class="text-stone-500 text-xs uppercase tracking-wide">Telefon</dt>
-          <dd class="font-medium"><%= link_to @user.phone, "tel:#{@user.phone}", class: "text-stone-900 hover:underline" %></dd>
-        </div>
-      <% end %>
+      <div class="col-span-2">
+        <dt class="text-stone-500 text-xs uppercase tracking-wide">Telefon</dt>
+        <dd class="font-medium <%= "text-stone-400" if @user.phone.blank? %>">
+          <% if @user.phone.present? %>
+            <%= link_to @user.phone, "tel:#{@user.phone}", class: "text-stone-900 hover:underline" %>
+          <% else %>
+            Nie podano
+          <% end %>
+        </dd>
+      </div>
       <div>
         <dt class="text-stone-500 text-xs uppercase tracking-wide">Ranga</dt>
         <dd class="font-medium"><%= @user.display_title %></dd>

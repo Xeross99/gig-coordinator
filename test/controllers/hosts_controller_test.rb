@@ -226,12 +226,14 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Telefon", response.body
   end
 
-  test "GET /organizatorzy/:id hides phone row when blank" do
+  test "GET /organizatorzy/:id shows 'Nie podano' for phone when blank" do
     hosts(:jan).update!(phone: nil)
     sign_in_as(users(:bartek))
     get host_path(hosts(:jan))
     assert_response :success
-    assert_no_match "Telefon", response.body
+    assert_match "Telefon", response.body
+    assert_match "Nie podano", response.body
+    assert_select "a[href^=?]", "tel:", count: 0
   end
 
   test "GET /organizatorzy/:id renders email as mailto: link when present" do
@@ -241,12 +243,12 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", "mailto:#{hosts(:jan).email}", text: hosts(:jan).email
   end
 
-  test "GET /organizatorzy/:id shows 'brak' instead of mailto when host has no email" do
+  test "GET /organizatorzy/:id shows 'Nie podano' instead of mailto when host has no email" do
     hosts(:jan).update!(email: nil)
     sign_in_as(users(:bartek))
     get host_path(hosts(:jan))
     assert_response :success
-    assert_match "brak", response.body
+    assert_match "Nie podano", response.body
     assert_select "a[href^=?]", "mailto:", count: 0
   end
 end

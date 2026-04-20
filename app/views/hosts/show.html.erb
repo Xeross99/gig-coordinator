@@ -35,16 +35,20 @@
           <% if @host.email.present? %>
             <%= link_to @host.email, "mailto:#{@host.email}", class: "text-stone-900 hover:underline" %>
           <% else %>
-            brak
+            Nie podano
           <% end %>
         </dd>
       </div>
-      <% if @host.phone.present? %>
-        <div>
-          <dt class="text-stone-500 text-xs uppercase tracking-wide">Telefon</dt>
-          <dd class="font-medium"><%= link_to @host.phone, "tel:#{@host.phone}", class: "text-stone-900 hover:underline" %></dd>
-        </div>
-      <% end %>
+      <div>
+        <dt class="text-stone-500 text-xs uppercase tracking-wide">Telefon</dt>
+        <dd class="font-medium <%= "text-stone-400" if @host.phone.blank? %>">
+          <% if @host.phone.present? %>
+            <%= link_to @host.phone, "tel:#{@host.phone}", class: "text-stone-900 hover:underline" %>
+          <% else %>
+            Nie podano
+          <% end %>
+        </dd>
+      </div>
       <div>
         <dt class="text-stone-500 text-xs uppercase tracking-wide">Lokalizacja</dt>
         <dd class="font-medium"><%= @host.location %></dd>
