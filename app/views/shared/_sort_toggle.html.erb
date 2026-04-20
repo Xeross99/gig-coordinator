@@ -13,6 +13,7 @@
     <% active = current == value %>
     <%= link_to label, send(path_helper, param_name => value),
                 class: "px-3 py-1.5 rounded-md font-medium transition-colors #{full_width ? "flex-1 text-center" : ""} #{active ? "sort-toggle-active bg-white text-stone-900 shadow-sm" : "text-stone-600 hover:text-stone-900"}",
-                aria: { current: active ? "true" : nil } %>
+                aria: { current: active ? "true" : nil },
+                data: { turbo_action: "replace" } %>
   <% end %>
 </div>
