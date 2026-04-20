@@ -31,7 +31,9 @@
     <dl class="grid grid-cols-1 gap-3 mt-5 text-sm">
       <div>
         <dt class="text-stone-500 text-xs uppercase tracking-wide">E-mail</dt>
-        <dd class="font-medium break-all"><%= @host.email %></dd>
+        <dd class="font-medium break-all <%= "text-stone-400" if @host.email.blank? %>">
+          <%= @host.email.presence || "brak" %>
+        </dd>
       </div>
       <div>
         <dt class="text-stone-500 text-xs uppercase tracking-wide">Lokalizacja</dt>
