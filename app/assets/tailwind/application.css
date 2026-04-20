@@ -168,6 +168,13 @@ html[data-transition-direction="none"]::view-transition-new(app-breadcrumb) {
   view-transition-name: sort-target;
 }
 
+/* Active sort pill: unique view-transition-name so the browser morphs the pill
+   between positions when the active option changes. Only one element has this
+   class at a time, which is required for view-transition-name uniqueness. */
+.sort-toggle-active {
+  view-transition-name: sort-toggle-pill;
+}
+
 html[data-transition-direction="sort"]::view-transition-old(root),
 html[data-transition-direction="sort"]::view-transition-new(root),
 html[data-transition-direction="sort"]::view-transition-old(app-breadcrumb),
@@ -180,6 +187,13 @@ html[data-transition-direction="sort"]::view-transition-old(sort-target) {
 }
 html[data-transition-direction="sort"]::view-transition-new(sort-target) {
   animation: view-transition-simple-fade-in 200ms ease-in both;
+}
+
+/* Slow the pill morph a touch so the position/size interpolation reads as a
+   smooth slide instead of a blink. */
+html[data-transition-direction="sort"]::view-transition-group(sort-toggle-pill) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Unified <select> appearance: strip native chevron, draw a stone-500 SVG chevron so selects match text/number inputs. */
