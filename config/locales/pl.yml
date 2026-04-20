@@ -41,6 +41,7 @@ pl:
     change_email: "Zmień adres e-mail"
     invalid_code: "Nieprawidłowy lub wygasły kod."
     login_required: "Zaloguj się, aby kontynuować."
+    admin_required: "Tylko administrator może wykonać tę akcję."
     logout: "Wyloguj"
   events:
     upcoming: "Do złapania"
@@ -87,3 +88,21 @@ pl:
       few:   "%{count} komendantów"
       many:  "%{count} komendantów"
       other: "%{count} komendantów"
+  admin:
+    users:
+      new_title:    "Dodaj pracownika"
+      edit_title:   "Edytuj pracownika"
+      add_button:   "Dodaj pracownika"
+      edit_link:    "Edytuj"
+      created:      "Dodano pracownika."
+      updated:      "Zapisano zmiany."
+      admin_yes:    "Tak"
+      admin_no:     "Nie"
+      admin_hint:   "Administrator: %{value} — zmieniane z konsoli."
+    hosts:
+      new_title:    "Dodaj organizatora"
+      edit_title:   "Edytuj organizatora"
+      add_button:   "Dodaj organizatora"
+      edit_link:    "Edytuj"
+      created:      "Dodano organizatora."
+      updated:      "Zapisano zmiany."

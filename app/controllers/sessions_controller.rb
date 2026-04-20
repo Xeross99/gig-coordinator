@@ -2,7 +2,7 @@ class SessionsController < ApplicationController
   layout "auth", only: :new
 
   def new
-    redirect_to(current_host ? host_root_path : root_path) and return if signed_in?
+    redirect_to(Current.host ? host_root_path : root_path) and return if Current.session.present?
   end
 
   def destroy

@@ -24,7 +24,7 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
 
   test "POST create when event is full creates waitlist participation" do
     4.times.with_index do |i|
-      Participation.create!(event: @event, user: User.create!(first_name: "X", last_name: "Y#{i}", email: "x#{i}@example.com"),
+      Participation.create!(event: @event, user: User.create!(first_name: "Filler#{i}", last_name: "Fill#{i}", email: "x#{i}@example.com"),
                             status: :confirmed, position: i + 1)
     end
     assert_difference "Participation.waitlist.count", 1 do
@@ -217,7 +217,7 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
 
   test "concurrent creates do not exceed capacity" do
     users_list = 6.times.map do |i|
-      User.create!(first_name: "Race#{i}", last_name: "User", email: "race#{i}@example.com")
+      User.create!(first_name: "Race#{i}", last_name: "Racer#{i}", email: "race#{i}@example.com")
     end
 
     # Serialize via the same lock the controller uses — test semantic correctness (not race)

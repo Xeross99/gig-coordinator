@@ -51,13 +51,13 @@ class EventsController < ApplicationController
   end
 
   def allowed_hosts
-    return Host.all                   if current_user.master?
-    return current_user.managed_hosts if current_user.captain?
+    return Host.all                   if Current.user.master?
+    return Current.user.managed_hosts if Current.user.captain?
     Host.none
   end
 
   def require_event_creator!
-    return if current_user&.can_create_events?
+    return if Current.user&.can_create_events?
 
     redirect_to root_path, alert: I18n.t("events.new_event_forbidden")
   end

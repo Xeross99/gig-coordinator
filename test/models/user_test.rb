@@ -3,8 +3,17 @@ require "test_helper"
 class UserTest < ActiveSupport::TestCase
   include ActionMailer::TestHelper
 
+  test "newly built user has admin=false by default" do
+    assert_equal false, User.new.admin
+  end
+
+  test "persisting without admin defaults to false" do
+    u = User.create!(first_name: "T", last_name: "T", email: "t@t.pl")
+    assert_equal false, u.reload.admin
+  end
+
   test "valid user can be created" do
-    user = User.new(first_name: "Ala", last_name: "Nowak", email: "new-ala@example.com")
+    user = User.new(first_name: "Zofia", last_name: "Kwiatkowska", email: "zofia@example.com")
     assert user.valid?, user.errors.full_messages.inspect
   end
 
@@ -23,14 +32,66 @@ class UserTest < ActiveSupport::TestCase
     assert dup.errors.of_kind?(:email, :taken)
   end
 
+  test "first_name+last_name pair is unique" do
+    User.create!(first_name: "Adam", last_name: "Nowak", email: "first@example.com")
+    dup = User.new(first_name: "Adam", last_name: "Nowak", email: "second@example.com")
+    refute dup.valid?
+    assert dup.errors.of_kind?(:first_name, :taken)
+  end
+
+  test "first_name uniqueness is case-insensitive within the same last_name" do
+    User.create!(first_name: "Adam", last_name: "Nowak", email: "first2@example.com")
+    dup = User.new(first_name: "ADAM", last_name: "Nowak", email: "second2@example.com")
+    refute dup.valid?
+    assert dup.errors.of_kind?(:first_name, :taken)
+  end
+
+  test "same first_name with different last_name is allowed" do
+    User.create!(first_name: "Michał", last_name: "Kowalska", email: "a1@example.com")
+    other = User.new(first_name: "Michał", last_name: "Wiśniewski", email: "a2@example.com")
+    assert other.valid?, other.errors.full_messages.inspect
+  end
+
+  test "same last_name with different first_name is allowed" do
+    User.create!(first_name: "Adam", last_name: "Nowak", email: "b1@example.com")
+    other = User.new(first_name: "Piotr", last_name: "Nowak", email: "b2@example.com")
+    assert other.valid?, other.errors.full_messages.inspect
+  end
+
   test "email normalized" do
     user = User.create!(first_name: "A", last_name: "B", email: "  UPPER@X.COM ")
     assert_equal "upper@x.com", user.email
   end
 
+  test "email format is validated" do
+    user = User.new(first_name: "A", last_name: "B", email: "not-an-email")
+    refute user.valid?
+    assert user.errors.of_kind?(:email, :invalid)
+  end
+
+  test "updating own record does not conflict with itself on name uniqueness" do
+    user = User.create!(first_name: "Self", last_name: "Update", email: "self@example.com")
+    user.first_name = "Self"
+    user.last_name  = "Update"
+    assert user.valid?, user.errors.full_messages.inspect
+  end
+
   test "has_many participations and push_subscriptions" do
     assert User.reflect_on_association(:participations)
     assert User.reflect_on_association(:push_subscriptions)
+  end
+
+  test "has :photo attachment with :small variant declared" do
+    reflection = User.reflect_on_attachment(:photo)
+    assert reflection, ":photo attachment should be defined via Avatarable"
+    assert reflection.named_variants.key?(:small), ":small variant should be declared"
+  end
+
+  test ":photo can resolve the :small variant on an attached blob" do
+    user = users(:ala)
+    user.photo.attach(io: StringIO.new("fake"), filename: "avatar.png", content_type: "image/png")
+    assert user.photo.attached?
+    assert_nothing_raised { user.photo.variant(:small) }
   end
 
   test "title defaults to rookie (0)" do

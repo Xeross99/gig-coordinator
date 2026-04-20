@@ -2,6 +2,7 @@ ala:
   first_name: Ala
   last_name: Nowak
   email: ala@example.com
+  admin: true
 
 bartek:
   first_name: Bartek

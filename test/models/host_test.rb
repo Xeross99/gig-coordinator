@@ -4,18 +4,18 @@ class HostTest < ActiveSupport::TestCase
   include ActionMailer::TestHelper
 
   test "valid host can be created" do
-    host = Host.new(first_name: "Jan", last_name: "Kowalski",
-                    email: "new-jan@example.com", location: "Warszawa")
+    host = Host.new(first_name: "Zenon", last_name: "Kurczak",
+                    email: "zenon@example.com", location: "Warszawa")
     assert host.valid?, host.errors.full_messages.inspect
   end
 
-  test "requires first_name, last_name, email, location" do
+  test "requires first_name, last_name, location (email is optional)" do
     host = Host.new
     refute host.valid?
     assert host.errors[:first_name].any?
     assert host.errors[:last_name].any?
-    assert host.errors[:email].any?
     assert host.errors[:location].any?
+    assert_empty host.errors[:email]
   end
 
   test "email is unique case-insensitively" do
@@ -30,10 +30,30 @@ class HostTest < ActiveSupport::TestCase
     assert_equal "norm@example.com", host.email
   end
 
+  test "blank email is normalized to nil so multiple hosts can have no email" do
+    h1 = Host.create!(first_name: "NoMail", last_name: "One", email: "", location: "L1")
+    h2 = Host.new(first_name: "NoMail", last_name: "Two", location: "L2")  # no email at all
+    assert_nil h1.email
+    assert h2.valid?, h2.errors.full_messages.inspect
+  end
+
   test "has_many events and has_one_attached photo" do
     assert Host.reflect_on_association(:events)
     host = Host.new
     assert_respond_to host, :photo
+  end
+
+  test "has :photo attachment with :small variant declared (via Avatarable)" do
+    reflection = Host.reflect_on_attachment(:photo)
+    assert reflection
+    assert reflection.named_variants.key?(:small)
+  end
+
+  test ":photo can resolve the :small variant on an attached blob" do
+    host = hosts(:jan)
+    host.photo.attach(io: StringIO.new("fake"), filename: "avatar.png", content_type: "image/png")
+    assert host.photo.attached?
+    assert_nothing_raised { host.photo.variant(:small) }
   end
 
   test "no welcome email is enqueued on create (hosts onboard via console)" do

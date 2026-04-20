@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
   before_action :load_current_session
   before_action :touch_last_seen
 
-  helper_method :current_session, :current_user, :current_host, :signed_in?
+  helper_method :admin_signed_in?
 
   private
 
@@ -18,25 +18,32 @@ class ApplicationController < ActionController::Base
   # the "online now" indicator + "ostatnio widziany" text in the UI stay fresh
   # without writing to the DB on every request.
   def touch_last_seen
-    return unless current_user
-    last = current_user.last_seen_at
+    return unless Current.user
+    last = Current.user.last_seen_at
     return if last && last > 1.minute.ago
-    current_user.update_column(:last_seen_at, Time.current)
+    Current.user.update_column(:last_seen_at, Time.current)
   end
 
-  def current_session = Current.session
-  def current_user    = Current.user
-  def current_host    = Current.host
-  def signed_in?      = Current.session.present?
-
   def require_user!
-    return if current_user
+    return if Current.user
+
     redirect_to login_path, alert: I18n.t("auth.login_required")
   end
 
   def require_host!
-    return if current_host
+    return if Current.host
+
     redirect_to login_path, alert: I18n.t("auth.login_required")
+  end
+
+  def admin_signed_in?
+    Current.user&.admin?
+  end
+
+  def require_admin!
+    return if admin_signed_in?
+
+    redirect_to root_path, alert: I18n.t("auth.admin_required")
   end
 
   def sign_in!(authenticatable)
@@ -50,7 +57,7 @@ class ApplicationController < ActionController::Base
   end
 
   def sign_out!
-    current_session&.destroy
+    Current.session&.destroy
     cookies.delete(:session_token)
     Current.session = nil
   end

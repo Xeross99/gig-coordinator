@@ -1,6 +1,11 @@
 require "test_helper"
 
 class UsersControllerTest < ActionDispatch::IntegrationTest
+  test "routes expose admin CRUD URLs for users" do
+    assert_equal "/pracownicy/nowy",           new_user_path
+    assert_equal "/pracownicy/1/edytuj",       edit_user_path(1)
+  end
+
   test "redirects to login when not signed in" do
     get users_path
     assert_redirected_to login_path
@@ -107,11 +112,11 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "GET /pracownicy/:id shows 'Zarządza' section with linked hosts for a komendant" do
-    users(:ala).update!(title: :captain)
-    users(:ala).managed_hosts << hosts(:jan)
+    users(:cezary).update!(title: :captain)
+    users(:cezary).managed_hosts << hosts(:jan)
 
     sign_in_as(users(:bartek))
-    get user_path(users(:ala))
+    get user_path(users(:cezary))
     assert_response :success
     assert_match I18n.t("user.manages"),     response.body
     assert_match hosts(:jan).display_name,   response.body
@@ -119,18 +124,124 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
   test "GET /pracownicy/:id hides 'Zarządza' section when user has no managed_hosts" do
     sign_in_as(users(:bartek))
-    get user_path(users(:ala))
+    get user_path(users(:cezary))
     assert_no_match I18n.t("user.manages"), response.body
   end
 
   test "GET /pracownicy/:id shows 'Zarządza wszystkimi' section with ALL hosts for master" do
-    users(:ala).update!(title: :master)
+    users(:cezary).update!(title: :master)
 
     sign_in_as(users(:bartek))
-    get user_path(users(:ala))
+    get user_path(users(:cezary))
     assert_response :success
     assert_match I18n.t("user.manages_all"),  response.body
     assert_match hosts(:jan).display_name,    response.body
     assert_match hosts(:anna).display_name,   response.body
+  end
+
+  # --- admin CRUD ------------------------------------------------------------
+
+  test "GET /pracownicy/nowy requires login" do
+    get new_user_path
+    assert_redirected_to login_path
+  end
+
+  test "GET /pracownicy/nowy as non-admin user redirects with alert" do
+    sign_in_as(users(:bartek))  # not admin
+    get new_user_path
+    assert_redirected_to root_path
+    assert_equal I18n.t("auth.admin_required"), flash[:alert]
+  end
+
+  test "GET /pracownicy/nowy as host redirects (hosts can't be admins)" do
+    sign_in_as(hosts(:jan))
+    get new_user_path
+    assert_redirected_to login_path
+  end
+
+  test "GET /pracownicy/nowy as admin renders form" do
+    sign_in_as(users(:ala))  # admin
+    get new_user_path
+    assert_response :success
+    assert_match I18n.t("admin.users.new_title"), response.body
+  end
+
+  test "POST /pracownicy as admin creates user and redirects to show" do
+    sign_in_as(users(:ala))
+    assert_difference -> { User.count }, 1 do
+      post users_path, params: { user: {
+        first_name: "Nowy", last_name: "Pracownik",
+        email: "nowy@example.com", title: "rookie"
+      } }
+    end
+    created = User.find_by(email: "nowy@example.com")
+    assert_redirected_to user_path(created)
+    assert_equal I18n.t("admin.users.created"), flash[:notice]
+  end
+
+  test "POST /pracownicy as non-admin is rejected" do
+    sign_in_as(users(:bartek))
+    assert_no_difference -> { User.count } do
+      post users_path, params: { user: { first_name: "X", last_name: "Y", email: "x@y.pl" } }
+    end
+    assert_redirected_to root_path
+  end
+
+  test "POST /pracownicy cannot set admin=true via params" do
+    sign_in_as(users(:ala))
+    post users_path, params: { user: {
+      first_name: "Zuch", last_name: "Admin",
+      email: "zuch@example.com", admin: true
+    } }
+    assert_equal false, User.find_by(email: "zuch@example.com").admin
+  end
+
+  test "GET /pracownicy/:id/edytuj as admin renders form" do
+    sign_in_as(users(:ala))
+    get edit_user_path(users(:bartek))
+    assert_response :success
+    assert_match users(:bartek).display_name, response.body
+    assert_match I18n.t("admin.users.edit_title"), response.body
+  end
+
+  test "GET /pracownicy/:id/edytuj as non-admin redirects" do
+    sign_in_as(users(:bartek))
+    get edit_user_path(users(:cezary))
+    assert_redirected_to root_path
+  end
+
+  test "PATCH /pracownicy/:id as admin updates fields and redirects to show" do
+    sign_in_as(users(:ala))
+    patch user_path(users(:bartek)), params: { user: {
+      first_name: "Bartłomiej", email: "bartlomiej@example.com", title: "master"
+    } }
+    bartek = users(:bartek).reload
+    assert_equal "Bartłomiej",         bartek.first_name
+    assert_equal "bartlomiej@example.com", bartek.email
+    assert_equal "master",       bartek.title
+    assert_redirected_to user_path(bartek)
+  end
+
+  test "PATCH /pracownicy/:id cannot flip admin flag via params" do
+    sign_in_as(users(:ala))
+    patch user_path(users(:bartek)), params: { user: { admin: true } }
+    assert_equal false, users(:bartek).reload.admin
+  end
+
+  test "PATCH /pracownicy/:id with invalid email re-renders form" do
+    sign_in_as(users(:ala))
+    patch user_path(users(:bartek)), params: { user: { email: "nie-email" } }
+    assert_response :unprocessable_content
+  end
+
+  test "POST /pracownicy with duplicate first+last name pair as admin re-renders form" do
+    User.create!(first_name: "Istniejacy", last_name: "Ktos", email: "ist@example.com")
+    sign_in_as(users(:ala))
+    assert_no_difference -> { User.count } do
+      post users_path, params: { user: {
+        first_name: "Istniejacy", last_name: "Ktos", email: "inny@example.com"
+      } }
+    end
+    assert_response :unprocessable_content
   end
 end
