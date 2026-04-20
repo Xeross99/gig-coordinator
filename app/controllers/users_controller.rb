@@ -3,7 +3,7 @@ class UsersController < ApplicationController
   before_action :require_admin!, only: %i[new create edit update]
 
   SORTS = {
-    "rank"      => { title: :desc, first_name: :asc,  last_name: :asc },
+    "rank"      => { title: :desc, id: :asc },
     "name_asc"  => { first_name: :asc,  last_name: :asc },
     "name_desc" => { first_name: :desc, last_name: :desc }
   }.freeze
