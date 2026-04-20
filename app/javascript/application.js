@@ -29,13 +29,23 @@ function navDepth(path) {
 }
 
 document.addEventListener("turbo:visit", (event) => {
-  const fromPath = window.location.pathname
-  const toPath   = new URL(event.detail.url, window.location.origin).pathname
+  const fromURL  = new URL(window.location.href)
+  const toURL    = new URL(event.detail.url, window.location.origin)
+  const fromPath = fromURL.pathname
+  const toPath   = toURL.pathname
 
   // Self-reload (pull-to-refresh) or a pre-set "none" should skip view
   // transitions entirely — animating a page into itself stutters.
-  if (fromPath === toPath || document.documentElement.dataset.transitionDirection === "none") {
+  const sameURL = fromPath === toPath && fromURL.search === toURL.search
+  if (sameURL || document.documentElement.dataset.transitionDirection === "none") {
     document.documentElement.dataset.transitionDirection = "none"
+    return
+  }
+
+  // Query-only change on the same path (e.g. ?sort=name_asc) — suppress the
+  // whole-root fade and let only the named list layer animate.
+  if (fromPath === toPath) {
+    document.documentElement.dataset.transitionDirection = "sort"
     return
   }
 

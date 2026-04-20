@@ -9,8 +9,15 @@
   <% end %>
 </div>
 
+<div class="mb-4">
+  <%= render "shared/sort_toggle",
+             options: [["name_asc", "Od A do Z"], ["name_desc", "Od Z do A"]],
+             current: @sort,
+             path_helper: :hosts_path %>
+</div>
+
 <% if @hosts.any? %>
-  <ul class="space-y-3">
+  <ul class="sort-target space-y-3">
     <% @hosts.each do |host| %>
       <% upcoming_count = @upcoming_counts[host.id] || 0 %>
       <li class="bg-white rounded-xl shadow-sm overflow-hidden">

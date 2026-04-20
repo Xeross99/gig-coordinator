@@ -160,6 +160,28 @@ html[data-transition-direction="none"]::view-transition-new(app-breadcrumb) {
   animation: none;
 }
 
+/* Sort-toggle navigations (same path, different ?sort=…): freeze the root and
+   the breadcrumb, animate only the element tagged `.sort-target` (which gets
+   its own view-transition-name below). The header/navbar/buttons stay put;
+   just the list fades. */
+.sort-target {
+  view-transition-name: sort-target;
+}
+
+html[data-transition-direction="sort"]::view-transition-old(root),
+html[data-transition-direction="sort"]::view-transition-new(root),
+html[data-transition-direction="sort"]::view-transition-old(app-breadcrumb),
+html[data-transition-direction="sort"]::view-transition-new(app-breadcrumb) {
+  animation: none;
+}
+
+html[data-transition-direction="sort"]::view-transition-old(sort-target) {
+  animation: view-transition-simple-fade-out 140ms ease-out both;
+}
+html[data-transition-direction="sort"]::view-transition-new(sort-target) {
+  animation: view-transition-simple-fade-in 200ms ease-in both;
+}
+
 /* Unified <select> appearance: strip native chevron, draw a stone-500 SVG chevron so selects match text/number inputs. */
 .form-select {
   appearance: none;

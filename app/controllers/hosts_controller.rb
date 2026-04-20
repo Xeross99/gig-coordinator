@@ -2,8 +2,14 @@ class HostsController < ApplicationController
   before_action :require_user!
   before_action :require_admin!, only: %i[new create edit update]
 
+  SORTS = {
+    "name_asc"  => { first_name: :asc,  last_name: :asc },
+    "name_desc" => { first_name: :desc, last_name: :desc }
+  }.freeze
+
   def index
-    @hosts = Host.order(:last_name, :first_name).with_attached_photo
+    @sort = SORTS.key?(params[:sort]) ? params[:sort] : "name_asc"
+    @hosts = Host.order(SORTS.fetch(@sort)).with_attached_photo
     @upcoming_counts = Event.upcoming.group(:host_id).count
     @manager_counts  = HostManager.group(:host_id).count
   end

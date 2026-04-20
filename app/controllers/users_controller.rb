@@ -2,8 +2,15 @@ class UsersController < ApplicationController
   before_action :require_user!
   before_action :require_admin!, only: %i[new create edit update]
 
+  SORTS = {
+    "rank"      => { title: :desc, first_name: :asc,  last_name: :asc },
+    "name_asc"  => { first_name: :asc,  last_name: :asc },
+    "name_desc" => { first_name: :desc, last_name: :desc }
+  }.freeze
+
   def index
-    @users = User.order(title: :desc, last_name: :asc, first_name: :asc).with_attached_photo
+    @sort = SORTS.key?(params[:sort]) ? params[:sort] : "rank"
+    @users = User.order(SORTS.fetch(@sort)).with_attached_photo
     @catch_counts = Participation.confirmed
       .joins(:event)
       .where.not(events: { completed_at: nil })

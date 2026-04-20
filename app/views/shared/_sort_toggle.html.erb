@@ -1,0 +1,14 @@
+<%#
+  locals:
+    options: Array of [value, label] pairs
+    current: currently-selected value
+    path_helper: symbol naming the path helper (e.g. :users_path)
+%>
+<div class="inline-flex items-center bg-stone-100 rounded-lg p-1 text-sm">
+  <% options.each do |value, label| %>
+    <% active = current == value %>
+    <%= link_to label, send(path_helper, sort: value),
+                class: "px-3 py-1.5 rounded-md font-medium transition-colors #{active ? "bg-white text-stone-900 shadow-sm" : "text-stone-600 hover:text-stone-900"}",
+                aria: { current: active ? "true" : nil } %>
+  <% end %>
+</div>
