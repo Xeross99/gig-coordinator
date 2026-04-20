@@ -21,8 +21,9 @@ class User < ApplicationRecord
 
   normalizes :email, with: ->(v) { v.to_s.strip.downcase }
 
-  validates :first_name, presence: true, uniqueness: { case_sensitive: false }
-  validates :last_name,  presence: true, uniqueness: { case_sensitive: false }
+  validates :last_name, presence: true
+  validates :first_name, presence: true,
+                         uniqueness: { scope: :last_name, case_sensitive: false }
   # `allow_blank: true` on format: presence already rejects a blank email, so this
   # avoids surfacing both "can't be blank" and "invalid format" on the same submit.
   validates :email, presence: true, uniqueness: { case_sensitive: false },

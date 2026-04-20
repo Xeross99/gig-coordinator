@@ -206,12 +206,12 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_content
   end
 
-  test "POST /pracownicy with duplicate first_name as admin re-renders form" do
+  test "POST /pracownicy with duplicate first+last name pair as admin re-renders form" do
     User.create!(first_name: "Istniejacy", last_name: "Ktos", email: "ist@example.com")
     sign_in_as(users(:ala))
     assert_no_difference -> { User.count } do
       post users_path, params: { user: {
-        first_name: "Istniejacy", last_name: "Inny", email: "inny@example.com"
+        first_name: "Istniejacy", last_name: "Ktos", email: "inny@example.com"
       } }
     end
     assert_response :unprocessable_content

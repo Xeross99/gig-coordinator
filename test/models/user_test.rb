@@ -32,18 +32,30 @@ class UserTest < ActiveSupport::TestCase
     assert dup.errors.of_kind?(:email, :taken)
   end
 
-  test "first_name is unique case-insensitively" do
+  test "first_name+last_name pair is unique" do
     User.create!(first_name: "Adam", last_name: "Nowak", email: "first@example.com")
-    dup = User.new(first_name: "adam", last_name: "Kowalski", email: "second@example.com")
+    dup = User.new(first_name: "Adam", last_name: "Nowak", email: "second@example.com")
     refute dup.valid?
     assert dup.errors.of_kind?(:first_name, :taken)
   end
 
-  test "last_name is unique case-insensitively" do
+  test "first_name uniqueness is case-insensitive within the same last_name" do
     User.create!(first_name: "Adam", last_name: "Nowak", email: "first2@example.com")
-    dup = User.new(first_name: "Piotr", last_name: "NOWAK", email: "second2@example.com")
+    dup = User.new(first_name: "ADAM", last_name: "Nowak", email: "second2@example.com")
     refute dup.valid?
-    assert dup.errors.of_kind?(:last_name, :taken)
+    assert dup.errors.of_kind?(:first_name, :taken)
+  end
+
+  test "same first_name with different last_name is allowed" do
+    User.create!(first_name: "Michał", last_name: "Kowalska", email: "a1@example.com")
+    other = User.new(first_name: "Michał", last_name: "Wiśniewski", email: "a2@example.com")
+    assert other.valid?, other.errors.full_messages.inspect
+  end
+
+  test "same last_name with different first_name is allowed" do
+    User.create!(first_name: "Adam", last_name: "Nowak", email: "b1@example.com")
+    other = User.new(first_name: "Piotr", last_name: "Nowak", email: "b2@example.com")
+    assert other.valid?, other.errors.full_messages.inspect
   end
 
   test "email normalized" do
