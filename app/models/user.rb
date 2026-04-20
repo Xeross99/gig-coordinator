@@ -14,6 +14,7 @@ class User < ApplicationRecord
   has_many :managed_hosts, -> { order(:last_name, :first_name) }, through: :host_memberships, source: :host
 
   normalizes :email, with: ->(v) { v.to_s.strip.downcase.presence }
+  normalizes :phone, with: ->(v) { v.to_s.strip.presence }
 
   validates :last_name, presence: true
   validates :first_name, presence: true, uniqueness: { scope: :last_name, case_sensitive: false }

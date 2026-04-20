@@ -35,6 +35,12 @@
           <%= @host.email.presence || "brak" %>
         </dd>
       </div>
+      <% if @host.phone.present? %>
+        <div>
+          <dt class="text-stone-500 text-xs uppercase tracking-wide">Telefon</dt>
+          <dd class="font-medium"><%= link_to @host.phone, "tel:#{@host.phone}", class: "text-stone-900 hover:underline" %></dd>
+        </div>
+      <% end %>
       <div>
         <dt class="text-stone-500 text-xs uppercase tracking-wide">Lokalizacja</dt>
         <dd class="font-medium"><%= @host.location %></dd>

@@ -60,4 +60,15 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     get edit_profile_path
     assert_redirected_to login_path
   end
+
+  test "PATCH update ignores phone param (admin-managed field)" do
+    users(:ala).update!(phone: "111 222 333")
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("fake-png"), filename: "me.png", content_type: "image/png"
+    )
+
+    patch profile_path, params: { user: { photo: blob.signed_id, phone: "999 999 999" } }
+
+    assert_equal "111 222 333", users(:ala).reload.phone
+  end
 end

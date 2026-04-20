@@ -53,6 +53,12 @@
         <dt class="text-stone-500 text-xs uppercase tracking-wide">E-mail</dt>
         <dd class="font-medium break-all"><%= @user.email %></dd>
       </div>
+      <% if @user.phone.present? %>
+        <div class="col-span-2">
+          <dt class="text-stone-500 text-xs uppercase tracking-wide">Telefon</dt>
+          <dd class="font-medium"><%= link_to @user.phone, "tel:#{@user.phone}", class: "text-stone-900 hover:underline" %></dd>
+        </div>
+      <% end %>
       <div>
         <dt class="text-stone-500 text-xs uppercase tracking-wide">Ranga</dt>
         <dd class="font-medium"><%= @user.display_title %></dd>

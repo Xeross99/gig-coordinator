@@ -48,6 +48,6 @@ class HostsController < ApplicationController
   private
 
   def host_params
-    params.expect(host: %i[first_name last_name email location photo])
+    params.expect(host: %i[first_name last_name email phone location photo])
   end
 end

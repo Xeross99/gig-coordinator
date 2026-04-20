@@ -7,6 +7,7 @@ class Host < ApplicationRecord
   has_many :managers, through: :host_managers, source: :user
 
   normalizes :email, with: ->(v) { v.to_s.strip.downcase.presence }
+  normalizes :phone, with: ->(v) { v.to_s.strip.presence }
 
   validates :last_name, :location, presence: true
   validates :first_name, presence: true, uniqueness: { scope: :last_name, case_sensitive: false }

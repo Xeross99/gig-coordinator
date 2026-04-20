@@ -208,4 +208,20 @@ class UserTest < ActiveSupport::TestCase
       refute users(:ala).event_creator_rank?, "#{title} nie powinien mieć rangi planisty"
     end
   end
+
+  test "phone is optional" do
+    user = User.new(first_name: "Bez", last_name: "Tel", email: "beztel@example.com")
+    assert user.valid?, user.errors.full_messages.inspect
+    assert_nil user.phone
+  end
+
+  test "phone is stripped of surrounding whitespace" do
+    user = User.create!(first_name: "Z", last_name: "Tel", email: "ztel@example.com", phone: "  +48 123 456 789  ")
+    assert_equal "+48 123 456 789", user.phone
+  end
+
+  test "blank phone is normalized to nil" do
+    user = User.create!(first_name: "Pusty", last_name: "Tel", email: "pusty@example.com", phone: "   ")
+    assert_nil user.phone
+  end
 end

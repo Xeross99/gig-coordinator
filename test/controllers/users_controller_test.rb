@@ -244,4 +244,46 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_content
   end
+
+  # --- phone -----------------------------------------------------------------
+
+  test "POST /pracownicy as admin saves phone when provided" do
+    sign_in_as(users(:ala))
+    post users_path, params: { user: {
+      first_name: "Z", last_name: "Telefonem",
+      email: "ztel@example.com", phone: "+48 123 456 789"
+    } }
+    assert_equal "+48 123 456 789", User.find_by(email: "ztel@example.com").phone
+  end
+
+  test "PATCH /pracownicy/:id as admin updates phone" do
+    sign_in_as(users(:ala))
+    patch user_path(users(:bartek)), params: { user: { phone: "500 600 700" } }
+    assert_equal "500 600 700", users(:bartek).reload.phone
+  end
+
+  test "PATCH /pracownicy/:id as admin can clear phone by sending blank" do
+    users(:bartek).update!(phone: "123 456 789")
+    sign_in_as(users(:ala))
+    patch user_path(users(:bartek)), params: { user: { phone: "" } }
+    assert_nil users(:bartek).reload.phone
+  end
+
+  test "GET /pracownicy/:id renders phone as tel: link when present" do
+    users(:bartek).update!(phone: "+48 500 600 700")
+    sign_in_as(users(:cezary))
+    get user_path(users(:bartek))
+    assert_response :success
+    assert_match "+48 500 600 700", response.body
+    assert_select "a[href=?]", "tel:+48 500 600 700"
+    assert_match "Telefon", response.body
+  end
+
+  test "GET /pracownicy/:id hides phone row when blank" do
+    users(:bartek).update!(phone: nil)
+    sign_in_as(users(:cezary))
+    get user_path(users(:bartek))
+    assert_response :success
+    assert_no_match "Telefon", response.body
+  end
 end

@@ -18,6 +18,10 @@
       <dd class="font-medium"><%= @user.email %></dd>
     </div>
     <div class="sm:col-span-2">
+      <dt class="text-stone-500">Telefon</dt>
+      <dd class="font-medium <%= "text-stone-400" if @user.phone.blank? %>"><%= @user.phone.presence || "brak" %></dd>
+    </div>
+    <div class="sm:col-span-2">
       <dt class="text-stone-500">Ranga</dt>
       <dd><%= render "users/title_badge", user: @user %></dd>
     </div>

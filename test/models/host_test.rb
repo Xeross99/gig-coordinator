@@ -70,4 +70,20 @@ class HostTest < ActiveSupport::TestCase
     assert_includes host.managers, users(:ala)
     assert_includes host.managers, users(:bartek)
   end
+
+  test "phone is optional" do
+    host = Host.new(first_name: "Bez", last_name: "Tel", location: "L")
+    assert host.valid?, host.errors.full_messages.inspect
+    assert_nil host.phone
+  end
+
+  test "phone is stripped of surrounding whitespace" do
+    host = Host.create!(first_name: "Z", last_name: "Tel", location: "L", phone: "  +48 987 654 321  ")
+    assert_equal "+48 987 654 321", host.phone
+  end
+
+  test "blank phone is normalized to nil" do
+    host = Host.create!(first_name: "Pusty", last_name: "Tel", location: "L", phone: "   ")
+    assert_nil host.phone
+  end
 end

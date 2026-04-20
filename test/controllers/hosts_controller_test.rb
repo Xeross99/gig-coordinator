@@ -191,4 +191,46 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     patch host_path(hosts(:jan)), params: { host: { email: "nie-email" } }
     assert_response :unprocessable_content
   end
+
+  # --- phone -----------------------------------------------------------------
+
+  test "POST /organizatorzy as admin saves phone when provided" do
+    sign_in_as(users(:ala))
+    post hosts_path, params: { host: {
+      first_name: "Z", last_name: "Telefonem",
+      location: "Wieś 1", phone: "+48 111 222 333"
+    } }
+    assert_equal "+48 111 222 333", Host.find_by(last_name: "Telefonem").phone
+  end
+
+  test "PATCH /organizatorzy/:id as admin updates phone" do
+    sign_in_as(users(:ala))
+    patch host_path(hosts(:jan)), params: { host: { phone: "600 700 800" } }
+    assert_equal "600 700 800", hosts(:jan).reload.phone
+  end
+
+  test "PATCH /organizatorzy/:id as admin can clear phone by sending blank" do
+    hosts(:jan).update!(phone: "600 700 800")
+    sign_in_as(users(:ala))
+    patch host_path(hosts(:jan)), params: { host: { phone: "" } }
+    assert_nil hosts(:jan).reload.phone
+  end
+
+  test "GET /organizatorzy/:id renders phone as tel: link when present" do
+    hosts(:jan).update!(phone: "+48 600 700 800")
+    sign_in_as(users(:bartek))
+    get host_path(hosts(:jan))
+    assert_response :success
+    assert_match "+48 600 700 800", response.body
+    assert_select "a[href=?]", "tel:+48 600 700 800"
+    assert_match "Telefon", response.body
+  end
+
+  test "GET /organizatorzy/:id hides phone row when blank" do
+    hosts(:jan).update!(phone: nil)
+    sign_in_as(users(:bartek))
+    get host_path(hosts(:jan))
+    assert_response :success
+    assert_no_match "Telefon", response.body
+  end
 end
