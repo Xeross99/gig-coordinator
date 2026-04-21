@@ -28,6 +28,7 @@ pl:
       master:        "Mistrz"
     manages: "Zarządza"
     manages_all: "Zarządza wszystkimi organizatorami"
+    blocked_at: "Zablokowany u"
     rank_descriptions:
       rookie:          "Witaj w obiekcie. Zapisuj się na łapania i zbieraj doświadczenie."
       member:      "Nie jesteś już nowicjuszem - masz za sobą pierwsze łapania i budujesz reputację w systemie."

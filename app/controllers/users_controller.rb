@@ -26,6 +26,7 @@ class UsersController < ApplicationController
     when @user.captain? then @user.managed_hosts.with_attached_photo
     else                                 Host.none
     end
+    @blocked_hosts = @user.blocked_hosts.with_attached_photo
 
     scope = @user.participations.includes(event: :host).order("events.scheduled_at DESC")
     @past_confirmed = scope.confirmed.select { |p| p.event.completed? }

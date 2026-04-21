@@ -112,6 +112,37 @@
     </div>
   <% end %>
 
+  <% if @blocked_hosts.any? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3 flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" class="size-3.5 text-red-500">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+        <%= t("user.blocked_at") %>
+      </h2>
+      <ul class="space-y-2">
+        <% @blocked_hosts.each do |host| %>
+          <li>
+            <%= link_to host_path(host), class: "flex items-center gap-3 text-sm" do %>
+              <% if host.photo.attached? %>
+                <%= image_tag rails_representation_path(host.photo.variant(:small), only_path: true),
+                              class: "size-10 rounded-full object-cover shrink-0" %>
+              <% else %>
+                <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
+                  <%= host.first_name[0] %><%= host.last_name[0] %>
+                </div>
+              <% end %>
+              <div class="min-w-0">
+                <div class="font-medium text-stone-900 truncate"><%= host.display_name %></div>
+                <div class="text-stone-500 text-xs truncate"><%= host.location %></div>
+              </div>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <% if @upcoming.any? %>
     <div class="border-t border-stone-200 p-5">
       <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3">Nadchodzące łapania</h2>
