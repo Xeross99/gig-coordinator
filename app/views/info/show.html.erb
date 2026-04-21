@@ -11,12 +11,31 @@
 
   <h2>Rangi</h2>
   <p>Każdy pracownik ma rangę. Rangi nadaje admin. W kolejności od startowej do najwyższej:</p>
-  <ul>
-    <li><strong>Nowy</strong> - starter, każdy nowy tu zaczyna</li>
-    <li><strong>Członek</strong></li>
-    <li><strong>Weteran</strong></li>
-    <li><strong>Kapitan</strong> - może planować łapania, ale tylko u przypisanych mu organizatorów</li>
-    <li><strong>Mistrz</strong> - najwyższa ranga, może planować łapania u <strong>dowolnego</strong> organizatora</li>
+  <ul class="not-prose space-y-3 my-4">
+    <% User.titles.keys.each do |title_key| %>
+      <% sample = User.new(title: title_key) %>
+      <% description = case title_key.to_sym
+         when :rookie          then "starter, każdy nowy tu zaczyna"
+         when :member      then "brak specjalnych uprawnień"
+         when :veteran  then "brak specjalnych uprawnień"
+         when :captain then "może planować łapania, ale tylko u przypisanych mu organizatorów"
+         when :master        then "najwyższa ranga, może planować łapania u dowolnego organizatora"
+         end %>
+      <li class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4">
+        <div class="size-14 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 shrink-0" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="size-7">
+            <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-7 9a7 7 0 0 1 14 0v1H5v-1Z"/>
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="font-medium text-stone-900"><%= sample.display_title %></div>
+          <div class="mt-1"><%= render "users/title_badge", user: sample %></div>
+          <% if description %>
+            <div class="mt-1 text-xs text-stone-500"><%= description %></div>
+          <% end %>
+        </div>
+      </li>
+    <% end %>
   </ul>
 
   <h2>Rezerwacje</h2>
