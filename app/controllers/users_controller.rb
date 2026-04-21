@@ -62,7 +62,15 @@ class UsersController < ApplicationController
 
   private
 
+  # Mistrz nie podlega blokadom — jeśli tytuł po zapisie będzie `master`,
+  # ignorujemy `blocked_host_ids`. Walidacja `HostBlock#user_is_not_master`
+  # blokowałaby save anyway; tu tylko zdejmujemy payload, żeby zapis przeszedł
+  # bez „niewidzialnego" błędu dla admina.
   def user_params
-    params.expect(user: %i[first_name last_name email phone title photo])
+    attrs = params.expect(user: [ :first_name, :last_name, :email, :phone, :title, :photo,
+                                  { managed_host_ids: [], blocked_host_ids: [] } ])
+    final_title = attrs[:title].presence || @user&.title.to_s
+    attrs[:blocked_host_ids] = [] if final_title == "master"
+    attrs
   end
 end

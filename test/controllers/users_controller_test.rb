@@ -269,6 +269,73 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_nil users(:bartek).reload.phone
   end
 
+  # --- managed_host_ids + blocked_host_ids -----------------------------------
+
+  test "PATCH /pracownicy/:id as admin replaces managed_host_ids" do
+    sign_in_as(users(:ala))
+    users(:bartek).managed_hosts << hosts(:jan)
+    patch user_path(users(:bartek)), params: { user: {
+      title: "captain",
+      managed_host_ids: [ hosts(:anna).id.to_s ]
+    } }
+    bartek = users(:bartek).reload
+    assert_equal [ hosts(:anna) ], bartek.managed_hosts.to_a
+  end
+
+  test "PATCH /pracownicy/:id as admin can clear managed_host_ids by sending empty" do
+    sign_in_as(users(:ala))
+    users(:bartek).managed_hosts << hosts(:jan)
+    patch user_path(users(:bartek)), params: { user: { managed_host_ids: [ "" ] } }
+    assert_empty users(:bartek).reload.managed_hosts
+  end
+
+  test "PATCH /pracownicy/:id as admin adds a HostBlock via blocked_host_ids" do
+    sign_in_as(users(:ala))
+    users(:bartek).update!(title: :member)
+    patch user_path(users(:bartek)), params: { user: {
+      blocked_host_ids: [ hosts(:jan).id.to_s ]
+    } }
+    assert_equal [ hosts(:jan) ], users(:bartek).reload.blocked_hosts.to_a
+  end
+
+  test "PATCH /pracownicy/:id as admin can remove a HostBlock" do
+    sign_in_as(users(:ala))
+    users(:bartek).update!(title: :member)
+    HostBlock.create!(user: users(:bartek), host: hosts(:jan))
+    patch user_path(users(:bartek)), params: { user: { blocked_host_ids: [ "" ] } }
+    assert_empty users(:bartek).reload.blocked_hosts
+  end
+
+  test "PATCH /pracownicy/:id ignores blocked_host_ids when title becomes master" do
+    sign_in_as(users(:ala))
+    users(:bartek).update!(title: :member)
+    patch user_path(users(:bartek)), params: { user: {
+      title: "master",
+      blocked_host_ids: [ hosts(:jan).id.to_s ]
+    } }
+    bartek = users(:bartek).reload
+    assert bartek.master?
+    assert_empty bartek.blocked_hosts
+  end
+
+  test "GET /pracownicy/:id/edytuj renders managed + blocked checkbox sections" do
+    sign_in_as(users(:ala))
+    users(:bartek).update!(title: :member)
+    get edit_user_path(users(:bartek))
+    assert_response :success
+    assert_select "input[type='checkbox'][name='user[managed_host_ids][]'][value=?]", hosts(:jan).id.to_s
+    assert_select "input[type='checkbox'][name='user[blocked_host_ids][]'][value=?]", hosts(:jan).id.to_s
+  end
+
+  test "GET /pracownicy/:id/edytuj hides blocked checkboxes for master" do
+    sign_in_as(users(:ala))
+    users(:bartek).update!(title: :master)
+    get edit_user_path(users(:bartek))
+    assert_response :success
+    assert_select "input[type='checkbox'][name='user[blocked_host_ids][]']", count: 0
+    assert_match "Mistrz nie podlega blokadom", response.body
+  end
+
   test "GET /pracownicy/:id renders phone as tel: link when present" do
     users(:bartek).update!(phone: "+48 500 600 700")
     sign_in_as(users(:cezary))
