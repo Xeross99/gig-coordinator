@@ -11,8 +11,6 @@ class HostsController < ApplicationController
     @sort = SORTS.key?(params[:sort]) ? params[:sort] : "name_asc"
     @hosts = Host.order(SORTS.fetch(@sort)).with_attached_photo
     @upcoming_counts = Event.upcoming.group(:host_id).count
-    @manager_counts  = HostManager.group(:host_id).count
-    @blocked_counts  = HostBlock.group(:host_id).count
   end
 
   def show

@@ -34,14 +34,6 @@
           <div class="min-w-0 flex-1">
             <div class="font-medium text-stone-900 truncate"><%= host.display_name %></div>
             <div class="text-sm text-stone-500 truncate"><%= host.location %></div>
-            <% manager_count = @manager_counts[host.id].to_i %>
-            <% blocked_count = @blocked_counts[host.id].to_i %>
-            <% if manager_count > 0 %>
-              <div class="text-xs text-purple-700 mt-0.5"><%= t("hosts.manager_count", count: manager_count) %></div>
-            <% end %>
-            <% if blocked_count > 0 %>
-              <div class="text-xs text-red-700 mt-0.5"><%= t("hosts.blocked_count", count: blocked_count) %></div>
-            <% end %>
           </div>
           <div class="text-right text-xs shrink-0">
             <div class="text-stone-900 font-semibold tabular-nums"><%= upcoming_count %></div>

@@ -95,19 +95,15 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match I18n.t("hosts.commanders"), response.body
   end
 
-  test "GET /organizatorzy shows manager count next to hosts that have at least one commander" do
+  test "GET /organizatorzy does NOT show komendant/blokada captions (those belong on show page)" do
     hosts(:jan).managers << users(:cezary)
     users(:cezary).update!(title: :captain)
+    HostBlock.create!(user: users(:bartek), host: hosts(:jan))
 
-    sign_in_as(users(:bartek))
-    get hosts_path
-    assert_match "1 komendant", response.body
-  end
-
-  test "GET /organizatorzy does not show 'komendant' text for hosts without managers" do
     sign_in_as(users(:bartek))
     get hosts_path
     assert_no_match(/komendant/, response.body)
+    assert_no_match(/zablokowan/, response.body)
   end
 
   test "GET /organizatorzy links each host to show page" do
