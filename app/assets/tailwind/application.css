@@ -1,6 +1,29 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Hard-lock do jasnego UI. `color-scheme: light` mówi przeglądarce, żeby
+   NIE stosowała automatycznych dark-mode stylów na form controls, scrollbary,
+   paski tytułu PWA itp. — niezależnie od ustawienia systemu. Wymusza też biel
+   na `canvastext`/`canvas` defaulcie. Lexxy ma swoje `@media (prefers-color-scheme: dark)`
+   reguły — ich zmienne trzymane są w zasięgu `:where(lexxy-editor)`, więc
+   kontra-override robimy niżej. */
+:root {
+  color-scheme: light !important;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light !important;
+  }
+  /* Reset Lexxy dark variables — trzymamy jasne tło edytora wiadomości
+     nawet gdy OS pcha dark-mode. */
+  lexxy-editor,
+  .lexxy-editor__content,
+  .lexxy-prompt-menu {
+    background: white !important;
+    color: #1c1917 !important;
+  }
+}
+
 @theme {
   --animate-pop-in: pop-in 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-bump: bump 450ms cubic-bezier(0.22, 1, 0.36, 1);

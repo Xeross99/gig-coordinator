@@ -75,6 +75,12 @@
   <% all_users = User.with_attached_photo.order(title: :desc, last_name: :asc, first_name: :asc) %>
   <% participations_by_user = event.participations.index_by(&:user_id) %>
   <% blocked_user_ids = HostBlock.where(host_id: event.host_id).pluck(:user_id).to_set %>
+  <%# Kolejność: najpierw ci, którzy zaznaczyli obecność (rosnąco po czasie zapisu),
+      potem pozostali w dotychczasowej kolejności alfabetyczno-rangowej. %>
+  <% all_users = all_users.sort_by.with_index do |u, i|
+       p = participations_by_user[u.id]
+       [ p ? 0 : 1, p ? p.created_at.to_f : i ]
+     end %>
   <% initial_cap = 4 %>
   <% visible_users, hidden_users = all_users.first(initial_cap), all_users.drop(initial_cap) %>
   <div class="pt-4 border-t border-stone-200">
