@@ -164,43 +164,60 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.managed_hosts, hosts(:anna)
   end
 
-  test "can_create_events? is true for master even without managed_hosts" do
+  test "can_create_events? is true only for admins (temporary admin-only gate)" do
     user = users(:ala)
-    user.update!(title: :master)
+    user.update!(admin: true, title: :master)
     assert user.can_create_events?
-  end
-
-  test "can_create_events? is true for captain with at least one managed_host" do
-    user = users(:ala)
-    user.update!(title: :captain)
-    user.managed_hosts << hosts(:jan)
-    assert user.can_create_events?
-  end
-
-  test "can_create_events? is false for captain without managed_hosts" do
-    user = users(:ala)
-    user.update!(title: :captain)
-    refute user.can_create_events?
-  end
-
-  test "can_submit_events? is true only for master (komendant chwilowo wyłączony)" do
-    user = users(:ala)
-    user.update!(title: :master)
     assert user.can_submit_events?
-
-    user.update!(title: :captain)
-    user.managed_hosts << hosts(:jan)
-    refute user.can_submit_events?, "komendant nie może finalizować tworzenia eventu"
   end
 
-  test "can_create_events? is false for lower ranks regardless of managed_hosts" do
+  test "can_create_events? is false for non-admin master during admin-only gate" do
     user = users(:ala)
-    user.managed_hosts << hosts(:jan)
-    %i[rookie member veteran].each do |title|
-      user.update!(title: title)
-      refute user.can_create_events?, "#{title} powinien NIE móc tworzyć eventów"
-    end
+    user.update!(admin: false, title: :master)
+    refute user.can_create_events?
+    refute user.can_submit_events?
   end
+
+  # Rangowe testy — wyłączone na czas admin-only gatingu. Odkomentuj razem z
+  # rangową wersją `User#can_create_events?` / `#can_submit_events?`.
+  #
+  # test "can_create_events? is true for master even without managed_hosts" do
+  #   user = users(:ala)
+  #   user.update!(title: :master)
+  #   assert user.can_create_events?
+  # end
+  #
+  # test "can_create_events? is true for captain with at least one managed_host" do
+  #   user = users(:ala)
+  #   user.update!(title: :captain)
+  #   user.managed_hosts << hosts(:jan)
+  #   assert user.can_create_events?
+  # end
+  #
+  # test "can_create_events? is false for captain without managed_hosts" do
+  #   user = users(:ala)
+  #   user.update!(title: :captain)
+  #   refute user.can_create_events?
+  # end
+  #
+  # test "can_submit_events? is true only for master (komendant chwilowo wyłączony)" do
+  #   user = users(:ala)
+  #   user.update!(title: :master)
+  #   assert user.can_submit_events?
+  #
+  #   user.update!(title: :captain)
+  #   user.managed_hosts << hosts(:jan)
+  #   refute user.can_submit_events?, "komendant nie może finalizować tworzenia eventu"
+  # end
+  #
+  # test "can_create_events? is false for lower ranks regardless of managed_hosts" do
+  #   user = users(:ala)
+  #   user.managed_hosts << hosts(:jan)
+  #   %i[rookie member veteran].each do |title|
+  #     user.update!(title: title)
+  #     refute user.can_create_events?, "#{title} powinien NIE móc tworzyć eventów"
+  #   end
+  # end
 
   test "event_creator_rank? is true for master" do
     users(:ala).update!(title: :master)

@@ -55,6 +55,7 @@ class EventsController < ApplicationController
   end
 
   def allowed_hosts
+    return Host.all                   if Current.user.admin?
     return Host.all                   if Current.user.master?
     return Current.user.managed_hosts if Current.user.captain?
     Host.none
