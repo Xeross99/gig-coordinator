@@ -27,6 +27,9 @@ class EventsController < ApplicationController
 
   def create
     @event = Event.new(event_params)
+    unless Current.user.can_submit_events?
+      redirect_to events_path, alert: I18n.t("events.submit_disabled_hint") and return
+    end
     unless allowed_hosts.exists?(id: @event.host_id)
       redirect_to events_path, alert: I18n.t("events.new_event_forbidden") and return
     end

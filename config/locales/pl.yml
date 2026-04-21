@@ -73,6 +73,7 @@ pl:
     new_event: "Zaplanuj wydarzenie"
     new_event_forbidden: "Nie masz uprawnień do planowania łapań."
     new_event_disabled_hint: "Nie masz jeszcze przypisanego organizatora."
+    submit_disabled_hint: "Tworzenie eventów chwilowo wyłączone."
     created: "Event dodany. Zaproszenia już poszły."
     open_in_maps: "Otwórz w Google Maps"
   host_panel:

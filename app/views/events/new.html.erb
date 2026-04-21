@@ -83,5 +83,15 @@
     </div>
   </div>
 
-  <%= f.submit t("events.new_event"), class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium" %>
+  <% if Current.user.can_submit_events? %>
+    <%= f.submit t("events.new_event"), class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium" %>
+  <% else %>
+    <div>
+      <button type="button" disabled aria-disabled="true"
+              class="w-full py-3 rounded-lg bg-stone-300 text-stone-500 font-medium cursor-not-allowed">
+        <%= t("events.new_event") %>
+      </button>
+      <p class="mt-2 text-xs text-stone-500 text-center"><%= t("events.submit_disabled_hint") %></p>
+    </div>
+  <% end %>
 <% end %>

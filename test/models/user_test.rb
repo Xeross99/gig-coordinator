@@ -183,6 +183,16 @@ class UserTest < ActiveSupport::TestCase
     refute user.can_create_events?
   end
 
+  test "can_submit_events? is true only for master (komendant chwilowo wyłączony)" do
+    user = users(:ala)
+    user.update!(title: :master)
+    assert user.can_submit_events?
+
+    user.update!(title: :captain)
+    user.managed_hosts << hosts(:jan)
+    refute user.can_submit_events?, "komendant nie może finalizować tworzenia eventu"
+  end
+
   test "can_create_events? is false for lower ranks regardless of managed_hosts" do
     user = users(:ala)
     user.managed_hosts << hosts(:jan)

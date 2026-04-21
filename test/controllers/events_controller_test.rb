@@ -106,25 +106,29 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  test "GET /eventy/nowy as captain WITH managed_hosts shows only his hosts" do
+  test "GET /eventy/nowy as captain WITH managed_hosts shows form with disabled submit" do
     users(:ala).update!(title: :captain)
     users(:ala).managed_hosts << hosts(:jan)
 
     get new_event_path
     assert_response :success
-    assert_match hosts(:jan).display_name,     response.body
-    assert_no_match hosts(:anna).display_name, response.body
+    assert_match hosts(:jan).display_name, response.body
+    # Submit button jest zablokowany + adnotacja „chwilowo wyłączone".
+    assert_select "button[type='button'][disabled][aria-disabled='true']",
+                  text: /#{Regexp.escape(I18n.t("events.new_event"))}/
+    assert_match I18n.t("events.submit_disabled_hint"), response.body
+    assert_select "input[type='submit']", count: 0
   end
 
   # ---- Authorization: create ----
 
-  test "POST /eventy as captain rejects host_id outside managed_hosts" do
+  test "POST /eventy as captain is blocked (submit chwilowo wyłączony)" do
     users(:ala).update!(title: :captain)
     users(:ala).managed_hosts << hosts(:jan)
 
     assert_no_difference "Event.count" do
       post events_path, params: { event: {
-        name: "Próba", host_id: hosts(:anna).id,
+        name: "Próba", host_id: hosts(:jan).id,
         event_date: 1.day.from_now.to_date.to_s,
         start_hour: "18", start_minute: "0",
         duration_hours: "2", duration_minutes: "0",
@@ -133,25 +137,7 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to events_path
     follow_redirect!
-    assert_match I18n.t("events.new_event_forbidden"), response.body
-  end
-
-  test "POST /eventy as captain accepts host_id from his managed_hosts" do
-    users(:ala).update!(title: :captain)
-    users(:ala).managed_hosts << hosts(:jan)
-
-    assert_difference "Event.count", 1 do
-      post events_path, params: { event: {
-        name: "OK event", host_id: hosts(:jan).id,
-        event_date: 1.day.from_now.to_date.to_s,
-        start_hour: "18", start_minute: "0",
-        duration_hours: "2", duration_minutes: "0",
-        pay_per_person: 100, capacity: 4
-      } }
-    end
-    assert_response :redirect
-    follow_redirect!
-    assert_match "OK event", response.body
+    assert_match I18n.t("events.submit_disabled_hint"), response.body
   end
 
   test "POST /eventy as master accepts any host_id" do

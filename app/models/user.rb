@@ -33,6 +33,12 @@ class User < ApplicationRecord
     master? || (captain? && managed_hosts.exists?)
   end
 
+  # Chwilowo tylko master może finalizować utworzenie eventu — komendanci
+  # wchodzą w formularz, ale przycisk „Utwórz" jest zablokowany.
+  def can_submit_events?
+    master?
+  end
+
   def event_creator_rank?
     master? || captain?
   end
