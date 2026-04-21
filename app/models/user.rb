@@ -28,6 +28,7 @@ class User < ApplicationRecord
 
   after_create_commit :send_welcome_email
   after_update_commit :clear_host_blocks_on_mistrz_promotion
+  after_update_commit :send_rank_promotion_email
 
   def display_name
     "#{first_name} #{last_name}"
@@ -79,5 +80,17 @@ class User < ApplicationRecord
   def clear_host_blocks_on_mistrz_promotion
     return unless saved_change_to_title? && master?
     HostBlock.where(user_id: id).delete_all
+  end
+
+  # Auto-awans: przy każdej zmianie tytułu, jeśli nowy tytuł jest na liście
+  # `RankPromotionMailer::NOTIFIABLE_TITLES` (komendant / master), leci
+  # mail. Guard na `saved_change_to_title?` zapewnia, że nie wyślemy maila,
+  # gdy user update'uje tylko np. zdjęcie profilowe albo email.
+  def send_rank_promotion_email
+    return unless saved_change_to_title?
+    return if email.blank?
+    new_title = title.to_s
+    return unless RankPromotionMailer::NOTIFIABLE_TITLES.include?(new_title)
+    RankPromotionMailer.notify(self, new_title: new_title).deliver_later
   end
 end
