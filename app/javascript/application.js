@@ -2,6 +2,9 @@
 import { Turbo } from "@hotwired/turbo-rails"
 import "controllers"
 import "@tailwindplus/elements"
+import { install as installHaptics } from "haptic"
+
+installHaptics()
 
 // Custom <turbo-stream action="visit" target="/path"> — used to push a
 // server-side navigation over a Turbo Stream (e.g. send an invited user

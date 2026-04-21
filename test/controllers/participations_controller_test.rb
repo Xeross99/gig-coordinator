@@ -268,6 +268,16 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "participation buttons carry data-haptic attributes for iOS/Android feedback" do
+    # „Akceptuję" na pustym evencie → confirm; „Anuluj" dla confirmed → error.
+    get event_path(@event)
+    assert_select "button[data-haptic='confirm']"
+
+    Participation.create!(event: @event, user: users(:ala), status: :confirmed, position: 1)
+    get event_path(@event)
+    assert_select "button[data-haptic='error']"
+  end
+
   test "roster shows 'blokada' chip for blocked user in the 'Wszyscy pracownicy' section" do
     HostBlock.create!(user: users(:bartek), host: @event.host)
     get event_path(@event)

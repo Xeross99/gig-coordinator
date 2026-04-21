@@ -7,3 +7,4 @@ pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"
 pin_all_from "app/javascript/controllers", under: "controllers"
 pin "@tailwindplus/elements", to: "@tailwindplus--elements.js" # @1.0.22
 pin "@rails/activestorage", to: "activestorage.esm.js"
+pin "haptic", to: "lib/haptic.js"
