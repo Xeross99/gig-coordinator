@@ -1,18 +1,23 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* Hard-lock do jasnego UI. `color-scheme: light` mówi przeglądarce, żeby
-   NIE stosowała automatycznych dark-mode stylów na form controls, scrollbary,
-   paski tytułu PWA itp. — niezależnie od ustawienia systemu. Wymusza też biel
-   na `canvastext`/`canvas` defaulcie. Lexxy ma swoje `@media (prefers-color-scheme: dark)`
-   reguły — ich zmienne trzymane są w zasięgu `:where(lexxy-editor)`, więc
-   kontra-override robimy niżej. */
+/* Hard-lock do jasnego UI. `color-scheme: only light` blokuje nie tylko
+   systemowy dark-mode (form controls, scrollbary, paski tytułu PWA), ale
+   też Chrome Auto-Dark-Theme for Web Content na Androidzie — keyword `only`
+   jest dedykowanym opt-outem (bez niego Chrome nadal invertuje kolory mimo
+   `color-scheme: light`). Dodatkowo forsujemy biel tła na `html/body`
+   wewnątrz `@media (prefers-color-scheme: dark)` jako fallback dla
+   Samsung Internet night mode i innych agresywnych WebView overridów. */
 :root {
-  color-scheme: light !important;
+  color-scheme: only light !important;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    color-scheme: light !important;
+    color-scheme: only light !important;
+  }
+  html, body {
+    background-color: #fafaf9 !important;
+    color: #1c1917 !important;
   }
   /* Reset Lexxy dark variables — trzymamy jasne tło edytora wiadomości
      nawet gdy OS pcha dark-mode. */
@@ -251,9 +256,9 @@ a.mention {
 .mention-card {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.1rem 0.4rem;
-  border-radius: 0.5rem;
+  gap: 0.35rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.15rem;
+  border-radius: 9999px;
   background-color: #e0e7ff;
   vertical-align: middle;
   line-height: 1.2;
@@ -284,7 +289,8 @@ a.mention {
    gdy brakuje miejsca (ciasne kafelki w wąskich wiadomościach). */
 .mention-card .inline-flex {
   font-size: 0.625rem;
-  padding: 0 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 9999px;
   max-width: 6rem;
   overflow: hidden;
   text-overflow: ellipsis;

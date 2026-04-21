@@ -6,6 +6,14 @@ class Event < ApplicationRecord
   has_many :users, through: :participations
   has_many :messages, -> { order(:created_at) }, dependent: :destroy
 
+  # Zapis od razu: virtual attribute set from the event-creation form. Handled
+  # in-transaction (after_create, NOT after_create_commit) so the confirmed
+  # participations exist before `seed_reservations` fires — `invite_candidates`
+  # then naturally excludes them, which enforces "mistrz dodany od razu = brak
+  # osobnej rezerwacji dla niego".
+  attr_accessor :pre_registered_user_ids
+
+  after_create         :create_pre_registrations
   after_create_commit  :broadcast_feed_append,        if: :upcoming_now?
   after_create_commit  :broadcast_visit_to_feed,      if: :upcoming_now?
   after_create_commit  :notify_new_event_subscribers, if: :upcoming_now?
@@ -103,6 +111,27 @@ class Event < ApplicationRecord
 
   def seed_reservations
     ReservationService.seed_on_create(self)
+  end
+
+  def create_pre_registrations
+    ids = Array(pre_registered_user_ids).map(&:to_i).uniq.reject(&:zero?)
+    return if ids.empty?
+
+    blocked = HostBlock.where(host_id: host_id).pluck(:user_id).to_set
+    ordered = ids.reject { |i| blocked.include?(i) }
+    return if ordered.empty?
+
+    confirmed_ids, waitlist_ids = ordered.first(capacity), ordered.drop(capacity)
+    users = User.where(id: ordered).index_by(&:id)
+
+    confirmed_ids.each_with_index do |uid, idx|
+      next unless users[uid]
+      participations.create!(user: users[uid], status: :confirmed, position: idx + 1)
+    end
+    waitlist_ids.each_with_index do |uid, idx|
+      next unless users[uid]
+      participations.create!(user: users[uid], status: :waitlist, position: idx + 1)
+    end
   end
 
   # Host bumped capacity → promote from waitlist (or invite top-tier) to fill

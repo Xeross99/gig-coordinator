@@ -58,16 +58,30 @@ export function error() {
 // atrybutem odpala haptic na click. Wartość: `tap` (domyślnie), `confirm`,
 // `error`. Używamy capture fazy, żeby haptic zdążył się odpalić zanim
 // przeglądarka zacznie navigation/submit.
+//
+// Dodatkowo: linki nawigacyjne do profili (`/organizatorzy`, `/pracownicy`,
+// `/eventy`) oraz linki w breadcrumbach dostają tap() automatycznie — bez
+// potrzeby dodawania `data-haptic` na każdym template.
+const NAV_HREF_RE = /^\/(organizatorzy|pracownicy|eventy)(\/|$|\?)/
+
 export function install() {
   document.addEventListener(
     "click",
     (event) => {
       const el = event.target.closest("[data-haptic]")
-      if (!el) return
-      const kind = el.dataset.haptic || "tap"
-      if (kind === "confirm") confirm()
-      else if (kind === "error") error()
-      else tap()
+      if (el) {
+        const kind = el.dataset.haptic || "tap"
+        if (kind === "confirm") confirm()
+        else if (kind === "error") error()
+        else tap()
+        return
+      }
+
+      const link = event.target.closest("a[href]")
+      if (!link) return
+      if (link.closest('[aria-label="Breadcrumb"]')) { tap(); return }
+      const href = link.getAttribute("href") || ""
+      if (NAV_HREF_RE.test(href)) tap()
     },
     { capture: true }
   )

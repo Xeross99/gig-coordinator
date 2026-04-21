@@ -23,6 +23,7 @@ class EventsController < ApplicationController
   def new
     @event = Event.new(scheduled_at: 1.day.from_now.change(hour: 18, min: 0), capacity: 4)
     @hosts = allowed_hosts.order(:last_name, :first_name)
+    @users_for_prereg = users_for_prereg
   end
 
   def create
@@ -37,6 +38,7 @@ class EventsController < ApplicationController
       redirect_to event_path(@event), notice: I18n.t("events.created")
     else
       @hosts = allowed_hosts.order(:last_name, :first_name)
+      @users_for_prereg = users_for_prereg
       render :new, status: :unprocessable_content
     end
   end
@@ -61,6 +63,10 @@ class EventsController < ApplicationController
     Host.none
   end
 
+  def users_for_prereg
+    User.with_attached_photo.order(title: :desc, last_name: :asc, first_name: :asc)
+  end
+
   def require_event_creator!
     return if Current.user&.can_create_events?
 
@@ -71,7 +77,8 @@ class EventsController < ApplicationController
     raw = params.require(:event).permit(:name, :host_id, :event_date,
                                         :start_hour, :start_minute,
                                         :duration_hours, :duration_minutes,
-                                        :pay_per_person, :capacity)
+                                        :pay_per_person, :capacity,
+                                        pre_registered_user_ids: [])
 
     date         = raw.delete(:event_date)
     start_hour   = raw.delete(:start_hour)
