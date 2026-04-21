@@ -1,9 +1,26 @@
 <% participation = event.participations.active.find_by(user_id: Current.user&.id) %>
+<% blocked = Current.user&.blocked_from?(event.host) %>
 
 <%= turbo_stream_from event, :counts %>
 <%= render "events/counts", event: event %>
 
-<% if participation&.reserved? && !participation.reservation_expired? %>
+<% if blocked && participation.nil? %>
+  <div class="rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm mb-3 animate-pop-in">
+    <div class="flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" class="size-4 text-red-500 shrink-0">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+      </svg>
+      <span class="font-semibold"><%= t("participations.blocked_badge") %></span>
+    </div>
+    <div class="text-xs mt-1 text-red-700">
+      <%= t("participations.blocked") %>
+    </div>
+  </div>
+  <button type="button" disabled aria-disabled="true"
+          class="w-full py-3 rounded-lg bg-stone-300 text-stone-500 font-medium cursor-not-allowed">
+    <%= t("events.accept") %>
+  </button>
+<% elsif participation&.reserved? && !participation.reservation_expired? %>
   <% remaining_min = ((participation.reserved_until - Time.current) / 60).to_i %>
   <div class="rounded-lg bg-indigo-50 text-indigo-900 px-3 py-2 text-sm mb-3 animate-pop-in">
     <div class="flex items-center gap-2">

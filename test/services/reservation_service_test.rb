@@ -50,12 +50,64 @@ class ReservationServiceTest < ActiveSupport::TestCase
     assert_equal [ users(:ala), users(:bartek) ].sort_by(&:id), reserved_users.sort_by(&:id)
   end
 
-  test "seed_on_create reserves a lone candidate even if the top tier is the default rookie" do
-    User.where.not(id: users(:dominika).id).destroy_all  # only rookie remains
+  test "seed_on_create creates zero reservations when no master exists" do
+    # Tylko żółtodziób w bazie — bez Mistrza Pióra rezerwacje nie powstają
+    # (hard-coded reguła, żadnej kaskady w dół rang).
+    User.where.not(id: users(:dominika).id).destroy_all
     event = build_event(capacity: 3)
     ReservationService.seed_on_create(event)
-    assert_equal 1, event.participations.reserved.count
-    assert_equal users(:dominika), event.participations.reserved.first.user
+    assert_equal 0, event.participations.reserved.count
+    assert_equal 0, event.participations.count
+  end
+
+  test "refill_one skips blocked users when inviting a replacement master" do
+    # Dwóch mistrzów. Bartek dostaje rezerwację, odrzuca — normalnie refill_one
+    # powinien zaprosić Alę (drugiego mistrza), ale Ala ma blokadę (wymuszona
+    # przez save(validate: false) — w produkcji niemożliwe, bo walidacja).
+    users(:bartek).update!(title: :master)
+    event = build_event(capacity: 1)
+    HostBlock.new(user: users(:ala), host: @host).save(validate: false)
+    ReservationService.seed_on_create(event)
+
+    first_reserved = event.participations.reserved.first
+    first_reserved.update!(status: :cancelled, reserved_until: nil)
+    ReservationService.refill_one(event)
+
+    assert_equal 0, event.participations.reserved.count,
+                 "zablokowany mistrz nie może przejąć slotu"
+  end
+
+  test "expire_stale! does NOT re-invite a blocked user after expiration" do
+    users(:bartek).update!(title: :master)
+    event = build_event(capacity: 1)
+    HostBlock.new(user: users(:ala), host: @host).save(validate: false)
+    ReservationService.seed_on_create(event)
+
+    # Wygaś rezerwację Bartka.
+    bartek_res = event.participations.reserved.find_by(user: users(:bartek))
+    bartek_res.update_column(:reserved_until, 5.minutes.ago)
+    ReservationService.expire_stale!
+
+    refute event.participations.reserved.exists?,
+           "po wygaśnięciu żaden mistrz nie powinien dostać rezerwacji (Bartek wygasł, Ala zablokowana)"
+  end
+
+  test "seed_on_create skips users with a HostBlock (defense-in-depth filter)" do
+    # Kontrakt: HostBlock nie może istnieć dla master (walidacja + callback
+    # auto-czyści przy promocji), więc w normalnym przepływie żaden zablokowany
+    # user nigdy nie jest w puli kandydatów. Ten test wymusza brzegowy scenariusz
+    # przez bezpośredni insert z pominięciem walidacji — tylko po to, żeby
+    # potwierdzić, że gdyby jakimś cudem taki rekord powstał (migracja, ręczna
+    # ingerencja w DB), serwis i tak go wyklucza.
+    users(:bartek).update!(title: :master)
+    HostBlock.new(user: users(:ala), host: @host).save(validate: false)
+
+    event = build_event(capacity: 3)
+    ReservationService.seed_on_create(event)
+
+    reserved_users = event.participations.reserved.includes(:user).map(&:user)
+    assert_equal [ users(:bartek) ], reserved_users
+    refute event.participations.find_by(user: users(:ala))&.reserved?
   end
 
   test "seed_on_create enqueues an InvitationMailer + WebPushNotifier per invitee" do
@@ -151,14 +203,17 @@ class ReservationServiceTest < ActiveSupport::TestCase
     refute event.participations.find_by(user: users(:bartek))&.reserved?
   end
 
-  test "komendant is top-tier when no master exists" do
+  test "komendant NEVER gets auto-reservations, even without any master" do
+    # Nowa reguła: tylko master dostaje rezerwacje. Komendant, mimo że
+    # dzięki `User.maximum(:title)` byłby „nowym top-tierem", jest pomijany.
     users(:ala).update!(title: :captain)
     users(:ala).managed_hosts << hosts(:jan)
 
     event = build_event(capacity: 2)
     ReservationService.seed_on_create(event)
 
-    assert_equal :reserved, event.participations.find_by(user: users(:ala))&.status&.to_sym
+    assert_nil event.participations.find_by(user: users(:ala))
+    assert_equal 0, event.participations.reserved.count
   end
 
   test "master wygrywa z komendantem przy seed_on_create" do

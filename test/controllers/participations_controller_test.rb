@@ -229,4 +229,51 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @event.capacity, @event.participations.confirmed.count
     assert_equal 2, @event.participations.waitlist.count
   end
+
+  test "POST create is rejected when user is blocked for the event's host" do
+    HostBlock.create!(user: users(:ala), host: @event.host)
+    assert_no_difference "Participation.count" do
+      post event_participation_path(@event)
+    end
+    assert_redirected_to event_path(@event)
+    follow_redirect!
+    assert_match I18n.t("participations.blocked"), response.body
+  end
+
+  test "GET event show renders a blocked banner instead of the accept button" do
+    HostBlock.create!(user: users(:ala), host: @event.host)
+    get event_path(@event)
+    assert_response :success
+    assert_match I18n.t("participations.blocked_badge"), response.body
+    # Nie ma klikalnego formularza „Akceptuję" – tylko wyłączony przycisk.
+    assert_select "form[action=?]", event_participation_path(@event), count: 0
+    assert_select "button[disabled][aria-disabled='true']"
+  end
+
+  test "blocked user with EXISTING confirmed participation keeps the cancel form" do
+    # Edge case: user zapisał się zanim dostał blokadę. Zachowuje własne
+    # kontrolki (może anulować), bo banner blokady odpala się tylko przy
+    # braku aktywnego participation.
+    Participation.create!(event: @event, user: users(:ala), status: :confirmed, position: 1)
+    HostBlock.create!(user: users(:ala), host: @event.host)
+
+    get event_path(@event)
+    assert_response :success
+    assert_match I18n.t("events.confirmed_badge"), response.body
+    # Brak bannera blokady — istniejące participation ma pierwszeństwo.
+    assert_no_match I18n.t("participations.blocked_badge"), response.body
+    # Formularz „Anuluj" (DELETE) jest obecny.
+    assert_select "form[action=?][method='post']", event_participation_path(@event) do
+      assert_select "input[name='_method'][value='delete']"
+    end
+  end
+
+  test "roster shows 'blokada' chip for blocked user in the 'Wszyscy pracownicy' section" do
+    HostBlock.create!(user: users(:bartek), host: @event.host)
+    get event_path(@event)
+    assert_response :success
+    # Sekcja „Wszyscy pracownicy" — Bartek ma chip „blokada" zamiast statusu.
+    assert_match "blokada", response.body
+    assert_select "span", text: /blokada/i
+  end
 end

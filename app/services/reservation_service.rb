@@ -56,18 +56,15 @@ class ReservationService
 
   # --- internals ---
 
-  # Picks invitees from the GLOBALLY-highest-rank tier — never cascades down.
-  # If no one at the top tier is available (already in the event or doesn't
-  # exist), the slot stays open. Regular users can still grab it via the feed.
+  # Picks invitees from the `master` tier ONLY — no cascade down.
+  # If no master exists (or all are already participating / blocked),
+  # the slot stays open. Regular users can still grab it via the feed.
   def self.invite_candidates(event, limit:)
-    global_top = User.maximum(:title)
-    return User.none if global_top.nil?
-
-    User
-      .where(title: global_top)
-      .where.not(id: event.participations.pluck(:user_id))
-      .order(:id)
-      .limit(limit)
+    blocked_ids = HostBlock.where(host_id: event.host_id).pluck(:user_id)
+    User.master
+        .where.not(id: event.participations.pluck(:user_id) + blocked_ids)
+        .order(:id)
+        .limit(limit)
   end
 
   def self.invite!(event, user)

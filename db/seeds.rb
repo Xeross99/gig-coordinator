@@ -8,6 +8,12 @@ if Rails.env.development?
     h.location   = "Słoneczna 12, 00-001 Warszawa"
   end
 
+  anna = Host.find_or_create_by!(email: "anna@example.com") do |h|
+    h.first_name = "Anna"
+    h.last_name  = "Nowak"
+    h.location   = "Polna 5, 30-001 Kraków"
+  end
+
   [
     { first_name: "Michał",   last_name: "Kowalska",  email: "admin@gigcoordinator.pl",       title: :master, admin: true },
     { first_name: "Adam",     last_name: "Nowak",      email: "example1@gigcoordinator.pl",         title: :master },
@@ -23,9 +29,12 @@ if Rails.env.development?
       u.title      = attrs[:title]
       u.admin      = attrs.fetch(:admin, false)
     end
-    # Idempotent admin flip: if the user already existed, ensure the flag matches seed intent.
-    desired = attrs.fetch(:admin, false)
-    user.update!(admin: desired) if user.admin != desired
+    # Idempotent admin + title refresh: if the user already existed, realign the
+    # flag/rank with seed intent (so ad-hoc changes from the console don't
+    # persist across `db:seed` re-runs).
+    desired_admin = attrs.fetch(:admin, false)
+    user.update!(admin: desired_admin) if user.admin != desired_admin
+    user.update!(title: attrs[:title])  if user.title.to_sym != attrs[:title]
   end
 
   unless host.events.exists?
@@ -38,6 +47,22 @@ if Rails.env.development?
       capacity: 4
     )
   end
+
+  unless anna.events.exists?
+    next_saturday = Date.current.next_occurring(:saturday)
+    anna.events.create!(
+      name: "Wydarzenie u Anny",
+      scheduled_at: next_saturday.to_time.change(hour: 8, min: 0),
+      ends_at:      next_saturday.to_time.change(hour: 11, min: 0),
+      pay_per_person: 120.0,
+      capacity: 3
+    )
+  end
+
+  # Przykładowa blokada — Mateusz (weteran) zablokowany u Anny. Blokady
+  # mistrzów są zabronione walidacją, więc demo robimy na niższej randze.
+  mateusz = User.find_by(email: "example4@gigcoordinator.pl")
+  HostBlock.find_or_create_by!(user: mateusz, host: anna) if mateusz
 
   puts "Seeded: #{Host.count} hosts, #{User.count} users, #{Event.count} events."
   puts "Log in with any seeded email — bin/login-code <email> prints a 5-digit code."

@@ -4,6 +4,9 @@ class ParticipationsController < ApplicationController
   # POST /eventy/:event_id/uczestnictwo
   def create
     @event = Event.find(params[:event_id])
+    if Current.user.blocked_from?(@event.host)
+      redirect_to event_path(@event), alert: I18n.t("participations.blocked") and return
+    end
 
     Event.transaction do
       @event.lock!

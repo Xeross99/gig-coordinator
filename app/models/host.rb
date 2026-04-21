@@ -5,6 +5,8 @@ class Host < ApplicationRecord
   has_many :sessions, as: :authenticatable, dependent: :destroy
   has_many :host_managers, dependent: :destroy
   has_many :managers, through: :host_managers, source: :user
+  has_many :host_blocks, dependent: :destroy
+  has_many :blocked_users, through: :host_blocks, source: :user
 
   normalizes :email, with: ->(v) { v.to_s.strip.downcase.presence }
   normalizes :phone, with: ->(v) { v.to_s.strip.presence }
