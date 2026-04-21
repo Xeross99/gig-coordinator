@@ -104,11 +104,17 @@ pl:
       cta:      "Zobacz swój profil"
   hosts:
     commanders: "Komendanci"
+    blocked_users: "Zablokowani pracownicy"
     manager_count:
       one:   "1 komendant"
       few:   "%{count} komendantów"
       many:  "%{count} komendantów"
       other: "%{count} komendantów"
+    blocked_count:
+      one:   "1 zablokowany"
+      few:   "%{count} zablokowanych"
+      many:  "%{count} zablokowanych"
+      other: "%{count} zablokowanych"
   admin:
     users:
       new_title:    "Dodaj pracownika"

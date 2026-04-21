@@ -12,10 +12,14 @@ class HostsController < ApplicationController
     @hosts = Host.order(SORTS.fetch(@sort)).with_attached_photo
     @upcoming_counts = Event.upcoming.group(:host_id).count
     @manager_counts  = HostManager.group(:host_id).count
+    @blocked_counts  = HostBlock.group(:host_id).count
   end
 
   def show
-    @host = Host.with_attached_photo.includes(managers: { photo_attachment: :blob }).find(params[:id])
+    @host = Host.with_attached_photo
+                .includes(managers:       { photo_attachment: :blob },
+                          blocked_users:  { photo_attachment: :blob })
+                .find(params[:id])
     @upcoming_events = @host.events.upcoming.order(:scheduled_at)
   end
 
