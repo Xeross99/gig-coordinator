@@ -1,0 +1,28 @@
+<%# locals: (user:, index:, participation:, blocked:) -%>
+<li class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm bg-stone-50 animate-pop-in"
+    style="animation-delay: <%= index * 40 %>ms">
+  <%= render "events/roster_avatar", user: user %>
+  <div class="min-w-0 flex-1">
+    <div class="font-medium text-stone-900 truncate"><%= user.display_name %></div>
+    <div class="mt-0.5"><%= render "users/title_badge", user: user %></div>
+  </div>
+  <% if blocked %>
+    <span class="inline-flex items-center gap-1 text-xs text-red-600 shrink-0">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" class="size-3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+      </svg>
+      blokada
+    </span>
+  <% else %>
+    <% case participation&.status %>
+    <% when "reserved" %>
+      <span class="text-xs text-indigo-600 shrink-0">oczekuje</span>
+    <% when "confirmed" %>
+      <span class="text-xs text-emerald-600 shrink-0">zapisany</span>
+    <% when "waitlist" %>
+      <span class="text-xs text-amber-600 shrink-0">rezerwa</span>
+    <% when "cancelled" %>
+      <span class="text-xs text-stone-400 shrink-0">anulował</span>
+    <% end %>
+  <% end %>
+</li>
