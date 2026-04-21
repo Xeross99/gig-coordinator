@@ -1,6 +1,22 @@
 require "test_helper"
 
 class UsersControllerTest < ActionDispatch::IntegrationTest
+  test "GET /pracownicy/prompt returns Lexxy prompt items for signed-in user" do
+    sign_in_as(users(:ala))
+    get prompt_users_path
+    assert_response :success
+    assert_select "lexxy-prompt-item", minimum: 1
+    assert_select "lexxy-prompt-item[search=?]", users(:bartek).display_name
+    # Template `type="editor"` wkleja <span class="mention"> do czatu.
+    assert_match "mention", response.body
+    assert_match "data-user-id", response.body
+  end
+
+  test "GET /pracownicy/prompt requires login" do
+    get prompt_users_path
+    assert_redirected_to login_path
+  end
+
   test "routes expose admin CRUD URLs for users" do
     assert_equal "/pracownicy/nowy",           new_user_path
     assert_equal "/pracownicy/1/edytuj",       edit_user_path(1)

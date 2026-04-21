@@ -23,9 +23,16 @@ Rails.application.routes.draw do
       post :accept
       post :decline
     end
+    resource :chat, only: :show, path: "czat" do
+      resources :messages, only: :create, path: "wiadomosci"
+    end
   end
   resources :hosts, except: :destroy, path: "organizatorzy", path_names: { new: "nowy", edit: "edytuj" }
-  resources :users, except: :destroy, path: "pracownicy", path_names: { new: "nowy", edit: "edytuj" }
+  resources :users, except: :destroy, path: "pracownicy", path_names: { new: "nowy", edit: "edytuj" } do
+    collection do
+      get :prompt, path: "prompt" # endpoint dla Lexxy @mentions w czacie
+    end
+  end
   resource  :profile, only: %i[edit update], path: "profil"
   resources :push_subscriptions, only: %i[create destroy], path: "subskrypcje-push"
   get "informacje", to: "info#show",    as: :info

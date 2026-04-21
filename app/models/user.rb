@@ -8,6 +8,7 @@ class User < ApplicationRecord
 
   has_many :participations, dependent: :destroy
   has_many :events, through: :participations
+  has_many :messages, dependent: :destroy
   has_many :push_subscriptions, dependent: :destroy
   has_many :sessions, as: :authenticatable, dependent: :destroy
   has_many :host_memberships, class_name: "HostManager", dependent: :destroy

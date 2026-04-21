@@ -1,0 +1,35 @@
+<%# locals: (event:, message:, autofocus: false) -%>
+<%= form_with model: message,
+              url: event_chat_messages_path(event),
+              id: dom_id(event, :chat_form),
+              data: {
+                controller: "chat-form",
+                chat_form_autofocus_value: autofocus
+              },
+              class: "space-y-2 chat-form" do |f| %>
+  <% if message.errors.any? %>
+    <div class="bg-red-50 text-red-800 rounded-lg p-2 text-xs">
+      <%= message.errors.full_messages.first %>
+    </div>
+  <% end %>
+
+  <%# Lexxy web component jako first-class form control. `insert-editable-text`
+      na `<lexxy-prompt>` wkleja sam HTML item (span z data-user-id), zamiast
+      Action Text attachmenta — tak unikamy zaciągania całej machinerii ActionText
+      i Trixa tylko po to, żeby mieć @mentions. %>
+  <lexxy-editor name="message[body]"
+                placeholder="Napisz wiadomość… (wpisz @ aby wywołać pracownika)"
+                attachments="false"
+                toolbar="false"
+                rows="2"
+                class="chat-editor lexxy-content block w-full px-3 py-1 rounded-lg border border-stone-300 bg-white text-sm">
+    <lexxy-prompt trigger="@"
+                  src="<%= prompt_users_path %>"
+                  name="mention"
+                  insert-editable-text
+                  supports-space-in-searches></lexxy-prompt>
+  </lexxy-editor>
+  <%= f.submit "Wyślij",
+               data: { haptic: "tap" },
+               class: "w-full py-2 rounded-lg bg-stone-900 text-white text-sm font-medium transition-transform active:scale-[0.97] hover:bg-stone-800" %>
+<% end %>

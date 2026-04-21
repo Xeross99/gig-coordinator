@@ -4,6 +4,7 @@ class Event < ApplicationRecord
   belongs_to :host
   has_many :participations, dependent: :destroy
   has_many :users, through: :participations
+  has_many :messages, -> { order(:created_at) }, dependent: :destroy
 
   after_create_commit  :broadcast_feed_append,        if: :upcoming_now?
   after_create_commit  :broadcast_visit_to_feed,      if: :upcoming_now?

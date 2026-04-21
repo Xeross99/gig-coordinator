@@ -3,6 +3,17 @@ import { Turbo } from "@hotwired/turbo-rails"
 import "controllers"
 import "@tailwindplus/elements"
 import { install as installHaptics } from "haptic"
+import * as Lexxy from "lexxy"
+
+// Czat zamknięty — tylko tekst + @mentions. Wyłączamy pasek narzędzi
+// (bold/italic/listy nie są potrzebne, a jego popover overflow rozpychał
+// viewport) oraz cały pipeline załączników (drag&drop, paste, upload).
+Lexxy.configure({
+  default: {
+    toolbar:     false,
+    attachments: false,
+  },
+})
 
 installHaptics()
 

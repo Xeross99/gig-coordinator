@@ -18,6 +18,15 @@ class UsersController < ApplicationController
       .count
   end
 
+  # GET /pracownicy/prompt
+  # Endpoint dla Lexxy `<lexxy-prompt>` — zwraca listę `<lexxy-prompt-item>`
+  # dla @mentions w czacie. Bez layoutu, bez breadcrumbów — tylko sam markup
+  # promptu.
+  def prompt
+    @users = User.order(:first_name, :last_name)
+    render layout: false
+  end
+
   def show
     @user = User.with_attached_photo.find(params[:id])
 

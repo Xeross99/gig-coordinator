@@ -76,3 +76,13 @@
     <%= render "events/roster", event: @event %>
   </div>
 </div>
+
+<%# Czat dojeżdża lazy w osobnej ramce — pierwsze malowanie strony (roster +
+    przycisk zapisu) nie czeka na żadne zapytanie związane z wiadomościami. %>
+<div class="mt-4">
+  <%= turbo_frame_tag "event_chat", src: event_chat_path(@event), loading: "lazy" do %>
+    <div class="bg-white rounded-xl shadow-sm p-4 text-stone-400 text-sm text-center">
+      Wczytuję czat…
+    </div>
+  <% end %>
+</div>

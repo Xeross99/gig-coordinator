@@ -48,6 +48,12 @@ gem "web-push", "~> 3.0"
 # Localization strings for 100+ languages (includes pl translations for AR/AV)
 gem "rails-i18n", "~> 8.0"
 
+# Lexxy — rich-text editor (Basecamp) używany w czacie eventów do @mentions.
+# Beta — pinujemy dokładną wersję. Gem dostarcza zarówno asset (JS+CSS) jak
+# i helpery Rails. W naszym setupie używamy tylko `<lexxy-editor>` jako web
+# component (bez Action Text), więc wyłączamy override Trixa.
+gem "lexxy", "~> 0.9.9.beta"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"

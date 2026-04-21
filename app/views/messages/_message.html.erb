@@ -1,0 +1,20 @@
+<%# locals: (message:) -%>
+<li id="<%= dom_id(message) %>" class="flex items-start gap-3 animate-pop-in">
+  <% if message.user.photo.attached? %>
+    <%= image_tag rails_representation_path(message.user.photo.variant(:small), only_path: true),
+                  class: "size-8 rounded-full object-cover shrink-0" %>
+  <% else %>
+    <div class="size-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
+      <%= message.user.first_name[0] %><%= message.user.last_name[0] %>
+    </div>
+  <% end %>
+  <div class="min-w-0 flex-1">
+    <div class="flex items-baseline gap-2 flex-wrap">
+      <span class="font-medium text-stone-900 text-sm"><%= message.user.display_name %></span>
+      <span class="text-[11px] text-stone-400 tabular-nums"><%= l(message.created_at, format: :short) %></span>
+    </div>
+    <div class="text-sm text-stone-700 break-words lexxy-content">
+      <%= render_message_body(message) %>
+    </div>
+  </div>
+</li>

@@ -1,0 +1,14 @@
+<%# locals: (user:) — inline kafelek @mention renderowany w treści wiadomości
+    czatu. Avatar (16px) + imię + rank badge, wszystko w jednym flow tekstu. -%>
+<span class="mention-card">
+  <% if user.photo.attached? %>
+    <%= image_tag rails_representation_path(user.photo.variant(:small), only_path: true),
+                  class: "mention-card__avatar" %>
+  <% else %>
+    <span class="mention-card__avatar mention-card__avatar--initials">
+      <%= user.first_name[0] %><%= user.last_name[0] %>
+    </span>
+  <% end %>
+  <span class="mention-card__name"><%= user.display_name %></span>
+  <%= render "users/title_badge", user: user %>
+</span>

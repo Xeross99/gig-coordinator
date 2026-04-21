@@ -6,6 +6,7 @@ class WebPushNotifier < ApplicationJob
   #   perform(:promotion,  participation_id: 42)
   #   perform(:new_event,  event_id: 7)
   #   perform(:invitation, event_id: 7, user_id: 3)
+  #   perform(:mention,    message_id: 99, user_id: 3)
   def perform(kind, **args)
     case kind.to_sym
     when :completion, :promotion
@@ -21,6 +22,11 @@ class WebPushNotifier < ApplicationJob
       user  = User.find(args.fetch(:user_id))
       payload = build_payload(:invitation, event: event)
       user.push_subscriptions.find_each { |s| send_web_push(s, payload) }
+    when :mention
+      message = Message.find(args.fetch(:message_id))
+      user    = User.find(args.fetch(:user_id))
+      payload = build_payload(:mention, message: message)
+      user.push_subscriptions.find_each { |s| send_web_push(s, payload) }
     else
       raise ArgumentError, "unknown kind: #{kind}"
     end
@@ -28,7 +34,7 @@ class WebPushNotifier < ApplicationJob
 
   private
 
-  def build_payload(kind, participation: nil, event: nil)
+  def build_payload(kind, participation: nil, event: nil, message: nil)
     url_for = ->(ev) { Rails.application.routes.url_helpers.event_path(ev) }
     case kind.to_sym
     when :completion
@@ -54,6 +60,13 @@ class WebPushNotifier < ApplicationJob
         title: "Zaproszenie: #{event.name}",
         body:  "Masz godzinę na potwierdzenie. Kliknij, żeby otworzyć event.",
         url:   url_for.call(event)
+      }
+    when :mention
+      snippet = Nokogiri::HTML5.fragment(message.body).text.strip.truncate(120)
+      {
+        title: "#{message.user.display_name} wywołał Cię w czacie",
+        body:  "#{message.event.name} · #{snippet}",
+        url:   url_for.call(message.event)
       }
     else
       raise ArgumentError, "unknown kind: #{kind}"

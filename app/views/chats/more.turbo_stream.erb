@@ -1,0 +1,9 @@
+<%# Odpowiedź na ?before=<id> — prepend starszych wiadomości + aktualizacja
+    sentinel-a (nowy cursor albo usunięcie gdy już nie ma starszych). %>
+<%= turbo_stream.prepend dom_id(@event, :chat_messages) do %>
+  <%= render @messages %>
+<% end %>
+
+<%= turbo_stream.replace dom_id(@event, :chat_load_more) do %>
+  <%= render "sentinel", event: @event, messages: @messages, has_more: @has_more %>
+<% end %>

@@ -206,3 +206,146 @@ html[data-transition-direction="sort"]::view-transition-group(sort-toggle-pill) 
   background-size: 1rem 1rem;
   padding-right: 2.25rem;
 }
+
+/* @mention wewnątrz edytora Lexxy (przed wysłaniem) — prosty chip,
+   bo Lexxy free-html nie akceptuje <img>. */
+a.mention {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.05rem 0.4rem;
+  margin: 0 0.05rem;
+  border-radius: 0.375rem;
+  background-color: #e0e7ff;
+  color: #3730a3;
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+/* @mention w renderze wiadomości — pełen kafelek: avatar + imię + rank badge.
+   Renderowany przez MessagesHelper#render_message_body (Nokogiri replace na
+   a.mention[data-user-id]). Inline, wpasowany w tekst wiadomości. */
+.mention-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.5rem;
+  background-color: #e0e7ff;
+  vertical-align: middle;
+  line-height: 1.2;
+}
+.mention-card__avatar {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  background-color: #e7e5e4;
+  flex-shrink: 0;
+}
+.mention-card__avatar--initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #57534e;
+  font-size: 0.5rem;
+  font-weight: 600;
+}
+.mention-card__name {
+  font-weight: 500;
+  color: #1c1917;
+  font-size: 0.8125rem;
+}
+.mention-card .inline-flex {
+  font-size: 0.625rem;
+  padding: 0 0.3rem;
+}
+
+/* Lexxy dropdown promptu — wiersz z awatarem + imieniem + rank badge */
+.lexxy-prompt-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.375rem;
+}
+.lexxy-prompt-menu-item__avatar {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  background-color: #e7e5e4; /* stone-200 */
+}
+.lexxy-prompt-menu-item__avatar--initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #57534e; /* stone-600 */
+  font-size: 0.5rem;
+  font-weight: 600;
+}
+.lexxy-prompt-menu-item__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 0;
+  line-height: 1.15;
+}
+.lexxy-prompt-menu-item__text strong {
+  color: #1c1917;
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+.lexxy-prompt-menu-item__text .inline-flex {
+  font-size: 0.625rem;
+  padding: 0 0.25rem;
+  margin-top: 0.125rem;
+  align-self: flex-start;
+  width: auto;
+}
+
+/* Guard przed horyzontalnym overflow — Lexxy editor w czacie ma mieć
+   szerokość 100% kontenera, nic poza nie. */
+lexxy-editor {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Chat editor — stałe 2 linie, reszta scrolluje wewnątrz. Przyczyna
+   poprzedniego „za dużego" pola: Lexxy ma CSS var `--lexxy-editor-rows`
+   z fallbackiem `8lh` dla przeglądarek nie wspierających `attr(rows lh)`
+   — a to większość browserów. Nadpisujemy var + content ma sztywny
+   rozmiar przez height/min/max. */
+.chat-editor {
+  --lexxy-editor-rows: 3rem;
+}
+.chat-editor .lexxy-editor__content {
+  height: 3rem !important;
+  min-height: 3rem !important;
+  max-height: 3rem !important;
+  overflow-y: auto !important;
+}
+
+/* Kill-switch na pasek narzędzi — nawet jeśli konfiguracja JS-owa nie
+   dojedzie (np. stary bundle z cache), CSS-em chowamy go na amen. */
+lexxy-editor[toolbar="false"] lexxy-toolbar,
+.chat-form lexxy-toolbar {
+  display: none !important;
+}
+
+/* Delikatny gradient u góry czatu — zamiast ostrego odcięcia starsze
+   wiadomości „rozpływają się" wyższe widoczności w dół. `mask-image`
+   działa na scrollowanym viewport'cie, więc gradient stoi (sticky) przy
+   krawędzi a content pod nim przewija się normalnie. */
+.chat-viewport {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 28px);
+          mask-image: linear-gradient(to bottom, transparent 0, black 28px);
+}
+
+/* Lexxy defaultowo ogranicza dropdown do 20ch — trochę za mało dla
+   dwuczłonowych polskich imion + rank badge. Lekkie rozszerzenie. */
+.lexxy-prompt-menu {
+  max-inline-size: min(32ch, calc(100vw - 2rem)) !important;
+  min-inline-size: 16rem;
+}

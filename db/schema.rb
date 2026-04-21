@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_21_074733) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_21_115112) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -101,6 +101,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_074733) do
     t.index ["expires_at"], name: "index_login_codes_on_expires_at"
   end
 
+  create_table "messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.integer "event_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["event_id", "created_at"], name: "index_messages_on_event_id_and_created_at"
+    t.index ["event_id"], name: "index_messages_on_event_id"
+    t.index ["user_id"], name: "index_messages_on_user_id"
+  end
+
   create_table "participations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "event_id", null: false
@@ -161,6 +172,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_074733) do
   add_foreign_key "host_blocks", "users"
   add_foreign_key "host_managers", "hosts"
   add_foreign_key "host_managers", "users"
+  add_foreign_key "messages", "events"
+  add_foreign_key "messages", "users"
   add_foreign_key "participations", "events"
   add_foreign_key "participations", "users"
   add_foreign_key "push_subscriptions", "users"

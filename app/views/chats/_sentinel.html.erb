@@ -1,0 +1,14 @@
+<%# locals: (event:, messages:, has_more:) -%>
+<%# Sentinel dla infinite-scroll w górę. Jeśli są starsze wiadomości, Stimulus
+    kontroler `chat-load-more` obserwuje ten div i fetchuje `?before=<oldest>`
+    gdy wejdzie w viewport. Po pobraniu strony server zwraca `replace` tego
+    elementu z nowym cursorem (lub usuwa go gdy `has_more=false`). -%>
+<div id="<%= dom_id(event, :chat_load_more) %>">
+  <% if has_more && messages.any? %>
+    <div class="py-3 text-center text-xs text-stone-400"
+         data-controller="chat-load-more"
+         data-chat-load-more-url-value="<%= event_chat_path(event, before: messages.first.id) %>">
+      Wczytywanie starszych wiadomości…
+    </div>
+  <% end %>
+</div>

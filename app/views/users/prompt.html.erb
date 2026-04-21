@@ -1,0 +1,30 @@
+<%# Odpowiedź dla `<lexxy-prompt src=...>` — sam markup listy itemów.
+    Bez layoutu (controller woła `render layout: false`). -%>
+<% @users.each do |user| %>
+  <lexxy-prompt-item search="<%= user.display_name %>">
+    <template type="menu">
+      <div class="lexxy-prompt-menu-item">
+        <% if user.photo.attached? %>
+          <%= image_tag rails_representation_path(user.photo.variant(:small), only_path: true),
+                        class: "lexxy-prompt-menu-item__avatar" %>
+        <% else %>
+          <span class="lexxy-prompt-menu-item__avatar lexxy-prompt-menu-item__avatar--initials">
+            <%= user.first_name[0] %><%= user.last_name[0] %>
+          </span>
+        <% end %>
+        <div class="lexxy-prompt-menu-item__text">
+          <strong><%= user.display_name %></strong>
+          <%= render "users/title_badge", user: user %>
+        </div>
+      </div>
+    </template>
+    <template type="editor">
+      <%# Link jest first-class węzłem Lexical — klasa i styling przeżywają
+          insert. `<span class="mention">` w free-html trybie Lexxy traci
+          atrybuty i ląduje jako goły tekst. %>
+      <a href="<%= user_path(user) %>" class="mention"
+         data-user-id="<%= user.id %>"
+         data-user-display-name="<%= user.display_name %>">@<%= user.display_name %></a>
+    </template>
+  </lexxy-prompt-item>
+<% end %>
