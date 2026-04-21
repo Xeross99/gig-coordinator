@@ -18,11 +18,11 @@
       Action Text attachmenta — tak unikamy zaciągania całej machinerii ActionText
       i Trixa tylko po to, żeby mieć @mentions. %>
   <lexxy-editor name="message[body]"
-                placeholder="Napisz wiadomość… (wpisz @ aby wywołać pracownika)"
+                placeholder="Napisz wiadomość… (@ aby oznaczyć)"
                 attachments="false"
                 toolbar="false"
                 rows="2"
-                class="chat-editor lexxy-content block w-full px-3 py-1 rounded-lg border border-stone-300 bg-white text-sm">
+                class="chat-editor lexxy-content block w-full px-3 pt-2 pb-1 rounded-lg border border-stone-300 bg-white">
     <lexxy-prompt trigger="@"
                   src="<%= prompt_users_path %>"
                   name="mention"

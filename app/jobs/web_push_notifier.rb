@@ -35,7 +35,8 @@ class WebPushNotifier < ApplicationJob
   private
 
   def build_payload(kind, participation: nil, event: nil, message: nil)
-    url_for = ->(ev) { Rails.application.routes.url_helpers.event_path(ev) }
+    helpers = Rails.application.routes.url_helpers
+    url_for = ->(ev) { helpers.event_path(ev) }
     case kind.to_sym
     when :completion
       {
@@ -62,11 +63,11 @@ class WebPushNotifier < ApplicationJob
         url:   url_for.call(event)
       }
     when :mention
-      snippet = Nokogiri::HTML5.fragment(message.body).text.strip.truncate(120)
+      snippet = Nokogiri::HTML5.fragment(message.body).text.strip.truncate(140)
       {
-        title: "#{message.user.display_name} wywołał Cię w czacie",
-        body:  "#{message.event.name} · #{snippet}",
-        url:   url_for.call(message.event)
+        title: "#{message.user.display_name} oznaczył Cię w czacie",
+        body:  snippet.presence || message.event.name,
+        url:   helpers.event_path(message.event, anchor: "event_chat")
       }
     else
       raise ArgumentError, "unknown kind: #{kind}"

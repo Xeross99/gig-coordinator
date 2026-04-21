@@ -255,10 +255,19 @@ a.mention {
   font-weight: 500;
   color: #1c1917;
   font-size: 0.8125rem;
+  white-space: nowrap;
 }
+/* Badge rangi w kafelku @mention — ścieśniamy i ucinamy tekst wielokropkiem
+   gdy brakuje miejsca (ciasne kafelki w wąskich wiadomościach). */
 .mention-card .inline-flex {
   font-size: 0.625rem;
   padding: 0 0.3rem;
+  max-width: 6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  line-height: 1.4;
 }
 
 /* Lexxy dropdown promptu — wiersz z awatarem + imieniem + rank badge */
@@ -335,12 +344,26 @@ lexxy-editor {
    rozmiar przez height/min/max. */
 .chat-editor {
   --lexxy-editor-rows: 3rem;
+  --lexxy-editor-padding: 0;
 }
 .chat-editor .lexxy-editor__content {
   height: 3rem !important;
   min-height: 3rem !important;
   max-height: 3rem !important;
   overflow-y: auto !important;
+  /* iOS Safari zoomuje na każdy focus jeśli font-size < 16px. Trzymamy 16px
+     na poziomie content editable, żeby zapobiec "zjeżdżaniu" layoutu przy
+     otwieraniu klawiatury. */
+  font-size: 16px;
+  line-height: 1.35;
+}
+/* Lexxy rysuje placeholder jako `::before` na `.lexxy-editor__content` gdy
+   rodzic ma `.lexxy-editor--empty` — nadpisujemy rozmiar, żeby nie rozpychał
+   się na 2 linie i był wizualnie mniej dominujący. */
+.chat-editor .lexxy-editor--empty .lexxy-editor__content::before {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
 }
 
 /* Kill-switch na pasek narzędzi — nawet jeśli konfiguracja JS-owa nie
