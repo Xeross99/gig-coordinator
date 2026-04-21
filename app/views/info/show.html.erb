@@ -57,7 +57,66 @@
   <h2>Anulowanie udziału</h2>
   <p>W dowolnej chwili możesz kliknąć <em>Anuluj</em>. Jeśli byłeś potwierdzony, Twoje miejsce przejmuje pierwsza osoba z listy rezerwowej. Jeśli byłeś w kolejce - po prostu znikasz z listy.</p>
 
-  <h2>Planowanie łapań (Mistrz i Kapitan)</h2>
+  <h2>Blokada u organizatora</h2>
+  <p>Admin może założyć <strong>blokadę</strong> między konkretnym pracownicym a konkretnym organizatorem. To nie wyrzuca Cię z systemu - dalej masz konto, rangę, możesz łapać u innych organizatorów. Blokada działa punktowo:</p>
+  <ul>
+    <li><strong>Widzisz eventy</strong> tego organizatora w feedzie i na stronie eventu - normalnie, bez różnicy.</li>
+    <li><strong>Dostajesz powiadomienia push</strong> o nowych eventach (bo push leci do wszystkich - to nie filtr).</li>
+    <li><strong>Nie możesz się zapisać</strong> - zamiast przycisku <em>Akceptuję</em> widzisz czerwony banner „Blokada u organizatora" i wyszarzony przycisk. Próba zapisania się przez URL też zostanie odrzucona.</li>
+  </ul>
+
+  <p>Tak wygląda blokada na stronie eventu:</p>
+  <div class="not-prose bg-white rounded-xl shadow-sm p-4 my-4">
+    <div class="rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm mb-3">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" class="size-4 text-red-500 shrink-0">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+        <span class="font-semibold"><%= t("participations.blocked_badge") %></span>
+      </div>
+      <div class="text-xs mt-1 text-red-700">
+        <%= t("participations.blocked") %>
+      </div>
+    </div>
+    <button type="button" disabled aria-disabled="true"
+            class="w-full py-3 rounded-lg bg-stone-300 text-stone-500 font-medium cursor-not-allowed">
+      <%= t("events.accept") %>
+    </button>
+  </div>
+
+  <p>Status blokady widać na profilu pracownika (sekcja <em>Zablokowany u</em>) oraz na stronie organizatora (sekcja <em>Zablokowani pracownicy</em>). W rosterze eventu zablokowany user w sekcji „Wszyscy pracownicy" ma chip <em>blokada</em> zamiast statusu:</p>
+  <div class="not-prose bg-stone-50 rounded-lg px-3 py-2 text-sm my-4 flex items-center gap-3">
+    <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 shrink-0" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="currentColor" class="size-5">
+        <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-7 9a7 7 0 0 1 14 0v1H5v-1Z"/>
+      </svg>
+    </div>
+    <div class="min-w-0 flex-1">
+      <div class="font-medium text-stone-900 truncate">Jan Kurołap</div>
+      <div class="mt-0.5">
+        <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-700">
+          Weteran
+        </span>
+      </div>
+    </div>
+    <span class="inline-flex items-center gap-1 text-xs text-red-600 shrink-0">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" class="size-3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+      </svg>
+      blokada
+    </span>
+  </div>
+
+  <h2 class="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <span>Planowanie łapań</span>
+    <span class="not-prose inline-flex items-center gap-1 text-sm font-normal">
+      <span class="text-stone-500">(</span>
+      <%= render "users/title_badge", user: User.new(title: :master) %>
+      <span class="text-stone-500">i</span>
+      <%= render "users/title_badge", user: User.new(title: :captain) %>
+      <span class="text-stone-500">)</span>
+    </span>
+  </h2>
   <p>Jeśli masz odpowiednią rangę, w menu pojawia się opcja <em>Zaplanuj wydarzenie</em>. Wypełniasz krótki formularz: organizator, nazwa, data, początek, długość, stawka na osobę, liczba miejsc.</p>
   <ul>
     <li><strong>Mistrz</strong> - wybierasz z listy <strong>dowolnego</strong> organizatora w systemie.</li>
@@ -83,11 +142,6 @@
   </ul>
 
   <h2>Instalacja na telefonie</h2>
-  <p>Gig Coordinator to PWA - działa jak zwykła apka, bez App Store.</p>
-  <ul>
-    <li><strong>iPhone (Safari)</strong>: ikonka <em>Udostępnij</em> → <em>Dodaj do ekranu początkowego</em>.</li>
-    <li><strong>Android (Chrome)</strong>: menu <em>⋮</em> → <em>Zainstaluj aplikację</em> / <em>Dodaj do ekranu głównego</em>.</li>
-  </ul>
-  <p>Bez instalacji push nie zadziała na iPhonie - to ograniczenie Apple, nie nasze ¯\_(ツ)_/¯</p>
+  <p>Pełna instrukcja (iPhone / Android, krok po kroku) czeka w <%= link_to "Menu → Jak zacząć", install_guide_path %>.</p>
 
 </article>
