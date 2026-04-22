@@ -8,6 +8,11 @@ class EventsController < ApplicationController
     @filter = FILTERS.include?(params[:filter]) ? params[:filter] : "new"
     @events = (@filter == "completed" ? Event.completed : Event.upcoming)
       .includes(host: { photo_attachment: :blob })
+    @pending_event_ids = Set.new(
+      Current.user.participations.reserved
+        .where("reserved_until > ?", Time.current)
+        .pluck(:event_id)
+    )
   end
 
   def show

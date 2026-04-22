@@ -32,6 +32,8 @@ class Participation < ApplicationRecord
   private
 
   def broadcast_event_updates
+    return unless roster_relevant_change?
+
     fresh_event = Event.find_by(id: event_id)
     return unless fresh_event  # event may have been destroyed in the same transaction
 
@@ -47,6 +49,15 @@ class Participation < ApplicationRecord
       partial: "events/counts",
       locals: { event: fresh_event }
     )
+  end
+
+  # Skip broadcasts for updates that don't change the roster visually — e.g. a
+  # bare `touch` or a `reserved_until` extension. Only status/position flips
+  # (and creates/destroys) actually reshape the list + counts.
+  def roster_relevant_change?
+    return true if destroyed?
+    return true if previously_new_record?
+    saved_change_to_status? || saved_change_to_position?
   end
 
   # Append one row to participation_events describing this transition. Inferred

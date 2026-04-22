@@ -36,12 +36,10 @@
 <%# :events and [Current.user, :events] streams are subscribed globally in
     the application layout so the `visit` action reaches workers on any page. %>
 
-<% pending_event_ids = Set.new(Current.user.participations.reserved.where("reserved_until > ?", Time.current).pluck(:event_id)) %>
-
 <div class="sort-target">
   <ul id="events_list" class="space-y-3">
     <% @events.each do |event| %>
-      <%= render "event_card", event: event, pending_reservation: pending_event_ids.include?(event.id) %>
+      <%= render "event_card", event: event, pending_reservation: @pending_event_ids.include?(event.id) %>
     <% end %>
   </ul>
 

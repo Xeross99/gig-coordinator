@@ -47,25 +47,59 @@ class Event < ApplicationRecord
     completed_at.present?
   end
 
+  # Single GROUP BY query, memoized per instance. All count helpers below derive
+  # from this — so rendering _counts + _roster triggers one query instead of
+  # four (confirmed + reserved + waitlist + slots_taken).
+  def participation_counts
+    @participation_counts ||= participations.group(:status).count.transform_keys(&:to_s)
+  end
+
   def confirmed_count
-    participations.confirmed.count
+    participation_counts.fetch("confirmed", 0)
   end
 
   def reserved_count
-    participations.reserved.count
+    participation_counts.fetch("reserved", 0)
+  end
+
+  def waitlist_count
+    participation_counts.fetch("waitlist", 0)
   end
 
   # Slots held against capacity — accepted + awaiting-response both block the slot.
   def slots_taken
-    participations.holding_slot.count
-  end
-
-  def waitlist_count
-    participations.waitlist.count
+    confirmed_count + reserved_count
   end
 
   def full?
     slots_taken >= capacity
+  end
+
+  # Everything the roster partial needs, loaded in a handful of queries and
+  # memoized on the instance. Called from the user+host show pages and from
+  # Participation#broadcast_event_updates (on a fresh Event instance each
+  # broadcast — memoization helps within a single render).
+  def roster_data
+    @roster_data ||= begin
+      all_users   = User.with_attached_photo.order(title: :desc, last_name: :asc, first_name: :asc).to_a
+      users_by_id = all_users.index_by(&:id)
+
+      all_parts = participations.order(:position).to_a
+      all_parts.each do |p|
+        preloaded = users_by_id[p.user_id]
+        p.association(:user).target = preloaded if preloaded
+      end
+
+      by_status = all_parts.group_by(&:status)
+      {
+        reserved:               by_status["reserved"]  || [],
+        confirmed:              by_status["confirmed"] || [],
+        waitlist:               by_status["waitlist"]  || [],
+        all_users:              all_users,
+        participations_by_user: all_parts.index_by(&:user_id),
+        blocked_user_ids:       HostBlock.where(host_id: host_id).pluck(:user_id).to_set
+      }
+    end
   end
 
   private
@@ -88,7 +122,11 @@ class Event < ApplicationRecord
     )
   end
 
+  FEED_CARD_FIELDS = %w[name pay_per_person capacity scheduled_at ends_at completed_at].freeze
+
   def broadcast_feed_replace
+    return unless saved_changes.keys.intersect?(FEED_CARD_FIELDS)
+
     broadcast_replace_to(
       :events,
       target: ActionView::RecordIdentifier.dom_id(self),

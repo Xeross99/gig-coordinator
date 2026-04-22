@@ -37,10 +37,17 @@ class UsersController < ApplicationController
     end
     @blocked_hosts = @user.blocked_hosts.with_attached_photo
 
-    scope = @user.participations.includes(event: :host).order("events.scheduled_at DESC")
-    @past_confirmed = scope.confirmed.select { |p| p.event.completed? }
-    @upcoming       = scope.active.reject  { |p| p.event.completed? || p.event.scheduled_at < Time.current }
-    @catches_count  = @past_confirmed.size
+    base = @user.participations.joins(:event).includes(event: :host)
+    @past_confirmed = base.confirmed
+                          .where.not(events: { completed_at: nil })
+                          .order("events.scheduled_at DESC")
+                          .to_a
+    @upcoming = base.active
+                    .where(events: { completed_at: nil })
+                    .where("events.scheduled_at >= ?", Time.current)
+                    .order("events.scheduled_at DESC")
+                    .to_a
+    @catches_count = @past_confirmed.size
   end
 
   def new

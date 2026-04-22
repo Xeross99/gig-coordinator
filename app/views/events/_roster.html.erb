@@ -1,5 +1,6 @@
+<% data = event.roster_data %>
 <div id="<%= dom_id(event, :roster) %>" class="space-y-4">
-  <% reserved = event.participations.reserved.includes(user: { photo_attachment: :blob }).order(:position) %>
+  <% reserved = data[:reserved] %>
   <% if reserved.any? %>
     <div>
       <h3 class="text-stone-500 text-xs uppercase tracking-wide mb-2">
@@ -24,12 +25,12 @@
     </div>
   <% end %>
 
+  <% confirmed = data[:confirmed] %>
   <div>
     <h3 class="text-stone-500 text-xs uppercase tracking-wide mb-2">
       <%= t("events.confirmed_count") %>
-      (<%= event.participations.confirmed.count %>/<%= event.capacity %>)
+      (<%= confirmed.size %>/<%= event.capacity %>)
     </h3>
-    <% confirmed = event.participations.confirmed.includes(user: { photo_attachment: :blob }).order(:position) %>
     <% if confirmed.any? %>
       <ul class="space-y-2">
         <% confirmed.each_with_index do |p, i| %>
@@ -48,12 +49,12 @@
     <% end %>
   </div>
 
+  <% waitlist = data[:waitlist] %>
   <div>
     <h3 class="text-stone-500 text-xs uppercase tracking-wide mb-2">
       <%= t("events.waitlist_count") %>
-      (<%= event.participations.waitlist.count %>)
+      (<%= waitlist.size %>)
     </h3>
-    <% waitlist = event.participations.waitlist.includes(user: { photo_attachment: :blob }).order(:position) %>
     <% if waitlist.any? %>
       <ul class="space-y-2">
         <% waitlist.each_with_index do |p, i| %>
@@ -72,12 +73,11 @@
     <% end %>
   </div>
 
-  <% all_users = User.with_attached_photo.order(title: :desc, last_name: :asc, first_name: :asc) %>
-  <% participations_by_user = event.participations.index_by(&:user_id) %>
-  <% blocked_user_ids = HostBlock.where(host_id: event.host_id).pluck(:user_id).to_set %>
+  <% participations_by_user = data[:participations_by_user] %>
+  <% blocked_user_ids       = data[:blocked_user_ids] %>
   <%# Kolejność: najpierw ci, którzy zaznaczyli obecność (rosnąco po czasie zapisu),
       potem pozostali w dotychczasowej kolejności alfabetyczno-rangowej. %>
-  <% all_users = all_users.sort_by.with_index do |u, i|
+  <% all_users = data[:all_users].sort_by.with_index do |u, i|
        p = participations_by_user[u.id]
        [ p ? 0 : 1, p ? p.created_at.to_f : i ]
      end %>
