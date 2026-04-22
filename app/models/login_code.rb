@@ -7,11 +7,7 @@ class LoginCode < ApplicationRecord
   validates :code, presence: true, format: { with: /\A\d{5}\z/ }
   validates :expires_at, presence: true
 
-  scope :active, -> {
-    where(used_at: nil)
-      .where("expires_at > ?", Time.current)
-      .where("attempts < ?", MAX_ATTEMPTS)
-  }
+  scope :active, -> { where(used_at: nil).where("expires_at > ?", Time.current).where("attempts < ?", MAX_ATTEMPTS) }
 
   scope :for, ->(record) {
     where(authenticatable_type: record.class.polymorphic_name, authenticatable_id: record.id)
