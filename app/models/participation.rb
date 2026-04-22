@@ -76,11 +76,11 @@ class Participation < ApplicationRecord
     elsif saved_change_to_status?
       prev_status, new_status = saved_change_to_status
       case [ prev_status, new_status ]
-      in ["cancelled", "confirmed" | "waitlist"] then :joined
-      in ["waitlist",  "confirmed"]              then :promoted
-      in ["reserved",  "confirmed"]              then :accepted
-      in ["reserved",  "cancelled"]              then cancellation_reason == :expired ? :expired : :declined
-      in [_,           "cancelled"]              then :cancelled
+      in [ "cancelled", "confirmed" | "waitlist" ] then :joined
+      in [ "waitlist",  "confirmed" ]              then :promoted
+      in [ "reserved",  "confirmed" ]              then :accepted
+      in [ "reserved",  "cancelled" ]              then cancellation_reason == :expired ? :expired : :declined
+      in [ _,           "cancelled" ]              then :cancelled
       else nil
       end
     end
