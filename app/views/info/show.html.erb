@@ -36,7 +36,14 @@
     <% end %>
   </ul>
 
-  <h2>Rezerwacje</h2>
+  <h2 class="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <span>Rezerwacje</span>
+    <span class="not-prose inline-flex items-center gap-1 text-sm font-normal">
+      <span class="text-stone-500">(</span>
+      <%= render "users/title_badge", user: User.new(title: :master) %>
+      <span class="text-stone-500">)</span>
+    </span>
+  </h2>
   <p>Kiedy organizator wrzuca nowe zlecenie, system <strong>automatycznie rezerwuje</strong> miejsca dla osób z najwyższą aktualnie rangą. Dostajesz na telefon powiadomienie i masz <strong>godzinę</strong>, żeby kliknąć <em>Akceptuję</em> albo <em>Odrzuć</em>.</p>
   <ul>
     <li><strong>Akceptuję</strong> - miejsce jest Twoje, widzimy się na evencie.</li>
@@ -45,7 +52,20 @@
   </ul>
   <p>Jeśli nie masz aktualnie najwyższej rangi, system Ci nie zarezerwuje - ale możesz sam wejść na zlecenie z listy eventów.</p>
 
-  <h2>Zapisywanie się z listy</h2>
+  <h2 class="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <span>Zapisywanie się z listy</span>
+    <span class="not-prose inline-flex flex-wrap items-center gap-1 text-sm font-normal">
+      <span class="text-stone-500">(</span>
+      <%= render "users/title_badge", user: User.new(title: :rookie) %>
+      <span class="text-stone-500">,</span>
+      <%= render "users/title_badge", user: User.new(title: :member) %>
+      <span class="text-stone-500">,</span>
+      <%= render "users/title_badge", user: User.new(title: :veteran) %>
+      <span class="text-stone-500">i</span>
+      <%= render "users/title_badge", user: User.new(title: :captain) %>
+      <span class="text-stone-500">)</span>
+    </span>
+  </h2>
   <p>Klikasz zlecenie w feedzie → <em>Akceptuję</em>. Dwa warianty:</p>
   <ul>
     <li><strong>Są wolne miejsca</strong> - jesteś potwierdzony od razu.</li>
@@ -124,13 +144,22 @@
   <ul>
     <li>Event od razu ląduje na feedzie wszystkich pracowników.</li>
     <li>Wszyscy zalogowani zostają automatycznie przeniesieni na stronę nowego eventu - pierwsi klikają <em>Akceptuję</em>.</li>
-    <li>System rezerwuje tyle miejsc ile capacity - ale tylko dla osób z aktualnie najwyższą rangą w systemie. Pozostałe sloty są otwarte dla wszystkich.</li>
+    <li>System rezerwuje tyle miejsc ile wynosi liczba miejsc na evencie - ale tylko dla osób z aktualnie najwyższą rangą w systemie. Pozostałe sloty są otwarte dla wszystkich.</li>
     <li>Wszyscy userzy dostają powiadomienie push o nowym evencie - <strong>oprócz żółtodziobów, którzy dostają push 5 min później</strong>, żeby wyższe rangi miały chwilę fory na zapis.</li>
   </ul>
-  <p>Nowy, Członek i Weteran nie mogą planować łapań - mogą tylko się zapisywać.</p>
+  <p class="flex flex-wrap items-center gap-x-1 gap-y-1">
+    <span class="not-prose inline-flex flex-wrap items-center gap-1">
+      <%= render "users/title_badge", user: User.new(title: :rookie) %>
+      <span class="text-stone-500">,</span>
+      <%= render "users/title_badge", user: User.new(title: :member) %>
+      <span class="text-stone-500">i</span>
+      <%= render "users/title_badge", user: User.new(title: :veteran) %>
+    </span>
+    <span>nie mogą planować łapań - mogą tylko się zapisywać.</span>
+  </p>
 
   <h2>Zmiana liczby miejsc w evencie</h2>
-  <p>Organizator może w każdej chwili zwiększyć <em>capacity</em> w swoim panelu. Jeśli event ma już listę rezerwową, a zmieści się więcej osób - system sam awansuje najstarsze osoby z rezerwy na <em>Potwierdzonych</em> (zgodnie z kolejnością zgłoszeń). Dostają powiadomienie push + mail. Zmniejszanie capacity <strong>nie wyrzuca</strong> nikogo, kto już jest potwierdzony.</p>
+  <p>Organizator może w każdej chwili zwiększyć <em>liczbę miejsc</em> w swoim panelu. Jeśli event ma już listę rezerwową, a zmieści się więcej osób - system sam awansuje najstarsze osoby z rezerwy na <em>Potwierdzonych</em> (zgodnie z kolejnością zgłoszeń). Dostają powiadomienie push + mail. Zmniejszenie liczby miejsc <strong>nie wyrzuca</strong> nikogo, kto już jest potwierdzony.</p>
 
   <h2>Powiadomienia</h2>
   <p>Dostajesz je na dwa sposoby:</p>

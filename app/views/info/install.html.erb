@@ -11,6 +11,14 @@
   <h1>Jak zacząć</h1>
   <p>Gig Coordinator działa jako PWA - <strong>nie ma jej w App Store ani Google Play</strong>. Dodajesz ją bezpośrednio z przeglądarki na ekran początkowy telefonu w 30 sekund. Bez instalacji część rzeczy nie zadziała (powiadomienia push, tryb pełnoekranowy), więc warto zrobić to na start.</p>
 
+  <h2>Czym jest PWA?</h2>
+  <p><strong>PWA</strong> to strona internetowa, którą dodajesz na ekran początkowy telefonu - po instalacji wygląda i działa jak zwykła aplikacja (własna ikonka, bez paska adresu, powiadomienia push), ale nie musisz szukać jej w App Store ani Google Play. Dzięki temu działa tak samo na iPhonie i Androidzie, a aktualizacje dostajesz od razu, bez czekania.</p>
+
+  <h2>Na komputerze też działa</h2>
+  <p>Skoro pod spodem to normalna strona internetowa, to <strong>na laptopie / komputerze otwierasz ją po prostu w przeglądarce</strong> pod adresem <strong>your-domain.example.com</strong> - nic nie instalujesz, logujesz się tak samo kodem 5-cyfrowym i masz dostęp do wszystkiego. Powiadomień push na desktopie nie wysyłamy (aplikacja jest pomyślana jako mobilna), ale listę eventów, zapisy i cały panel organizatora obsłużysz z dużego ekranu bez problemu.</p>
+
+  <%= render "install_screenshot", name: "desktop-browser", caption: "Widok Gig Coordinator w przeglądarce na komputerze", orientation: :desktop %>
+
   <h2>iPhone (Safari)</h2>
   <p>Musi być <strong>Safari</strong> - Chrome na iOS nie potrafi zainstalować PWA, bo Apple mu nie pozwala.</p>
   <ol>
