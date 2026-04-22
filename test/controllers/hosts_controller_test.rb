@@ -64,6 +64,125 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/chytań\b/, response.body)
   end
 
+  # --- "Zarządzam" filter (komendant-only) -----------------------------------
+
+  test "GET /organizatorzy does NOT render 'Zarządzam' toggle for rookie" do
+    sign_in_as(users(:bartek))  # default title rookie
+    get hosts_path
+    assert_response :success
+    assert_no_match "Zarządzam", response.body
+  end
+
+  test "GET /organizatorzy does NOT render 'Zarządzam' toggle for master" do
+    users(:ala).update!(title: :master)
+    sign_in_as(users(:ala))
+    get hosts_path
+    assert_response :success
+    assert_no_match "Zarządzam", response.body
+  end
+
+  test "GET /organizatorzy does NOT render 'Zarządzam' toggle for komendant with zero managed hosts" do
+    users(:cezary).update!(title: :captain)
+    assert_equal 0, users(:cezary).managed_hosts.count
+
+    sign_in_as(users(:cezary))
+    get hosts_path
+    assert_response :success
+    assert_no_match "Zarządzam", response.body
+  end
+
+  test "GET /organizatorzy renders 'Zarządzam' pill for komendant managing >=1 host" do
+    users(:cezary).update!(title: :captain)
+    users(:cezary).managed_hosts << hosts(:jan)
+
+    sign_in_as(users(:cezary))
+    get hosts_path
+    assert_response :success
+    assert_match "Od A do Z", response.body
+    assert_match "Od Z do A", response.body
+    assert_match "Zarządzam", response.body
+    assert_select "a[href=?]", hosts_path(sort: "name_asc",  filter: "all")
+    assert_select "a[href=?]", hosts_path(sort: "name_desc", filter: "all")
+    assert_select "a[href=?]", hosts_path(filter: "managed")
+  end
+
+  test "GET /organizatorzy renders only sort pills (no 'Zarządzam') for non-komendant" do
+    sign_in_as(users(:bartek))
+    get hosts_path
+    assert_response :success
+    assert_match "Od A do Z", response.body
+    assert_match "Od Z do A", response.body
+    assert_no_match "Zarządzam", response.body
+  end
+
+  test "GET /organizatorzy?filter=managed as komendant returns only their managed hosts" do
+    users(:cezary).update!(title: :captain)
+    users(:cezary).managed_hosts << hosts(:jan)
+
+    sign_in_as(users(:cezary))
+    get hosts_path(filter: "managed")
+    assert_response :success
+    assert_match hosts(:jan).display_name,    response.body
+    assert_no_match hosts(:anna).display_name, response.body
+  end
+
+  test "GET /organizatorzy?filter=all as komendant returns every host" do
+    users(:cezary).update!(title: :captain)
+    users(:cezary).managed_hosts << hosts(:jan)
+
+    sign_in_as(users(:cezary))
+    get hosts_path(filter: "all")
+    assert_response :success
+    assert_match hosts(:jan).display_name,  response.body
+    assert_match hosts(:anna).display_name, response.body
+  end
+
+  test "GET /organizatorzy (no filter) defaults to all hosts even for komendant" do
+    users(:cezary).update!(title: :captain)
+    users(:cezary).managed_hosts << hosts(:jan)
+
+    sign_in_as(users(:cezary))
+    get hosts_path
+    assert_response :success
+    assert_match hosts(:jan).display_name,  response.body
+    assert_match hosts(:anna).display_name, response.body
+  end
+
+  test "GET /organizatorzy?filter=managed by a non-komendant is ignored (returns all hosts)" do
+    # bartek is rookie — even if he crafts ?filter=managed manually, the
+    # guard in the controller should ignore it and not scope the list.
+    sign_in_as(users(:bartek))
+    get hosts_path(filter: "managed")
+    assert_response :success
+    assert_match hosts(:jan).display_name,  response.body
+    assert_match hosts(:anna).display_name, response.body
+  end
+
+  test "GET /organizatorzy with unknown filter value falls back to all" do
+    users(:cezary).update!(title: :captain)
+    users(:cezary).managed_hosts << hosts(:jan)
+
+    sign_in_as(users(:cezary))
+    get hosts_path(filter: "bogus")
+    assert_response :success
+    assert_match hosts(:jan).display_name,  response.body
+    assert_match hosts(:anna).display_name, response.body
+  end
+
+  test "GET /organizatorzy as komendant: sort pills always link to filter=all, Zarządzam pill to filter=managed" do
+    # Single toggle, 3 mutually-exclusive pills. Sort options reset filter
+    # back to "all"; Zarządzam is its own mode (no sort dimension).
+    users(:cezary).update!(title: :captain)
+    users(:cezary).managed_hosts << hosts(:jan)
+
+    sign_in_as(users(:cezary))
+    get hosts_path(filter: "managed")
+    assert_response :success
+    assert_select "a[href=?]", hosts_path(sort: "name_asc",  filter: "all")
+    assert_select "a[href=?]", hosts_path(sort: "name_desc", filter: "all")
+    assert_select "a[href=?]", hosts_path(filter: "managed")
+  end
+
   # --- show action -----------------------------------------------------------
 
   test "GET /organizatorzy/:id requires login" do

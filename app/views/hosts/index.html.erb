@@ -9,12 +9,26 @@
   <% end %>
 </div>
 
+<% show_managed_filter = Current.user&.captain? && Current.user.managed_hosts.exists? %>
+
 <div class="mb-4">
-  <%= render "shared/sort_toggle",
-             options: [["name_asc", "Od A do Z"], ["name_desc", "Od Z do A"]],
-             current: @sort,
-             path_helper: :hosts_path,
-             full_width: true %>
+  <%
+    toggle_options = [
+      { label: "Od A do Z", url: hosts_path(sort: "name_asc",  filter: "all"), active: @filter == "all" && @sort == "name_asc"  },
+      { label: "Od Z do A", url: hosts_path(sort: "name_desc", filter: "all"), active: @filter == "all" && @sort == "name_desc" }
+    ]
+    if show_managed_filter
+      toggle_options << { label: "Zarządzam", url: hosts_path(filter: "managed"), active: @filter == "managed" }
+    end
+  %>
+  <div class="flex w-full items-center bg-stone-100 rounded-lg p-1 text-sm ring-1 ring-stone-200">
+    <% toggle_options.each do |opt| %>
+      <%= link_to opt[:label], opt[:url],
+                  class: "px-3 py-1.5 rounded-md font-medium transition-colors flex-1 text-center #{opt[:active] ? "sort-toggle-active bg-white text-stone-900 shadow-sm" : "text-stone-600 hover:text-stone-900"}",
+                  aria: { current: opt[:active] ? "true" : nil },
+                  data: { turbo_action: "replace" } %>
+    <% end %>
+  </div>
 </div>
 
 <% if @hosts.any? %>

@@ -7,9 +7,17 @@ class HostsController < ApplicationController
     "name_desc" => { first_name: :desc, last_name: :desc }
   }.freeze
 
+  FILTERS = %w[all managed].freeze
+
   def index
     @sort = SORTS.key?(params[:sort]) ? params[:sort] : "name_asc"
-    @hosts = Host.order(SORTS.fetch(@sort)).with_attached_photo
+    @filter = FILTERS.include?(params[:filter]) ? params[:filter] : "all"
+
+    scope = Host.order(SORTS.fetch(@sort)).with_attached_photo
+    if @filter == "managed" && Current.user&.captain?
+      scope = scope.where(id: Current.user.managed_host_ids)
+    end
+    @hosts = scope
     @upcoming_counts = Event.upcoming.group(:host_id).count
   end
 
