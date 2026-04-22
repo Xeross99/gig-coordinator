@@ -145,6 +145,50 @@ class UserTest < ActiveSupport::TestCase
     end
   end
 
+  test "rank promotion email is enqueued on awans to master" do
+    user = users(:ala)
+    user.update!(title: :member)
+    assert_enqueued_emails 1 do
+      user.update!(title: :master)
+    end
+  end
+
+  test "rank promotion email is enqueued on awans to captain" do
+    user = users(:ala)
+    user.update!(title: :member)
+    assert_enqueued_emails 1 do
+      user.update!(title: :captain)
+    end
+  end
+
+  test "rank promotion email is NOT enqueued when title changes to a low rank" do
+    user = users(:ala)
+    user.update!(title: :master)
+    assert_enqueued_emails 0 do
+      user.update!(title: :member)
+    end
+  end
+
+  test "rank promotion email is NOT enqueued on non-title updates" do
+    user = users(:ala)
+    user.update!(title: :master)
+    assert_enqueued_emails 0 do
+      user.update!(first_name: "Inne")
+    end
+  end
+
+  test "rank promotion email is NOT enqueued when user has no email" do
+    user = users(:ala)
+    user.update!(title: :member)
+    User.connection.execute("UPDATE users SET email = '' WHERE id = #{user.id}")
+    user.reload
+    assert user.email.blank?, "email should be blank for this test"
+    user.title = :master
+    assert_enqueued_emails 0 do
+      user.save(validate: false)
+    end
+  end
+
   test "display_title returns the i18n-translated label for captain" do
     user = User.new(title: :captain)
     assert_equal "Kapitan", user.display_title
