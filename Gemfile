@@ -71,6 +71,12 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+
+  # Checks DB schema for missing indexes, validations, foreign keys, etc.
+  gem "database_consistency", require: false
+
+  # Detects N+1 queries and unused eager loading
+  gem "bullet"
 end
 
 group :test do

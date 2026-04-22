@@ -2,7 +2,7 @@ class Message < ApplicationRecord
   belongs_to :event
   belongs_to :user
 
-  validates :body, length: { maximum: 2_000 }
+  validates :body, presence: true, length: { maximum: 2_000 }
   validate :body_has_content
 
   # Broadcast appenda do czatu eventu. Strumień `[event, :chat]` subskrybuje

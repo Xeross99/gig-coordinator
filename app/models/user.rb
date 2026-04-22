@@ -21,10 +21,7 @@ class User < ApplicationRecord
 
   validates :last_name, presence: true
   validates :first_name, presence: true, uniqueness: { scope: :last_name, case_sensitive: false }
-  # `allow_blank: true` on format: presence already rejects a blank email, so this
-  # avoids surfacing both "can't be blank" and "invalid format" on the same submit.
-  validates :email, presence: true, uniqueness: { case_sensitive: false },
-                    format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
+  validates :email, presence: true, uniqueness: { case_sensitive: true }, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
 
   after_create_commit :send_welcome_email
   after_update_commit :clear_host_blocks_on_mistrz_promotion
@@ -87,10 +84,11 @@ class User < ApplicationRecord
   # mail. Guard na `saved_change_to_title?` zapewnia, że nie wyślemy maila,
   # gdy user update'uje tylko np. zdjęcie profilowe albo email.
   def send_rank_promotion_email
-    return unless saved_change_to_title?
-    return if email.blank?
+    return unless saved_change_to_title? && email.present?
+
     new_title = title.to_s
     return unless RankPromotionMailer::NOTIFIABLE_TITLES.include?(new_title)
+
     RankPromotionMailer.notify(self, new_title: new_title).deliver_later
   end
 end

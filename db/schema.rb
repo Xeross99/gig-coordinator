@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_21_115112) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_22_063935) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -61,7 +61,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_115112) do
     t.integer "user_id", null: false
     t.index ["host_id", "user_id"], name: "index_host_blocks_on_host_id_and_user_id"
     t.index ["user_id", "host_id"], name: "index_host_blocks_on_user_id_and_host_id", unique: true
-    t.index ["user_id"], name: "index_host_blocks_on_user_id"
   end
 
   create_table "host_managers", force: :cascade do |t|
@@ -71,7 +70,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_115112) do
     t.integer "user_id", null: false
     t.index ["host_id", "user_id"], name: "index_host_managers_on_host_id_and_user_id"
     t.index ["user_id", "host_id"], name: "index_host_managers_on_user_id_and_host_id", unique: true
-    t.index ["user_id"], name: "index_host_managers_on_user_id"
   end
 
   create_table "hosts", force: :cascade do |t|
@@ -82,6 +80,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_115112) do
     t.string "location", null: false
     t.string "phone"
     t.datetime "updated_at", null: false
+    t.index "LOWER(first_name), last_name", name: "index_hosts_on_lower_first_name_and_last_name", unique: true
     t.index ["email"], name: "index_hosts_on_email", unique: true
   end
 
@@ -108,7 +107,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_115112) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["event_id", "created_at"], name: "index_messages_on_event_id_and_created_at"
-    t.index ["event_id"], name: "index_messages_on_event_id"
     t.index ["user_id"], name: "index_messages_on_user_id"
   end
 
@@ -122,7 +120,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_115112) do
     t.integer "user_id", null: false
     t.index ["event_id", "status", "position"], name: "index_participations_on_event_id_and_status_and_position"
     t.index ["event_id", "user_id"], name: "index_participations_on_event_id_and_user_id", unique: true
-    t.index ["event_id"], name: "index_participations_on_event_id"
     t.index ["reserved_until"], name: "index_participations_on_reserved_until"
     t.index ["user_id"], name: "index_participations_on_user_id"
   end
@@ -160,6 +157,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_115112) do
     t.string "phone"
     t.integer "title", default: 0
     t.datetime "updated_at", null: false
+    t.index "LOWER(first_name), last_name", name: "index_users_on_lower_first_name_and_last_name", unique: true
     t.index ["admin"], name: "index_users_on_admin", where: "admin = true"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["title"], name: "index_users_on_title"
