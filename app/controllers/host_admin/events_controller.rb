@@ -6,7 +6,13 @@ module HostAdmin
       @events = Current.host.events.order(scheduled_at: :desc)
     end
 
-    def show; end
+    def show
+      @history = ParticipationEvent
+        .joins(:participation)
+        .where(participations: { event_id: @event.id })
+        .includes(participation: { user: { photo_attachment: :blob } })
+        .order(created_at: :desc)
+    end
 
     def new
       @event = Current.host.events.new(scheduled_at: 1.day.from_now, ends_at: 1.day.from_now + 2.hours, capacity: 4)

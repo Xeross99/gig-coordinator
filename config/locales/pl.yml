@@ -97,6 +97,16 @@ pl:
     new_event: "Nowy event"
     profile: "Mój profil"
     roster: "Uczestnicy"
+    history:
+      heading:  "Historia zapisów"
+      empty:    "Nic się jeszcze nie zadziało."
+      joined:    "zapisał się"
+      cancelled: "zrezygnował"
+      reserved:  "dostał rezerwację"
+      accepted:  "potwierdził rezerwację"
+      declined:  "odrzucił rezerwację"
+      promoted:  "awansował z listy rezerwowej"
+      expired:   "rezerwacja wygasła"
   mailers:
     hello: "Cześć %{name}!"
     welcome:

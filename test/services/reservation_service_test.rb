@@ -203,6 +203,22 @@ class ReservationServiceTest < ActiveSupport::TestCase
     refute event.participations.find_by(user: users(:bartek))&.reserved?
   end
 
+  test "expire_stale! loguje :expired w historii (nie :declined)" do
+    # Sweeper ustawia `cancellation_reason = :expired` przed update! —
+    # callback Participation#log_participation_event musi to rozpoznać i
+    # zapisać jako :expired, bo host w panelu chce odróżnić „user odmówił"
+    # od „nie zdążył kliknąć w godzinę".
+    event = build_event(capacity: 1)
+    ReservationService.seed_on_create(event)
+    res = event.participations.reserved.first
+    res.update_column(:reserved_until, 5.minutes.ago)
+
+    ReservationService.expire_stale!
+
+    types = res.reload.participation_events.order(:id).pluck(:event_type).map(&:to_sym)
+    assert_equal %i[reserved expired], types
+  end
+
   test "komendant NEVER gets auto-reservations, even without any master" do
     # Nowa reguła: tylko master dostaje rezerwacje. Komendant, mimo że
     # dzięki `User.maximum(:title)` byłby „nowym top-tierem", jest pomijany.

@@ -49,7 +49,10 @@ class ReservationService
   def self.expire_stale!
     expired = Participation.reserved.where("reserved_until <= ?", Time.current).includes(:event)
     expired.find_each do |p|
-      with_lock(p.event) { p.update!(status: :cancelled, reserved_until: nil) }
+      with_lock(p.event) do
+        p.cancellation_reason = :expired
+        p.update!(status: :cancelled, reserved_until: nil)
+      end
       refill_one(p.event)
     end
   end

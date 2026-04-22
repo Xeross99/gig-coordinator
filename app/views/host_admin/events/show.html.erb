@@ -35,3 +35,25 @@
   <%= turbo_stream_from @event, :roster %>
   <%= render "events/roster", event: @event %>
 </div>
+
+<details class="bg-white rounded-xl shadow-sm mt-4 group">
+  <summary class="cursor-pointer list-none p-5 flex items-center justify-between">
+    <h2 class="text-lg font-semibold"><%= t("host_panel.history.heading") %> (<%= @history.size %>)</h2>
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 text-stone-400 transition-transform group-open:rotate-180">
+      <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+    </svg>
+  </summary>
+  <% if @history.any? %>
+    <ul class="px-5 pb-5 space-y-2">
+      <% @history.each do |e| %>
+        <li class="flex items-center gap-3 text-sm text-stone-700">
+          <time class="text-xs text-stone-500 tabular-nums shrink-0 w-28"><%= l(e.created_at, format: :short) %></time>
+          <span class="font-medium text-stone-900 truncate"><%= e.participation.user.display_name %></span>
+          <span class="text-stone-500 truncate"><%= t("host_panel.history.#{e.event_type}") %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="px-5 pb-5 text-sm text-stone-400"><%= t("host_panel.history.empty") %></p>
+  <% end %>
+</details>

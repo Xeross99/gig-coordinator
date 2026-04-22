@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_22_063935) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_22_074251) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -110,6 +110,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_063935) do
     t.index ["user_id"], name: "index_messages_on_user_id"
   end
 
+  create_table "participation_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "event_type", null: false
+    t.integer "participation_id", null: false
+    t.index ["participation_id"], name: "index_participation_events_on_participation_id"
+  end
+
   create_table "participations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "event_id", null: false
@@ -172,6 +179,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_063935) do
   add_foreign_key "host_managers", "users"
   add_foreign_key "messages", "events"
   add_foreign_key "messages", "users"
+  add_foreign_key "participation_events", "participations"
   add_foreign_key "participations", "events"
   add_foreign_key "participations", "users"
   add_foreign_key "push_subscriptions", "users"

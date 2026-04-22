@@ -54,4 +54,92 @@ class ParticipationTest < ActiveSupport::TestCase
     assert_includes active, p_waitlist
     refute_includes active, p_cancel
   end
+
+  # ---- Historia zapisów: log_participation_event ----
+
+  def event_types(p)
+    p.participation_events.order(:id).pluck(:event_type).map(&:to_sym)
+  end
+
+  test "create as confirmed logs :joined" do
+    p = Participation.create!(event: @event, user: @user, status: :confirmed, position: 1)
+    assert_equal %i[joined], event_types(p)
+  end
+
+  test "create as waitlist logs :joined" do
+    p = Participation.create!(event: @event, user: @user, status: :waitlist, position: 1)
+    assert_equal %i[joined], event_types(p)
+  end
+
+  test "create as reserved logs :reserved" do
+    p = Participation.create!(event: @event, user: @user, status: :reserved, position: 1,
+                              reserved_until: 1.hour.from_now)
+    assert_equal %i[reserved], event_types(p)
+  end
+
+  test "create as cancelled does not log anything (nothing meaningful happened)" do
+    p = Participation.create!(event: @event, user: @user, status: :cancelled, position: 0)
+    assert_equal [], event_types(p)
+  end
+
+  test "reserved -> confirmed logs :accepted" do
+    p = Participation.create!(event: @event, user: @user, status: :reserved, position: 1,
+                              reserved_until: 1.hour.from_now)
+    p.update!(status: :confirmed, reserved_until: nil)
+    assert_equal %i[reserved accepted], event_types(p)
+  end
+
+  test "reserved -> cancelled without cancellation_reason logs :declined" do
+    p = Participation.create!(event: @event, user: @user, status: :reserved, position: 1,
+                              reserved_until: 1.hour.from_now)
+    p.update!(status: :cancelled, reserved_until: nil)
+    assert_equal %i[reserved declined], event_types(p)
+  end
+
+  test "reserved -> cancelled with cancellation_reason=:expired logs :expired" do
+    p = Participation.create!(event: @event, user: @user, status: :reserved, position: 1,
+                              reserved_until: 1.hour.from_now)
+    p.cancellation_reason = :expired
+    p.update!(status: :cancelled, reserved_until: nil)
+    assert_equal %i[reserved expired], event_types(p)
+  end
+
+  test "waitlist -> confirmed logs :promoted" do
+    p = Participation.create!(event: @event, user: @user, status: :waitlist, position: 1)
+    p.update!(status: :confirmed, position: 1)
+    assert_equal %i[joined promoted], event_types(p)
+  end
+
+  test "confirmed -> cancelled logs :cancelled" do
+    p = Participation.create!(event: @event, user: @user, status: :confirmed, position: 1)
+    p.update!(status: :cancelled)
+    assert_equal %i[joined cancelled], event_types(p)
+  end
+
+  test "waitlist -> cancelled logs :cancelled" do
+    p = Participation.create!(event: @event, user: @user, status: :waitlist, position: 1)
+    p.update!(status: :cancelled)
+    assert_equal %i[joined cancelled], event_types(p)
+  end
+
+  test "cancelled -> confirmed logs :joined (re-activation)" do
+    p = Participation.create!(event: @event, user: @user, status: :confirmed, position: 1)
+    p.update!(status: :cancelled)
+    p.update!(status: :confirmed, position: 1)
+    assert_equal %i[joined cancelled joined], event_types(p)
+  end
+
+  test "cancelled -> waitlist logs :joined (re-activation onto waitlist)" do
+    p = Participation.create!(event: @event, user: @user, status: :confirmed, position: 1)
+    p.update!(status: :cancelled)
+    p.update!(status: :waitlist, position: 1)
+    assert_equal %i[joined cancelled joined], event_types(p)
+  end
+
+  test "update without status change does not log" do
+    p = Participation.create!(event: @event, user: @user, status: :confirmed, position: 1)
+    assert_no_difference -> { p.participation_events.count } do
+      p.update!(position: 7)
+    end
+  end
 end
