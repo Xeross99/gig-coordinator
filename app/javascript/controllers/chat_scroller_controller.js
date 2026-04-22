@@ -2,9 +2,11 @@ import { Controller } from "@hotwired/stimulus"
 
 // Pilnuje scrollowania czatu:
 // 1. Na mount viewport jedzie na dół (najnowsze wiadomości).
-// 2. Przy dodaniu wiadomości (append z Turbo broadcast) auto-scroll jeżeli
-//    user jest już blisko dołu — inaczej zachowujemy jego pozycję, żeby nie
-//    podrzucać widoku gdy czyta stare wiadomości.
+// 2. Kiedy przyjdzie nowa wiadomość (append przez Turbo broadcast):
+//    - jeśli user był blisko dołu → auto-scroll,
+//    - w przeciwnym razie zostawiamy jego pozycję (czyta stare).
+// 3. Kiedy user SAM wysyła wiadomość (submit formularza czatu) → zawsze scroll,
+//    niezależnie od pozycji, bo oczekuje że zobaczy swój wpis natychmiast.
 export default class extends Controller {
   static targets = ["viewport"]
 
@@ -21,7 +23,25 @@ export default class extends Controller {
       img.addEventListener("error", () => this.scrollToBottom(), { once: true })
     })
 
-    const list = this.viewportTarget.querySelector("ul[id$='_chat_messages']")
+    // Śledzimy „był blisko dołu" NA BIEŻĄCO przez listener scrolla. Czytamy to
+    // w MutationObserver — tam scrollHeight jest już powiększony o nową
+    // wiadomość, więc `isNearBottom()` z wnętrza callbacku fałszywie mówi
+    // „daleko od dołu" dla każdej wiadomości wyższej niż próg.
+    this.wasNearBottom = true
+    this.onScroll = () => { this.wasNearBottom = this.isNearBottom() }
+    this.viewportTarget.addEventListener("scroll", this.onScroll, { passive: true })
+
+    // Submit własnej wiadomości → ustaw flagę forsującą następny auto-scroll,
+    // niezależnie od pozycji viewportu. Form dosadzany jest siblingiem (nie
+    // dzieckiem viewportu), więc listener łapiemy na całej sekcji kontrolera.
+    this.onSubmit = () => { this.forceNextScroll = true }
+    this.element.addEventListener("submit", this.onSubmit, true)
+
+    // Id listy to `chat_messages_event_<id>` (dom_id z prefiksem), więc
+    // szukamy po PREFIKSIE. Poprzednio było `id$='_chat_messages'` (sufiks) —
+    // ten selector nigdy nie matchował, przez co MutationObserver nie startował
+    // i auto-scroll nie działał przy żadnym appendzie.
+    const list = this.viewportTarget.querySelector("ul[id^='chat_messages_']")
     if (!list) return
 
     this.mutationObserver = new MutationObserver((mutations) => {
@@ -34,13 +54,23 @@ export default class extends Controller {
                              .filter((n) => n.nodeType === 1)
       const lastAdded = added[added.length - 1]
       const isAppend  = lastAdded && lastAdded === list.lastElementChild
-      if (isAppend && this.isNearBottom()) this.scrollToBottom()
+      if (!isAppend) return
+
+      if (this.forceNextScroll || this.wasNearBottom) {
+        this.forceNextScroll = false
+        this.scrollToBottom()
+        // Po broadcast-append z websocketu wysokość potrafi jeszcze urosnąć
+        // (obrazy ładują się async), więc strzelamy jeszcze w kolejnej klatce.
+        requestAnimationFrame(() => this.scrollToBottom())
+      }
     })
     this.mutationObserver.observe(list, { childList: true })
   }
 
   disconnect() {
     this.mutationObserver?.disconnect()
+    this.viewportTarget?.removeEventListener("scroll", this.onScroll)
+    this.element.removeEventListener("submit", this.onSubmit, true)
   }
 
   isNearBottom() {

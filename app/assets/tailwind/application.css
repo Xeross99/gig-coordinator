@@ -257,7 +257,7 @@ a.mention {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin: 0 1px;
+  margin: 0.15rem 0.25rem;
   padding: 0.25rem 0.25rem 0.25rem 0.15rem;
   border-radius: 9999px;
   background-color: #e0e7ff;
@@ -298,6 +298,13 @@ a.mention {
   white-space: nowrap;
   display: inline-block;
   line-height: 1.4;
+}
+
+/* Renderowana treść wiadomości: większy line-height, żeby pionowo sztaplowane
+   kafelki @mention (każdy ~28 px) nie dotykały się między liniami. Bez tego
+   cztery oznaczenia pod sobą wyglądały jak jeden sklejony blok. */
+.lexxy-content {
+  line-height: 1.9;
 }
 
 /* Lexxy dropdown promptu — wiersz z awatarem + imieniem + rank badge */
