@@ -5,6 +5,7 @@ class WebPushNotifier < ApplicationJob
   #   perform(:completion, participation_id: 42)
   #   perform(:promotion,  participation_id: 42)
   #   perform(:new_event,  event_id: 7)
+  #   perform(:new_event,  event_id: 7, titles: %w[rookie])
   #   perform(:invitation, event_id: 7, user_id: 3)
   #   perform(:mention,    message_id: 99, user_id: 3)
   def perform(kind, **args)
@@ -14,9 +15,19 @@ class WebPushNotifier < ApplicationJob
       payload = build_payload(kind, participation: participation)
       participation.user.push_subscriptions.find_each { |s| send_web_push(s, payload) }
     when :new_event
-      event = Event.find(args.fetch(:event_id))
+      # Re-check: the delayed wave (rookie, 5 min po utworzeniu) nie powinna
+      # pingować o evencie, który został usunięty, już się rozpoczął albo zapełnił
+      # się w międzyczasie. Na natychmiastowej fali te warunki i tak są spełnione.
+      event = Event.find_by(id: args.fetch(:event_id))
+      return unless event && event.scheduled_at&.future? && !event.full?
+
       payload = build_payload(:new_event, event: event)
-      PushSubscription.find_each { |s| send_web_push(s, payload) }
+      subs    = PushSubscription.all
+      if (titles = args[:titles]).present?
+        title_ints = User.titles.values_at(*titles).compact
+        subs = subs.joins(:user).where(users: { title: title_ints })
+      end
+      subs.find_each { |s| send_web_push(s, payload) }
     when :invitation
       event = Event.find(args.fetch(:event_id))
       user  = User.find(args.fetch(:user_id))

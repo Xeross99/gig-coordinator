@@ -15,7 +15,7 @@
     <% User.titles.keys.each do |title_key| %>
       <% sample = User.new(title: title_key) %>
       <% description = case title_key.to_sym
-         when :rookie          then "starter, każdy nowy tu zaczyna"
+         when :rookie          then "starter, każdy nowy tu zaczyna; powiadomienia o nowych eventach dostaje 5 min po reszcie, żeby wyższe rangi miały pierwszeństwo zapisu"
          when :member      then "brak specjalnych uprawnień"
          when :veteran  then "brak specjalnych uprawnień"
          when :captain then "może planować łapania, ale tylko u przypisanych mu organizatorów"
@@ -127,7 +127,7 @@
     <li>Event od razu ląduje na feedzie wszystkich pracowników.</li>
     <li>Wszyscy zalogowani zostają automatycznie przeniesieni na stronę nowego eventu - pierwsi klikają <em>Akceptuję</em>.</li>
     <li>System rezerwuje tyle miejsc ile capacity - ale tylko dla osób z aktualnie najwyższą rangą w systemie. Pozostałe sloty są otwarte dla wszystkich.</li>
-    <li>Wszyscy userzy dostają powiadomienie push o nowym evencie.</li>
+    <li>Wszyscy userzy dostają powiadomienie push o nowym evencie - <strong>oprócz żółtodziobów, którzy dostają push 5 min później</strong>, żeby wyższe rangi miały chwilę fory na zapis.</li>
   </ul>
   <p>Nowy, Członek i Weteran nie mogą planować łapań - mogą tylko się zapisywać.</p>
 
@@ -138,7 +138,7 @@
   <p>Dostajesz je na dwa sposoby:</p>
   <ul>
     <li><strong>E-mail</strong> - o zaproszeniach (1h deadline) i awansach z listy rezerwowej.</li>
-    <li><strong>Push</strong> na telefon - o nowych eventach, zaproszeniach i awansach. Żeby zadziałał, <strong>zainstaluj aplikację</strong> (patrz niżej) i pozwól na powiadomienia przy pierwszym wejściu.</li>
+    <li><strong>Push</strong> na telefon - o nowych eventach, zaproszeniach i awansach. Żeby zadziałał, <strong>zainstaluj aplikację</strong> (patrz niżej) i pozwól na powiadomienia przy pierwszym wejściu. Żółtodzioby dostają push o nowym evencie <strong>5 min po pozostałych rangach</strong>.</li>
   </ul>
 
   <h2>Instalacja na telefonie</h2>

@@ -1,6 +1,12 @@
 class Event < ApplicationRecord
   RESERVATION_WINDOW = 1.hour
 
+  # Żółtodzioby (najniższa ranga) dostają push o nowym evencie 5 min po reszcie,
+  # żeby wyższe rangi miały fory na zapis. Feed / turbo broadcasty lecą real-time
+  # dla wszystkich — opóźnienie dotyczy tylko web-pushy.
+  NEW_EVENT_LAGGING_TITLES = %w[rookie].freeze
+  NEW_EVENT_LAGGING_DELAY  = 5.minutes
+
   belongs_to :host
   has_many :participations, dependent: :destroy
   has_many :users, through: :participations
@@ -106,7 +112,10 @@ class Event < ApplicationRecord
   end
 
   def notify_new_event_subscribers
-    WebPushNotifier.perform_later(:new_event, event_id: id)
+    immediate_titles = User.titles.keys - NEW_EVENT_LAGGING_TITLES
+    WebPushNotifier.perform_later(:new_event, event_id: id, titles: immediate_titles)
+    WebPushNotifier.set(wait: NEW_EVENT_LAGGING_DELAY)
+                   .perform_later(:new_event, event_id: id, titles: NEW_EVENT_LAGGING_TITLES)
   end
 
   def seed_reservations

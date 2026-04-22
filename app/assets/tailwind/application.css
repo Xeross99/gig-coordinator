@@ -257,6 +257,7 @@ a.mention {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  margin: 0 1px;
   padding: 0.25rem 0.25rem 0.25rem 0.15rem;
   border-radius: 9999px;
   background-color: #e0e7ff;
