@@ -378,4 +378,29 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a[href=?]", "mailto:#{users(:bartek).email}", text: users(:bartek).email
   end
+
+  # --- photo upload UI (DirectUpload + photo-upload Stimulus controller) ---
+
+  test "GET /pracownicy/:id/edytuj wires the photo-upload Stimulus controller" do
+    sign_in_as(users(:ala))
+    get edit_user_path(users(:bartek))
+    assert_response :success
+    assert_select "form[data-controller~=?][data-photo-upload-url-value=?]", "photo-upload", rails_direct_uploads_path
+    assert_select "input[type=file][data-photo-upload-target=input][accept=?]", "image/*"
+    assert_select "input[type=hidden][name=?][disabled]", "user[photo]"
+    assert_select "button[type=button][data-action=?]", "click->photo-upload#selectFile", text: /Wybierz zdjęcie/
+    assert_select "input[type=file][type=file]", count: 1
+    # No legacy raw f.file_field — should be the styled DirectUpload widget only.
+    assert_select "input[type=file][name='user[photo]']", count: 0
+  end
+
+  test "PATCH /pracownicy/:id attaches a photo from a direct-upload signed_id" do
+    sign_in_as(users(:ala))
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("fake-png"), filename: "x.png", content_type: "image/png"
+    )
+    patch user_path(users(:bartek)), params: { user: { photo: blob.signed_id } }
+    assert users(:bartek).reload.photo.attached?
+    assert_equal blob.id, users(:bartek).reload.photo.blob.id
+  end
 end

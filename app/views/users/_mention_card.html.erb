@@ -3,6 +3,7 @@
 <span class="mention-card">
   <% if user.photo.attached? %>
     <%= image_tag rails_representation_path(user.photo.variant(:small), only_path: true),
+                  alt: user.display_name,
                   class: "mention-card__avatar" %>
   <% else %>
     <span class="mention-card__avatar mention-card__avatar--initials">

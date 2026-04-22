@@ -34,6 +34,7 @@
             <div class="relative">
               <% if me&.photo&.attached? %>
                 <%= image_tag me.photo.variant(:small),
+                              alt: me.display_name,
                               class: "size-12 rounded-full object-cover" %>
               <% else %>
                 <div class="size-12 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold">

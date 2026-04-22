@@ -6,6 +6,7 @@
       <div class="lexxy-prompt-menu-item">
         <% if user.photo.attached? %>
           <%= image_tag rails_representation_path(user.photo.variant(:small), only_path: true),
+                        alt: user.display_name,
                         class: "lexxy-prompt-menu-item__avatar" %>
         <% else %>
           <span class="lexxy-prompt-menu-item__avatar lexxy-prompt-menu-item__avatar--initials">

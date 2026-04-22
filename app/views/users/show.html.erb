@@ -95,6 +95,7 @@
             <%= link_to host_path(host), class: "flex items-center gap-3 text-sm" do %>
               <% if host.photo.attached? %>
                 <%= image_tag rails_representation_path(host.photo.variant(:small), only_path: true),
+                              alt: host.display_name,
                               class: "size-10 rounded-full object-cover shrink-0" %>
               <% else %>
                 <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
@@ -126,6 +127,7 @@
             <%= link_to host_path(host), class: "flex items-center gap-3 text-sm" do %>
               <% if host.photo.attached? %>
                 <%= image_tag rails_representation_path(host.photo.variant(:small), only_path: true),
+                              alt: host.display_name,
                               class: "size-10 rounded-full object-cover shrink-0" %>
               <% else %>
                 <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">

@@ -25,6 +25,7 @@
         <%= link_to host_path(host), class: "p-4 flex items-center gap-4 hover:bg-stone-50 active:bg-stone-100 transition-colors" do %>
           <% if host.photo.attached? %>
             <%= image_tag host.photo.variant(:small),
+                          alt: host.display_name,
                           class: "size-14 rounded-full object-cover shrink-0" %>
           <% else %>
             <div class="size-14 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold shrink-0">

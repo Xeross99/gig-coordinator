@@ -83,49 +83,48 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     assert_match "został potwierdzony",          response.body
   end
 
-  # ---- Authorization: who can see/hit the "new event" form ----
+  # ---- Authorization (TEMPORARY admin-only gate, see User#can_create_events?) ----
+  # Gate is currently `admin?` regardless of rank. The rank-based gate
+  # (master || komendant + managed_hosts) is commented out in user.rb.
+  # When the rank gate is restored, these tests must be flipped back.
 
-  test "GET /eventy/nowy as rookie (no title) is forbidden" do
+  test "GET /eventy/nowy as non-admin user is forbidden (admin-only gate)" do
+    sign_in_as(users(:bartek))  # not admin
     get new_event_path
     assert_redirected_to root_path
     follow_redirect!
     assert_match I18n.t("events.new_event_forbidden"), response.body
   end
 
-  test "GET /eventy/nowy as master is allowed and lists ALL hosts in dropdown" do
-    users(:ala).update!(title: :master)
-    get new_event_path
-    assert_response :success
-    assert_match hosts(:jan).display_name,  response.body
-    assert_match hosts(:anna).display_name, response.body
-  end
-
-  test "GET /eventy/nowy as captain WITHOUT managed_hosts is forbidden" do
-    users(:ala).update!(title: :captain)
+  test "GET /eventy/nowy as non-admin user with master rank is still forbidden" do
+    users(:bartek).update!(title: :master)
+    sign_in_as(users(:bartek))
     get new_event_path
     assert_redirected_to root_path
   end
 
-  test "GET /eventy/nowy as captain WITH managed_hosts shows form with disabled submit" do
-    users(:ala).update!(title: :captain)
-    users(:ala).managed_hosts << hosts(:jan)
+  test "GET /eventy/nowy as non-admin komendant with managed_hosts is still forbidden" do
+    users(:bartek).update!(title: :captain)
+    users(:bartek).managed_hosts << hosts(:jan)
+    sign_in_as(users(:bartek))
+    get new_event_path
+    assert_redirected_to root_path
+  end
 
+  test "GET /eventy/nowy as admin renders form and lists ALL hosts in dropdown" do
     get new_event_path
     assert_response :success
-    assert_match hosts(:jan).display_name, response.body
-    # Submit button jest zablokowany + adnotacja „chwilowo wyłączone".
-    assert_select "button[type='button'][disabled][aria-disabled='true']",
-                  text: /#{Regexp.escape(I18n.t("events.new_event"))}/
-    assert_match I18n.t("events.submit_disabled_hint"), response.body
-    assert_select "input[type='submit']", count: 0
+    assert_match hosts(:jan).display_name,  response.body
+    assert_match hosts(:anna).display_name, response.body
+    # Admin always sees the real submit, never the disabled placeholder.
+    assert_select "input[type='submit']", count: 1
+    assert_select "button[type='button'][disabled][aria-disabled='true']", count: 0
   end
 
   # ---- Authorization: create ----
 
-  test "POST /eventy as captain is blocked (submit chwilowo wyłączony)" do
-    users(:ala).update!(title: :captain)
-    users(:ala).managed_hosts << hosts(:jan)
-
+  test "POST /eventy as non-admin is blocked at require_event_creator!" do
+    sign_in_as(users(:bartek))
     assert_no_difference "Event.count" do
       post events_path, params: { event: {
         name: "Próba", host_id: hosts(:jan).id,
@@ -135,17 +134,13 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
         pay_per_person: 100, capacity: 4
       } }
     end
-    assert_redirected_to events_path
-    follow_redirect!
-    assert_match I18n.t("events.submit_disabled_hint"), response.body
+    assert_redirected_to root_path
   end
 
-  test "POST /eventy as master accepts any host_id" do
-    users(:ala).update!(title: :master)
-
+  test "POST /eventy as admin accepts any host_id" do
     assert_difference "Event.count", 1 do
       post events_path, params: { event: {
-        name: "Mistrz event", host_id: hosts(:anna).id,
+        name: "Admin event", host_id: hosts(:anna).id,
         event_date: 1.day.from_now.to_date.to_s,
         start_hour: "18", start_minute: "0",
         duration_hours: "2", duration_minutes: "0",
@@ -155,47 +150,44 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
   end
 
-  test "GET / does NOT show 'Zaplanuj wydarzenie' button for rookie" do
+  test "GET / does NOT show 'Zaplanuj wydarzenie' button for non-admin without rank" do
+    sign_in_as(users(:bartek))
     get root_path
     assert_no_match I18n.t("events.new_event"), response.body
   end
 
-  test "GET / shows 'Zaplanuj wydarzenie' button for master" do
+  test "GET / shows enabled 'Zaplanuj wydarzenie' link for admin with event_creator_rank?" do
+    # The button area is gated on event_creator_rank? (master || komendant)
+    # — admin alone is not enough to render the wrapper.
     users(:ala).update!(title: :master)
     get root_path
-    assert_match I18n.t("events.new_event"), response.body
+    assert_select "a[href=?]", new_event_path, text: /#{Regexp.escape(I18n.t("events.new_event"))}/
   end
 
-  test "GET / shows 'Zaplanuj wydarzenie' button for captain with managed_hosts" do
-    users(:ala).update!(title: :captain)
-    users(:ala).managed_hosts << hosts(:jan)
-    get root_path
-    assert_match I18n.t("events.new_event"), response.body
-  end
-
-  test "GET / shows a DISABLED 'Zaplanuj wydarzenie' button for captain without managed_hosts" do
-    users(:ala).update!(title: :captain)
+  test "GET / shows DISABLED 'Zaplanuj wydarzenie' for non-admin komendant (rank-only, no admin)" do
+    users(:bartek).update!(title: :captain)
+    sign_in_as(users(:bartek))
     get root_path
     assert_response :success
-    # Button visible, but as a non-link <span> with aria-disabled + explanation tooltip.
+    # event_creator_rank? gate still renders the wrapper; can_create_events? is false → disabled span.
     assert_select "span[aria-disabled='true']", text: /#{Regexp.escape(I18n.t("events.new_event"))}/
     assert_match I18n.t("events.new_event_disabled_hint"), response.body
-    # And there's NO clickable link to the new-event form.
     assert_select "a[href=?]", new_event_path, count: 0
   end
 
-  test "GET / shows an ENABLED link for captain with at least one managed_host" do
-    users(:ala).update!(title: :captain)
-    users(:ala).managed_hosts << hosts(:jan)
+  test "GET / shows DISABLED 'Zaplanuj wydarzenie' for non-admin master (admin-only gate)" do
+    users(:bartek).update!(title: :master)
+    sign_in_as(users(:bartek))
     get root_path
     assert_response :success
-    assert_select "a[href=?]", new_event_path, text: /#{Regexp.escape(I18n.t("events.new_event"))}/
-    assert_select "span[aria-disabled='true']", false
+    assert_select "span[aria-disabled='true']", text: /#{Regexp.escape(I18n.t("events.new_event"))}/
+    assert_select "a[href=?]", new_event_path, count: 0
   end
 
-  test "GET / does NOT show any 'Zaplanuj wydarzenie' button for lower ranks" do
+  test "GET / does NOT show any 'Zaplanuj wydarzenie' button for non-admin lower ranks" do
     %i[rookie member veteran].each do |title|
-      users(:ala).update!(title: title)
+      users(:bartek).update!(title: title)
+      sign_in_as(users(:bartek))
       get root_path
       assert_no_match I18n.t("events.new_event"), response.body, "rank #{title} nie powinien widzieć przycisku"
     end

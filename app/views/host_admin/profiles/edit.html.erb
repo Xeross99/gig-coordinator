@@ -2,7 +2,9 @@
 <%= render "shared/breadcrumbs", crumbs: [[t("host_panel.profile"), nil]], home_path: host_root_path %>
 <h1 class="text-2xl font-semibold mb-4"><%= t("host_panel.profile") %></h1>
 
-<%= form_with model: @host, url: host_profile_path, method: :patch, local: true, class: "space-y-4" do |f| %>
+<%= form_with model: @host, url: host_profile_path, method: :patch, local: true,
+              class: "space-y-4",
+              data: { controller: "photo-upload", photo_upload_url_value: rails_direct_uploads_path } do |f| %>
   <% if @host.errors.any? %>
     <div class="bg-red-50 text-red-800 rounded-lg p-3 text-sm">
       <ul class="list-disc list-inside">
@@ -13,7 +15,7 @@
 
   <% if @host.photo.attached? %>
     <div class="flex items-center gap-3">
-      <%= image_tag @host.photo.variant(:small), class: "size-16 rounded-full object-cover" %>
+      <%= image_tag @host.photo.variant(:small), alt: @host.display_name, class: "size-16 rounded-full object-cover" %>
       <div class="text-sm text-stone-500">Obecne zdjęcie</div>
     </div>
   <% end %>
@@ -40,9 +42,30 @@
   </div>
 
   <div>
-    <%= f.label :photo, "Zdjęcie", class: "block text-sm text-stone-700 mb-1" %>
-    <%= f.file_field :photo, accept: "image/*", class: "block" %>
+    <label class="block text-sm text-stone-700 mb-1">Zdjęcie</label>
+
+    <input type="file" accept="image/*" class="sr-only"
+           data-photo-upload-target="input"
+           data-action="change->photo-upload#upload">
+
+    <input type="hidden" name="host[photo]" data-photo-upload-target="hiddenInput" disabled>
+
+    <button type="button"
+            class="w-full py-2.5 rounded-lg border border-stone-300 bg-white text-stone-900 font-medium hover:bg-stone-50"
+            data-action="click->photo-upload#selectFile">
+      Wybierz zdjęcie
+    </button>
+
+    <p class="mt-2 text-sm text-stone-600 truncate" data-photo-upload-target="filename"></p>
+
+    <div class="mt-2 hidden" data-photo-upload-target="progress">
+      <div class="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
+        <div class="h-full bg-stone-900 transition-[width] duration-150" style="width: 0%" data-photo-upload-target="progressBar"></div>
+      </div>
+      <p class="mt-1 text-xs text-stone-500" data-photo-upload-target="status"></p>
+    </div>
   </div>
 
-  <%= f.submit "Zapisz", class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium" %>
+  <%= f.submit "Zapisz", class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium",
+               data: { photo_upload_target: "submit" } %>
 <% end %>

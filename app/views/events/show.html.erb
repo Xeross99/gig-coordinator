@@ -45,9 +45,9 @@
     <div class="text-stone-500 text-xs uppercase tracking-wide mb-2"><%= t("events.host") %></div>
     <div class="flex items-center gap-3">
       <% if @host.photo.attached? %>
-        <%= image_tag @host.photo.variant(:small), class: "w-12 h-12 rounded-full object-cover" %>
+        <%= image_tag @host.photo.variant(:small), alt: @host.display_name, class: "size-12 rounded-full object-cover" %>
       <% else %>
-        <div class="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 font-semibold text-sm">
+        <div class="size-12 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 font-semibold text-sm">
           <%= @host.first_name[0] %><%= @host.last_name[0] %>
         </div>
       <% end %>

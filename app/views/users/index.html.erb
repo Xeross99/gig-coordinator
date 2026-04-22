@@ -33,6 +33,7 @@
         <div class="relative shrink-0">
           <% if user.photo.attached? %>
             <%= image_tag user.photo.variant(:small),
+                          alt: user.display_name,
                           class: "size-14 rounded-full object-cover" %>
           <% else %>
             <div class="size-14 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold">

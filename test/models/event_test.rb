@@ -88,4 +88,84 @@ class EventTest < ActiveSupport::TestCase
     event = Event.create!(valid_attrs(capacity: 1))
     assert event.full?, "single reserved slot should mark capacity 1 event as full"
   end
+
+  # --- pre_registered_user_ids -----------------------------------------------
+  # Virtual attr set from the event-creation form. Confirmed in-transaction
+  # before reservation seeding so pre-registered mistrzowie don't get a separate
+  # reservation row.
+
+  test "pre_registered_user_ids confirms users immediately, ahead of reservation seeding" do
+    users(:ala).update!(title: :master)  # would otherwise be auto-reserved
+    attrs = valid_attrs(capacity: 4, pre_registered_user_ids: [ users(:bartek).id, users(:ala).id ])
+    event = Event.create!(attrs)
+
+    confirmed_users = event.participations.confirmed.includes(:user).order(:position).map(&:user)
+    assert_includes confirmed_users, users(:ala)
+    assert_includes confirmed_users, users(:bartek)
+    # Ala is pre-confirmed — not double-booked into a separate `reserved` row.
+    assert_equal 0, event.participations.reserved.where(user: users(:ala)).count
+  end
+
+  test "pre_registered_user_ids spills onto waitlist when count exceeds capacity" do
+    attrs = valid_attrs(
+      capacity: 2,
+      pre_registered_user_ids: [ users(:ala).id, users(:bartek).id, users(:cezary).id ]
+    )
+    event = Event.create!(attrs)
+
+    assert_equal 2, event.participations.confirmed.count
+    waitlisted = event.participations.waitlist.includes(:user).map(&:user)
+    assert_equal [ users(:cezary) ], waitlisted
+  end
+
+  test "pre_registered_user_ids skips users blocked by the host" do
+    HostBlock.create!(user: users(:bartek), host: hosts(:jan))
+    attrs = valid_attrs(capacity: 2, pre_registered_user_ids: [ users(:bartek).id, users(:cezary).id ])
+    event = Event.create!(attrs)
+
+    confirmed_users = event.participations.confirmed.includes(:user).map(&:user)
+    refute_includes confirmed_users, users(:bartek)
+    assert_includes confirmed_users, users(:cezary)
+  end
+
+  test "pre_registered_user_ids ignores blank/zero entries (sentinel values)" do
+    attrs = valid_attrs(capacity: 4, pre_registered_user_ids: [ "", "0", users(:ala).id.to_s ])
+    event = Event.create!(attrs)
+    assert_equal [ users(:ala) ], event.participations.confirmed.includes(:user).map(&:user)
+  end
+
+  # --- refill_on_capacity_increase -------------------------------------------
+  # When a host bumps capacity mid-event we should pull in waitlisters first
+  # and only then look at top-tier reservation candidates.
+
+  test "increasing capacity promotes the oldest waitlister into the new slot" do
+    # Capacity 1, ala (mistrz) auto-reserves the only slot. Add bartek to waitlist.
+    users(:ala).update!(title: :master)
+    event = Event.create!(valid_attrs(capacity: 1))
+    Participation.create!(event: event, user: users(:bartek), status: :waitlist, position: 1)
+
+    event.update!(capacity: 2)
+
+    bartek = event.participations.find_by(user: users(:bartek))
+    assert_equal "confirmed", bartek.status
+  end
+
+  test "decreasing capacity is a no-op (does not evict signed-up workers)" do
+    users(:ala).update!(title: :master)
+    event = Event.create!(valid_attrs(capacity: 4))
+    Participation.create!(event: event, user: users(:bartek), status: :confirmed, position: 1)
+
+    assert_no_difference -> { event.participations.confirmed.count } do
+      event.update!(capacity: 2)
+    end
+  end
+
+  test "updates that don't touch capacity don't trigger any refill" do
+    users(:ala).update!(title: :master)
+    event = Event.create!(valid_attrs(capacity: 4))
+    before = event.participations.holding_slot.count
+
+    event.update!(name: "Inna nazwa")
+    assert_equal before, event.participations.holding_slot.count
+  end
 end
