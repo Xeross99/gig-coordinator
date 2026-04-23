@@ -5,48 +5,55 @@
 ] %>
 
 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-  <%# Hero: original-resolution photo (no :small variant), falls back to initials. %>
-  <% if @user.photo.attached? %>
-    <div class="bg-stone-100">
-      <%= image_tag rails_blob_path(@user.photo, only_path: true),
-                    alt: @user.display_name,
-                    class: "w-full aspect-square object-cover" %>
+  <%# Hero: original-resolution photo (no :small variant), falls back to initials.
+      Rank badge (icon + nazwa rangi) przyklejony do prawego dolnego rogu zdjęcia,
+      żeby długie imiona/nazwiska nie musiały go omijać w sekcji tekstowej. %>
+  <div class="relative">
+    <% if @user.photo.attached? %>
+      <div class="bg-stone-100">
+        <%= image_tag rails_blob_path(@user.photo, only_path: true),
+                      alt: @user.display_name,
+                      class: "w-full aspect-square object-cover" %>
+      </div>
+    <% else %>
+      <div class="w-full aspect-square bg-stone-200 flex items-center justify-center">
+        <span class="text-6xl font-semibold text-stone-500">
+          <%= @user.first_name[0] %><%= @user.last_name[0] %>
+        </span>
+      </div>
+    <% end %>
+
+    <%# Gradient scrim daje kontrast pod rangą niezależnie od tego jak jasne/ciemne
+        jest zdjęcie. Wyłączony z interakcji, żeby nie blokował ewentualnych
+        klików/hoverów na samym hero. %>
+    <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 via-black/25 to-transparent"></div>
+
+    <div class="absolute bottom-3 right-3 flex items-center gap-2">
+      <%= render "users/title_badge", user: @user %>
+      <div class="size-9 rounded-full bg-amber-100 flex items-center justify-center text-base leading-none shadow-sm" aria-hidden="true">
+        <%= t("user.rank_icons.#{@user.title}") %>
+      </div>
     </div>
-  <% else %>
-    <div class="w-full aspect-square bg-stone-200 flex items-center justify-center">
-      <span class="text-6xl font-semibold text-stone-500">
-        <%= @user.first_name[0] %><%= @user.last_name[0] %>
-      </span>
-    </div>
-  <% end %>
+  </div>
 
   <div class="p-6">
-    <div class="flex items-stretch justify-between gap-4">
-      <div class="min-w-0 flex-1 flex flex-col justify-between">
-        <h1 class="text-2xl sm:text-3xl font-semibold text-stone-900 leading-tight break-words">
-          <%= @user.display_name %>
-        </h1>
-        <div class="mt-2 flex items-center gap-2 text-xs">
-          <% if @user.online? %>
-            <span class="inline-flex items-center gap-1 text-emerald-600 font-medium">
-              <span class="size-2 rounded-full bg-emerald-500"></span> Online teraz
-            </span>
-          <% elsif @user.last_seen_at.present? %>
-            <span class="inline-flex items-center gap-1 text-stone-500">
-              <span class="size-2 rounded-full bg-stone-300"></span>
-              Ostatnio <%= time_ago_in_words(@user.last_seen_at) %> temu
-            </span>
-          <% else %>
-            <span class="text-stone-400">Nigdy się nie logował</span>
-          <% end %>
-        </div>
-      </div>
-
-      <div class="shrink-0 flex flex-col items-center justify-between">
-        <div class="size-9 rounded-full bg-amber-100 flex items-center justify-center text-base leading-none" aria-hidden="true">
-          <%= t("user.rank_icons.#{@user.title}") %>
-        </div>
-        <%= render "users/title_badge", user: @user %>
+    <div class="min-w-0">
+      <h1 class="text-2xl sm:text-3xl font-semibold text-stone-900 leading-tight break-words">
+        <%= @user.display_name %>
+      </h1>
+      <div class="mt-2 flex items-center gap-2 text-xs">
+        <% if @user.online? %>
+          <span class="inline-flex items-center gap-1 text-emerald-600 font-medium">
+            <span class="size-2 rounded-full bg-emerald-500"></span> Online teraz
+          </span>
+        <% elsif @user.last_seen_at.present? %>
+          <span class="inline-flex items-center gap-1 text-stone-500">
+            <span class="size-2 rounded-full bg-stone-300"></span>
+            Ostatnio <%= time_ago_in_words(@user.last_seen_at) %> temu
+          </span>
+        <% else %>
+          <span class="text-stone-400">Nigdy się nie logował</span>
+        <% end %>
       </div>
     </div>
 

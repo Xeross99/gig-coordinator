@@ -37,7 +37,7 @@ class UsersController < ApplicationController
     end
     @blocked_hosts = @user.blocked_hosts.with_attached_photo
 
-    base = @user.participations.joins(:event).includes(event: :host)
+    base = @user.participations.joins(:event).includes(:event)
     @past_confirmed = base.confirmed
                           .where.not(events: { completed_at: nil })
                           .order("events.scheduled_at DESC")

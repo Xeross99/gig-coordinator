@@ -198,7 +198,7 @@ activerecord:
 
 Pod `participations:` usuń:
 ```yaml
-rate_limited: "Za dużo wiadomości — zwolnij i spróbuj za chwilę."
+rate_limited: "Za dużo wiadomości - zwolnij i spróbuj za chwilę."
 ```
 
 ### `config/environments/test.rb`

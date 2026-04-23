@@ -410,6 +410,13 @@ lexxy-editor[toolbar="false"] lexxy-toolbar,
   display: none !important;
 }
 
+/* „Brak wiadomości…" placeholder znika w momencie gdy do `<ul>` wpadnie
+   pierwsza wiadomość (append via turbo-stream broadcast nie usuwa starego
+   empty-state <li>, więc ukrywamy go CSS-em gdy ma rodzeństwo). */
+ul:has(> li:not([data-empty-state])) > [data-empty-state] {
+  display: none;
+}
+
 /* Delikatny gradient u góry czatu — zamiast ostrego odcięcia starsze
    wiadomości „rozpływają się" wyższe widoczności w dół. `mask-image`
    działa na scrollowanym viewport'cie, więc gradient stoi (sticky) przy

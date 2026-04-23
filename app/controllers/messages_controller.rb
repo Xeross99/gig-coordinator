@@ -49,8 +49,7 @@ class MessagesController < ApplicationController
   def render_rate_limited
     @event   = Event.find(params[:event_id])
     @message = @event.messages.build(user: Current.user, body: params.dig(:message, :body))
-    @message.errors.add(:base, I18n.t("participations.rate_limited",
-                                       default: "Za dużo wiadomości — zwolnij i spróbuj za chwilę."))
+    @message.errors.add(:base, I18n.t("participations.rate_limited", default: "Za dużo wiadomości - zwolnij i spróbuj za chwilę."))
     respond_to do |format|
       format.turbo_stream do
         render turbo_stream: turbo_stream.replace(

@@ -90,7 +90,7 @@ pl:
   participations:
     blocked: "Masz blokadę u tego organizatora — nie możesz zapisać się na ten event."
     blocked_badge: "Blokada u organizatora"
-    rate_limited: "Za dużo wiadomości — zwolnij i spróbuj za chwilę."
+    rate_limited: "Za dużo wiadomości - zwolnij i spróbuj za chwilę."
   host_panel:
     title: "Panel organizatora"
     my_events: "Moje eventy"
