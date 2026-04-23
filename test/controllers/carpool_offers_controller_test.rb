@@ -55,6 +55,28 @@ class CarpoolOffersControllerTest < ActionDispatch::IntegrationTest
     assert CarpoolOffer.exists?(other_offer.id)
   end
 
+  test "POST refuses when the user is only on the waitlist" do
+    Participation.where(event: @event, user: @user).update_all(status: Participation.statuses[:waitlist])
+    sign_in_as(@user)
+
+    assert_no_difference "CarpoolOffer.count" do
+      post event_carpool_offer_path(@event)
+    end
+    assert_redirected_to event_path(@event)
+    assert_match "zapisani uczestnicy", flash[:alert]
+  end
+
+  test "POST refuses when the user is a pending reservation" do
+    Participation.where(event: @event, user: @user).update_all(status: Participation.statuses[:reserved])
+    sign_in_as(@user)
+
+    assert_no_difference "CarpoolOffer.count" do
+      post event_carpool_offer_path(@event)
+    end
+    assert_redirected_to event_path(@event)
+    assert_match "zapisani uczestnicy", flash[:alert]
+  end
+
   test "POST refuses when the user has no driver permission" do
     bartek = users(:bartek); bartek.update!(can_drive: false)
     Participation.create!(event: @event, user: bartek, status: :confirmed, position: 2)

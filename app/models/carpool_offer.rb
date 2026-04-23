@@ -35,8 +35,8 @@ class CarpoolOffer < ApplicationRecord
 
   def user_is_event_participant
     return if event.blank? || user.blank?
-    return if event.participations.where(user_id: user_id, status: %i[confirmed reserved waitlist]).exists?
-    errors.add(:base, "tylko uczestnicy eventu mogą zgłosić się jako kierowca")
+    return if event.participations.where(user_id: user_id, status: :confirmed).exists?
+    errors.add(:base, "tylko zapisani uczestnicy eventu mogą zgłosić się jako kierowca")
   end
 
   def user_has_driver_permission

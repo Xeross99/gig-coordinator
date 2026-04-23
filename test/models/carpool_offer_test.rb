@@ -24,12 +24,24 @@ class CarpoolOfferTest < ActiveSupport::TestCase
     refute offer.valid?
   end
 
-  test "waitlist or reserved participant can still offer to drive" do
+  test "waitlist participant cannot offer to drive" do
     Participation.where(event: @event, user: @user).update_all(status: Participation.statuses[:waitlist])
-    assert CarpoolOffer.new(event: @event, user: @user).valid?
+    offer = CarpoolOffer.new(event: @event, user: @user)
+    refute offer.valid?
+    assert offer.errors[:base].any? { |m| m.include?("zapisani uczestnicy") }
+  end
 
+  test "reserved participant cannot offer to drive" do
     Participation.where(event: @event, user: @user).update_all(status: Participation.statuses[:reserved])
-    assert CarpoolOffer.new(event: @event, user: @user).valid?
+    offer = CarpoolOffer.new(event: @event, user: @user)
+    refute offer.valid?
+    assert offer.errors[:base].any? { |m| m.include?("zapisani uczestnicy") }
+  end
+
+  test "offer becomes invalid if participant slips from confirmed onto waitlist" do
+    offer = CarpoolOffer.create!(event: @event, user: @user)
+    Participation.where(event: @event, user: @user).update_all(status: Participation.statuses[:waitlist])
+    refute offer.reload.valid?
   end
 
   test "(event, user) is unique" do
