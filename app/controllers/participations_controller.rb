@@ -8,20 +8,38 @@ class ParticipationsController < ApplicationController
       redirect_to event_path(@event), alert: I18n.t("participations.blocked") and return
     end
 
+    resulting_status = nil
+
     Event.transaction do
       @event.lock!
       existing = @event.participations.find_by(user_id: Current.user.id)
       if existing.nil?
         status, position = next_slot_for(@event)
         @event.participations.create!(user: Current.user, status: status, position: position)
+        resulting_status = status
       elsif existing.cancelled?
         status, position = next_slot_for(@event)
         existing.update!(status: status, position: position)
+        resulting_status = status
       end
       # reserved/confirmed/waitlist — no-op (dedicated accept/decline actions handle those).
     end
 
-    redirect_to event_path(@event)
+    respond_to do |format|
+      format.turbo_stream do
+        streams = [
+          turbo_stream.replace(ActionView::RecordIdentifier.dom_id(@event, :participation),
+                               partial: "events/participation_button",
+                               locals: { event: @event })
+        ]
+        streams << turbo_stream.append_all("body", %(<div data-controller="confetti"></div>).html_safe) if resulting_status == :confirmed
+        render turbo_stream: streams
+      end
+      format.html do
+        flash[:confetti] = true if resulting_status == :confirmed
+        redirect_to event_path(@event)
+      end
+    end
   end
 
   # DELETE /eventy/:event_id/uczestnictwo
@@ -50,6 +68,7 @@ class ParticipationsController < ApplicationController
   # User accepts a reservation offered by the priority seeding.
   def accept
     @event = Event.find(params[:event_id])
+    accepted = false
 
     Event.transaction do
       @event.lock!
@@ -57,9 +76,11 @@ class ParticipationsController < ApplicationController
       if p && !p.reservation_expired?
         pos = (@event.participations.confirmed.maximum(:position) || 0) + 1
         p.update!(status: :confirmed, position: pos, reserved_until: nil)
+        accepted = true
       end
     end
 
+    flash[:confetti] = true if accepted
     redirect_to event_path(@event), notice: "Potwierdzone - do zobaczenia na łapaniu!"
   end
 

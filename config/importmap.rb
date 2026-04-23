@@ -9,3 +9,4 @@ pin "@tailwindplus/elements", to: "@tailwindplus--elements.js" # @1.0.22
 pin "@rails/activestorage", to: "activestorage.esm.js"
 pin "haptic", to: "lib/haptic.js"
 pin "lexxy",  to: "lexxy.js"
+pin "canvas-confetti" # @1.9.4

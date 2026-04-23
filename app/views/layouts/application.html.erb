@@ -182,6 +182,7 @@
 
     <%= render "shared/toast" %>
     <%= render "shared/turbo_confirm" %>
+    <% if flash[:confetti] %><div data-controller="confetti"></div><% end %>
 
     <main class="w-full max-w-lg mx-auto px-4 py-4">
       <%= yield %>
