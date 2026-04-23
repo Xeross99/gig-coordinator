@@ -11,17 +11,6 @@
 :root {
   color-scheme: only light !important;
 }
-
-/* Scroll-snap na root scrollerze — event show dokleja `snap-start` do sekcji
-   czatu (h-dvh minus navbar), więc scrollując w dół user wpada w pełny
-   ekran czatu. Tryb `proximity` nie wymusza snapu na stronach bez dzieci
-   z `scroll-snap-align`, więc jest no-op poza event show. `scroll-padding-top`
-   kompensuje sticky navbar (~4.5rem), żeby snap-start nie wsuwał nagłówka
-   czatu pod pasek na górze. */
-html {
-  scroll-snap-type: y proximity;
-  scroll-padding-top: 4.5rem;
-}
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: only light !important;

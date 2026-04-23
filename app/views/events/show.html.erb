@@ -90,12 +90,10 @@
 </div>
 
 <%# Czat dojeżdża lazy w osobnej ramce — pierwsze malowanie strony (roster +
-    przycisk zapisu) nie czeka na żadne zapytanie związane z wiadomościami.
-    `snap-start` + `h-[calc(100dvh-4.5rem)]` — scrollując w dół z rostera,
-    viewport zatrzaskuje się na pełnej wysokości czatu (minus sticky navbar). %>
-<div class="mt-4 snap-start h-[calc(100dvh-4.5rem)]">
-  <%= turbo_frame_tag "event_chat", src: event_chat_path(@event), loading: "lazy", class: "block h-full" do %>
-    <div class="bg-white rounded-xl shadow-sm p-6 h-full flex items-center justify-center text-stone-400 text-sm text-center">
+    przycisk zapisu) nie czeka na żadne zapytanie związane z wiadomościami. %>
+<div class="mt-4">
+  <%= turbo_frame_tag "event_chat", src: event_chat_path(@event), loading: "lazy" do %>
+    <div class="bg-white rounded-xl shadow-sm p-6 min-h-64 flex items-center justify-center text-stone-400 text-sm text-center">
       Wczytuję czat…
     </div>
   <% end %>
