@@ -1,11 +1,11 @@
 <%# Zawartość turbo-frame'a `event_chat` — event show page dokleja ramkę lazy,
     więc ta odpowiedź leci dopiero gdy user doscrolluje do sekcji. -%>
-<turbo-frame id="event_chat">
+<turbo-frame id="event_chat" class="block h-full">
   <%= turbo_stream_from @event, :chat %>
 
-  <section class="bg-white rounded-xl shadow-sm p-4 space-y-3"
+  <section class="bg-white rounded-xl shadow-sm p-4 h-full flex flex-col gap-3"
            data-controller="chat-scroller">
-    <div class="flex items-center gap-2 flex-wrap">
+    <div class="flex items-center gap-2 flex-wrap shrink-0">
       <h2 class="text-stone-500 text-xs uppercase tracking-wide">Czat eventu</h2>
       <span class="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
         Beta testy
@@ -13,7 +13,7 @@
     </div>
 
     <div data-chat-scroller-target="viewport"
-         class="chat-viewport max-h-[60vh] overflow-y-auto overscroll-contain -mx-2 px-2">
+         class="chat-viewport flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-2 px-2">
       <%= render "sentinel", event: @event, messages: @messages, has_more: @has_more %>
       <ul id="<%= dom_id(@event, :chat_messages) %>" class="space-y-3 pt-4">
         <% if @messages.any? %>
