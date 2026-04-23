@@ -38,6 +38,12 @@ class WebPushNotifier < ApplicationJob
       user    = User.find(args.fetch(:user_id))
       payload = build_payload(:mention, message: message)
       user.push_subscriptions.find_each { |s| send_web_push(s, payload) }
+    when :carpool_ask, :carpool_accepted, :carpool_declined
+      req = CarpoolRequest.find_by(id: args.fetch(:carpool_request_id))
+      return unless req
+      recipient = kind.to_sym == :carpool_ask ? req.carpool_offer.user : req.user
+      payload = build_payload(kind, carpool_request: req)
+      recipient.push_subscriptions.find_each { |s| send_web_push(s, payload) }
     else
       raise ArgumentError, "unknown kind: #{kind}"
     end
@@ -45,7 +51,7 @@ class WebPushNotifier < ApplicationJob
 
   private
 
-  def build_payload(kind, participation: nil, event: nil, message: nil)
+  def build_payload(kind, participation: nil, event: nil, message: nil, carpool_request: nil)
     helpers = Rails.application.routes.url_helpers
     url_for = ->(ev) { helpers.event_path(ev) }
     case kind.to_sym
@@ -79,6 +85,27 @@ class WebPushNotifier < ApplicationJob
         title: "#{message.user.display_name} oznaczył Cię w czacie",
         body:  snippet.presence || message.event.name,
         url:   helpers.event_path(message.event, anchor: "event_chat")
+      }
+    when :carpool_ask
+      ev = carpool_request.carpool_offer.event
+      {
+        title: "Prośba o podwózkę",
+        body:  "#{carpool_request.user.display_name} pyta o miejsce w Twoim aucie na \"#{ev.name}\".",
+        url:   helpers.event_path(ev)
+      }
+    when :carpool_accepted
+      ev = carpool_request.carpool_offer.event
+      {
+        title: "Masz podwózkę!",
+        body:  "#{carpool_request.carpool_offer.user.display_name} potwierdził podwózkę na \"#{ev.name}\".",
+        url:   helpers.event_path(ev)
+      }
+    when :carpool_declined
+      ev = carpool_request.carpool_offer.event
+      {
+        title: "Brak miejsca w aucie",
+        body:  "#{carpool_request.carpool_offer.user.display_name} nie może Cię zabrać na \"#{ev.name}\".",
+        url:   helpers.event_path(ev)
       }
     else
       raise ArgumentError, "unknown kind: #{kind}"

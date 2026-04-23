@@ -82,6 +82,21 @@
         <dt class="text-stone-500 shrink-0">Dołączył</dt>
         <dd class="font-medium"><%= l(@user.created_at.to_date, format: :long) %></dd>
       </div>
+      <div class="flex items-center justify-between gap-4 py-3">
+        <dt class="text-stone-500 shrink-0">Kierowca</dt>
+        <dd class="font-medium">
+          <% if @user.can_drive? %>
+            <span class="inline-flex items-center gap-1 text-sky-700 bg-sky-100 rounded-full px-2 py-0.5 text-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="size-3.5">
+                <path d="M3.375 8.25A3.375 3.375 0 0 1 6.72 5.25h10.56a3.375 3.375 0 0 1 3.345 3l.226 2.05a.75.75 0 0 0 .176.392l.777.856A2.25 2.25 0 0 1 22.5 13.058V16.5A1.5 1.5 0 0 1 21 18h-.75v.75a1.5 1.5 0 0 1-3 0V18h-10.5v.75a1.5 1.5 0 0 1-3 0V18H3a1.5 1.5 0 0 1-1.5-1.5v-3.442a2.25 2.25 0 0 1 .696-1.51l.777-.856a.75.75 0 0 0 .176-.392l.226-2.05Zm3.345-1.5a1.875 1.875 0 0 0-1.861 1.667l-.184 1.666h14.65l-.184-1.666A1.875 1.875 0 0 0 17.28 6.75H6.72ZM6 14.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm12 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+              </svg>
+              Tak
+            </span>
+          <% else %>
+            <span class="text-stone-400">Nie</span>
+          <% end %>
+        </dd>
+      </div>
     </dl>
 
     <% if admin_signed_in? %>

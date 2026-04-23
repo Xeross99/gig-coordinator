@@ -119,6 +119,14 @@
     </div>
   </div>
 
+  <div>
+    <label class="flex items-center gap-2 text-sm text-stone-700">
+      <%= f.check_box :can_drive, class: "size-4 rounded border-stone-300" %>
+      <span>Uprawnienia kierowcy</span>
+    </label>
+    <p class="text-xs text-stone-500 mt-1">Tylko użytkownik z tą flagą może zgłosić się jako kierowca na evencie.</p>
+  </div>
+
   <p class="text-xs text-stone-500">
     <%= t("admin.users.admin_hint",
           value: user.admin? ? t("admin.users.admin_yes") : t("admin.users.admin_no")) %>

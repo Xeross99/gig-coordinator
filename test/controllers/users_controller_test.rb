@@ -109,7 +109,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_match users(:ala).display_name,            response.body
     assert_match users(:ala).email,                   response.body
     assert_match I18n.t("user.titles.master"),  response.body
-    assert_match "Zaliczone łapania",                 response.body
+    assert_match "Statystyki",                        response.body
   end
 
   test "GET /pracownicy/:id lists upcoming participations" do
@@ -242,6 +242,37 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:ala))
     patch user_path(users(:bartek)), params: { user: { admin: true } }
     assert_equal false, users(:bartek).reload.admin
+  end
+
+  test "PATCH /pracownicy/:id as admin flips can_drive" do
+    sign_in_as(users(:ala))
+    assert_equal false, users(:bartek).reload.can_drive
+    patch user_path(users(:bartek)), params: { user: { can_drive: "1" } }
+    assert_equal true, users(:bartek).reload.can_drive
+
+    patch user_path(users(:bartek)), params: { user: { can_drive: "0" } }
+    assert_equal false, users(:bartek).reload.can_drive
+  end
+
+  test "PATCH /pracownicy/:id as non-admin cannot change can_drive" do
+    bartek = users(:bartek); bartek.update!(can_drive: false)
+    sign_in_as(users(:cezary))
+    patch user_path(bartek), params: { user: { can_drive: "1" } }
+    assert_redirected_to root_path
+    assert_equal false, bartek.reload.can_drive
+  end
+
+  test "GET /pracownicy/:id pokazuje 'Kierowca: Tak/Nie' zgodnie z can_drive" do
+    sign_in_as(users(:ala))
+    users(:bartek).update!(can_drive: true)
+    get user_path(users(:bartek))
+    assert_match "Kierowca", response.body
+    assert_match "Tak", response.body
+
+    users(:bartek).update!(can_drive: false)
+    get user_path(users(:bartek))
+    assert_match "Kierowca", response.body
+    assert_match "Nie", response.body
   end
 
   test "PATCH /pracownicy/:id with invalid email re-renders form" do

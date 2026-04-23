@@ -26,6 +26,13 @@ Rails.application.routes.draw do
     resource :chat, only: :show, path: "czat" do
       resources :messages, only: :create, path: "wiadomosci"
     end
+    resource :carpool_offer, only: %i[create destroy], path: "podwozka"
+    resources :carpool_requests, only: %i[create destroy], path: "podwozki-zapytania" do
+      member do
+        post :accept
+        post :decline
+      end
+    end
   end
   resources :hosts, except: :destroy, path: "organizatorzy", path_names: { new: "nowy", edit: "edytuj" }
   resources :users, except: :destroy, path: "pracownicy", path_names: { new: "nowy", edit: "edytuj" } do

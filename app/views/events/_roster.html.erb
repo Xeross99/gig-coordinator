@@ -73,8 +73,24 @@
     <% end %>
   </div>
 
+  <% offers = data[:carpool_offers] %>
+  <% if offers.any? %>
+    <div class="pt-4 border-t border-stone-200">
+      <h3 class="text-stone-500 text-xs uppercase tracking-wide mb-2">
+        Podwózki (<%= offers.size %>)
+      </h3>
+      <ul class="space-y-2">
+        <% offers.each do |offer| %>
+          <%= render "events/carpool_card", event: event, offer: offer %>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <% participations_by_user = data[:participations_by_user] %>
   <% blocked_user_ids       = data[:blocked_user_ids] %>
+  <% offers_by_user         = data[:carpool_offers_by_user] %>
+  <% own_requests           = data[:carpool_request_by_user] %>
   <%# Kolejność: najpierw ci, którzy zaznaczyli obecność (rosnąco po czasie zapisu),
       potem pozostali w dotychczasowej kolejności alfabetyczno-rangowej. %>
   <% all_users = data[:all_users].sort_by.with_index do |u, i|
@@ -83,6 +99,8 @@
      end %>
   <% initial_cap = 4 %>
   <% visible_users, hidden_users = all_users.first(initial_cap), all_users.drop(initial_cap) %>
+  <% current_user_is_participant = event.participant?(Current.user) %>
+  <% current_user_drives = Current.user && offers_by_user[Current.user.id].present? %>
   <div class="pt-4 border-t border-stone-200">
     <h3 class="text-stone-500 text-xs uppercase tracking-wide mb-2">
       Wszyscy pracownicy (<%= all_users.size %>)
@@ -90,10 +108,15 @@
     <ul class="space-y-2">
       <% visible_users.each_with_index do |user, i| %>
         <%= render "events/roster_all_user",
+                    event:         event,
                     user:          user,
                     index:         i,
                     participation: participations_by_user[user.id],
-                    blocked:       blocked_user_ids.include?(user.id) %>
+                    blocked:       blocked_user_ids.include?(user.id),
+                    driver_offer:  offers_by_user[user.id],
+                    own_request:   own_requests[user.id],
+                    current_user_is_participant: current_user_is_participant,
+                    current_user_drives: current_user_drives %>
       <% end %>
     </ul>
 
@@ -105,10 +128,15 @@
             <ul class="space-y-2 pt-2">
               <% hidden_users.each_with_index do |user, i| %>
                 <%= render "events/roster_all_user",
+                            event:         event,
                             user:          user,
                             index:         i,
                             participation: participations_by_user[user.id],
-                            blocked:       blocked_user_ids.include?(user.id) %>
+                            blocked:       blocked_user_ids.include?(user.id),
+                            driver_offer:  offers_by_user[user.id],
+                            own_request:   own_requests[user.id],
+                            current_user_is_participant: current_user_is_participant,
+                            current_user_drives: current_user_drives %>
               <% end %>
             </ul>
           </div>

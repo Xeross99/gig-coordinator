@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_22_074251) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_23_090000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -37,6 +37,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_074251) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "carpool_offers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "event_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["event_id", "user_id"], name: "index_carpool_offers_on_event_id_and_user_id", unique: true
+    t.index ["event_id"], name: "index_carpool_offers_on_event_id"
+    t.index ["user_id"], name: "index_carpool_offers_on_user_id"
+  end
+
+  create_table "carpool_requests", force: :cascade do |t|
+    t.integer "carpool_offer_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["carpool_offer_id", "user_id"], name: "index_carpool_requests_on_carpool_offer_id_and_user_id", unique: true
+    t.index ["user_id", "carpool_offer_id"], name: "index_carpool_requests_on_user_id_and_carpool_offer_id"
   end
 
   create_table "events", force: :cascade do |t|
@@ -156,6 +176,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_074251) do
 
   create_table "users", force: :cascade do |t|
     t.boolean "admin", default: false, null: false
+    t.boolean "can_drive", default: false, null: false
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "first_name", null: false
@@ -172,6 +193,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_074251) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "carpool_offers", "events"
+  add_foreign_key "carpool_offers", "users"
+  add_foreign_key "carpool_requests", "carpool_offers"
+  add_foreign_key "carpool_requests", "users"
   add_foreign_key "events", "hosts"
   add_foreign_key "host_blocks", "hosts"
   add_foreign_key "host_blocks", "users"

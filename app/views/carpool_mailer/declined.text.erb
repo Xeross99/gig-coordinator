@@ -1,0 +1,5 @@
+<%= t("mailers.hello", name: @passenger.first_name) %>
+
+<%= @driver.display_name %> niestety nie może zabrać Cię na event "<%= @event.name %>". Sprawdź, czy ktoś inny nie zgłosił się jako kierowca.
+
+<%= event_url(@event) %>

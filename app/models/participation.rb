@@ -24,6 +24,7 @@ class Participation < ApplicationRecord
   # code path that touches participations.
   after_commit :broadcast_event_updates, on: %i[create update destroy]
   after_commit :log_participation_event, on: %i[create update]
+  after_commit :cleanup_carpool_on_cancel, on: %i[update destroy]
 
   def reservation_expired?
     reserved? && reserved_until.present? && reserved_until <= Time.current
@@ -69,6 +70,19 @@ class Participation < ApplicationRecord
     return unless event_type
 
     participation_events.create!(event_type: event_type)
+  end
+
+  # When a user cancels (or their participation is deleted), kill the carpool
+  # artifacts they own for this event — their driver offer (which cascades to
+  # passenger requests under them) and any passenger requests they made.
+  def cleanup_carpool_on_cancel
+    cancelled_now = destroyed? || (saved_change_to_status? && status == "cancelled")
+    return unless cancelled_now
+
+    CarpoolOffer.where(event_id: event_id, user_id: user_id).destroy_all
+    CarpoolRequest.joins(:carpool_offer)
+                  .where(user_id: user_id, carpool_offers: { event_id: event_id })
+                  .destroy_all
   end
 
   def classify_transition

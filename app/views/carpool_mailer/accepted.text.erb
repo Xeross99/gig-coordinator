@@ -1,0 +1,7 @@
+<%= t("mailers.hello", name: @passenger.first_name) %>
+
+<%= @driver.display_name %> potwierdził, że zabiera Cię na event "<%= @event.name %>".
+
+Start: <%= l(@event.scheduled_at, format: :long) %>
+
+<%= event_url(@event) %>

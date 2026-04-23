@@ -11,6 +11,8 @@ class Event < ApplicationRecord
   has_many :participations, dependent: :destroy
   has_many :users, through: :participations
   has_many :messages, -> { order(:created_at) }, dependent: :destroy
+  has_many :carpool_offers, dependent: :destroy
+  has_many :carpool_requests, through: :carpool_offers
 
   # Zapis od razu: virtual attribute set from the event-creation form. Handled
   # in-transaction (after_create, NOT after_create_commit) so the confirmed
@@ -91,15 +93,34 @@ class Event < ApplicationRecord
       end
 
       by_status = all_parts.group_by(&:status)
+
+      offers   = carpool_offers.includes(carpool_requests: :user).to_a
+      offers_by_user = offers.index_by(&:user_id)
+      # user_id → CarpoolRequest (theirs as a passenger on this event, if any)
+      own_requests = {}
+      offers.each do |o|
+        o.carpool_requests.each { |r| own_requests[r.user_id] = r }
+      end
+
       {
         reserved:               by_status["reserved"]  || [],
         confirmed:              by_status["confirmed"] || [],
         waitlist:               by_status["waitlist"]  || [],
         all_users:              all_users,
         participations_by_user: all_parts.index_by(&:user_id),
-        blocked_user_ids:       HostBlock.where(host_id: host_id).pluck(:user_id).to_set
+        blocked_user_ids:       HostBlock.where(host_id: host_id).pluck(:user_id).to_set,
+        carpool_offers:         offers,
+        carpool_offers_by_user: offers_by_user,
+        carpool_request_by_user: own_requests
       }
     end
+  end
+
+  # True if the given user currently holds an active participation (confirmed
+  # / reserved / waitlist) on this event — used to gate carpool UI actions.
+  def participant?(user)
+    return false if user.blank?
+    participations.where(user_id: user.id, status: %i[confirmed reserved waitlist]).exists?
   end
 
   private

@@ -95,7 +95,7 @@ class UsersController < ApplicationController
   # blokowałaby save anyway; tu tylko zdejmujemy payload, żeby zapis przeszedł
   # bez „niewidzialnego" błędu dla admina.
   def user_params
-    attrs = params.expect(user: [ :first_name, :last_name, :email, :phone, :title, :photo,
+    attrs = params.expect(user: [ :first_name, :last_name, :email, :phone, :title, :photo, :can_drive,
                                   { managed_host_ids: [], blocked_host_ids: [] } ])
     final_title = attrs[:title].presence || @user&.title.to_s
     attrs[:blocked_host_ids] = [] if final_title == "master"

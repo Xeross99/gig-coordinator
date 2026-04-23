@@ -1,0 +1,11 @@
+<%= render "mailers/title", text: "Brak miejsca w aucie" %>
+<%= render "mailers/paragraph", html: t("mailers.hello", name: @passenger.first_name) %>
+<%= render "mailers/paragraph",
+           html: safe_join([
+             tag.strong(@driver.display_name),
+             " niestety nie może zabrać Cię na event ",
+             tag.strong(@event.name),
+             ". Sprawdź, czy ktoś inny nie zgłosił się jako kierowca."
+           ]) %>
+<%= render "mailers/cta_button", label: "Otwórz event", url: event_url(@event) %>
+<%= render "mailers/raw_url", url: event_url(@event) %>

@@ -3,6 +3,7 @@ ala:
   last_name: Nowak
   email: ala@example.com
   admin: true
+  can_drive: true
 
 bartek:
   first_name: Bartek

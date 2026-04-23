@@ -1,0 +1,14 @@
+<%= render "mailers/title", text: "Masz podwózkę!" %>
+<%= render "mailers/paragraph", html: t("mailers.hello", name: @passenger.first_name) %>
+<%= render "mailers/paragraph",
+           html: safe_join([
+             tag.strong(@driver.display_name),
+             " potwierdził, że zabiera Cię na event ",
+             tag.strong(@event.name),
+             ".",
+             tag.br, tag.br,
+             "Start: ",
+             tag.strong(l(@event.scheduled_at, format: :long))
+           ]) %>
+<%= render "mailers/cta_button", label: "Otwórz event", url: event_url(@event) %>
+<%= render "mailers/raw_url", url: event_url(@event) %>
