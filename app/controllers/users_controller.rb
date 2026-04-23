@@ -37,17 +37,29 @@ class UsersController < ApplicationController
     end
     @blocked_hosts = @user.blocked_hosts.with_attached_photo
 
-    base = @user.participations.joins(:event).includes(:event)
-    @past_confirmed = base.confirmed
-                          .where.not(events: { completed_at: nil })
-                          .order("events.scheduled_at DESC")
-                          .to_a
+    base = @user.participations.joins(:event).includes(event: :host)
+    past_confirmed = base.confirmed
+                         .where.not(events: { completed_at: nil })
+                         .order("events.scheduled_at DESC")
+                         .to_a
     @upcoming = base.active
                     .where(events: { completed_at: nil })
                     .where("events.scheduled_at >= ?", Time.current)
                     .order("events.scheduled_at DESC")
                     .to_a
-    @catches_count = @past_confirmed.size
+    @catches_count = past_confirmed.size
+
+    past_cancelled_count = @user.participations.cancelled.joins(:event)
+                                .where.not(events: { completed_at: nil }).count
+    total_past = past_confirmed.size + past_cancelled_count
+    @stats_attendance_pct = total_past.zero? ? nil : (past_confirmed.size * 100.0 / total_past).round
+    total_seconds = past_confirmed.sum { |p| p.event.ends_at - p.event.scheduled_at }
+    @stats_total_hours = (total_seconds / 3600.0).round
+
+    host_counts = past_confirmed.each_with_object(Hash.new(0)) { |p, h| h[p.event.host_id] += 1 }
+    top_ids_with_counts = host_counts.sort_by { |_, c| -c }.first(3)
+    hosts_by_id = Host.with_attached_photo.where(id: top_ids_with_counts.map(&:first)).index_by(&:id)
+    @top_hosts = top_ids_with_counts.map { |id, count| [hosts_by_id[id], count] }
   end
 
   def new

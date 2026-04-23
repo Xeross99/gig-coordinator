@@ -79,10 +79,6 @@
         </dd>
       </div>
       <div class="flex items-center justify-between gap-4 py-3">
-        <dt class="text-stone-500 shrink-0">Zaliczone łapania</dt>
-        <dd class="font-semibold text-lg tabular-nums"><%= @catches_count %></dd>
-      </div>
-      <div class="flex items-center justify-between gap-4 py-3">
         <dt class="text-stone-500 shrink-0">Dołączył</dt>
         <dd class="font-medium"><%= l(@user.created_at.to_date, format: :long) %></dd>
       </div>
@@ -178,20 +174,55 @@
     </div>
   <% end %>
 
-  <% if @past_confirmed.any? %>
+  <% if @catches_count.positive? %>
     <div class="border-t border-stone-200 p-5">
-      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3">Historia zakończonych łapań</h2>
-      <ul class="space-y-2">
-        <% @past_confirmed.each do |p| %>
-          <li class="flex items-center justify-between gap-3 text-sm">
-            <%= link_to p.event.name, event_path(p.event),
-                        class: "font-medium text-stone-900 hover:underline truncate min-w-0 flex-1" %>
-            <span class="shrink-0 text-xs text-stone-500 tabular-nums">
-              <%= l(p.event.scheduled_at.to_date) %>
-            </span>
-          </li>
-        <% end %>
-      </ul>
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3">Statystyki</h2>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="rounded-lg bg-stone-50 border border-stone-100 p-3 text-center">
+          <div class="text-2xl font-semibold tabular-nums text-stone-900"><%= @catches_count %></div>
+          <div class="text-[11px] text-stone-500 leading-tight mt-1">łapań</div>
+        </div>
+        <div class="rounded-lg bg-stone-50 border border-stone-100 p-3 text-center">
+          <div class="text-2xl font-semibold tabular-nums text-stone-900">
+            <%= @stats_attendance_pct ? "#{@stats_attendance_pct}%" : "—" %>
+          </div>
+          <div class="text-[11px] text-stone-500 leading-tight mt-1">stawiennictwa</div>
+        </div>
+        <div class="rounded-lg bg-stone-50 border border-stone-100 p-3 text-center">
+          <div class="text-2xl font-semibold tabular-nums text-stone-900">
+            <%= @stats_total_hours %><span class="text-base font-medium text-stone-500">h</span>
+          </div>
+          <div class="text-[11px] text-stone-500 leading-tight mt-1">w obiekcie</div>
+        </div>
+      </div>
+
+      <% if @top_hosts.any? %>
+        <h3 class="text-stone-500 text-xs uppercase tracking-wide mt-5 mb-3">Ulubieni organizatorzy</h3>
+        <ul class="space-y-2">
+          <% @top_hosts.each do |host, count| %>
+            <li>
+              <%= link_to host_path(host), class: "flex items-center gap-3 text-sm" do %>
+                <% if host.photo.attached? %>
+                  <%= image_tag rails_representation_path(host.photo.variant(:small), only_path: true),
+                                alt: host.display_name,
+                                class: "size-10 rounded-full object-cover shrink-0" %>
+                <% else %>
+                  <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
+                    <%= host.first_name[0] %><%= host.last_name[0] %>
+                  </div>
+                <% end %>
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium text-stone-900 truncate"><%= host.display_name %></div>
+                  <div class="text-stone-500 text-xs truncate"><%= host.location %></div>
+                </div>
+                <span class="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-stone-700 tabular-nums">
+                  <%= count %> 🐔
+                </span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
     </div>
   <% end %>
 </div>
