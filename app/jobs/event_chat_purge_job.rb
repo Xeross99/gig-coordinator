@@ -19,6 +19,9 @@ class EventChatPurgeJob < ApplicationJob
   def purge!(event)
     return unless event.messages.exists?
     event.messages.delete_all
+    # delete_all pomija callbacki, więc counter_cache na Message#event nie zostaje
+    # zdekrementowany — resetujemy ręcznie do zera.
+    Event.where(id: event.id).update_all(messages_count: 0)
     Turbo::StreamsChannel.broadcast_replace_to(
       event, :chat,
       target: ActionView::RecordIdentifier.dom_id(event, :chat_panel),

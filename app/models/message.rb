@@ -1,5 +1,5 @@
 class Message < ApplicationRecord
-  belongs_to :event
+  belongs_to :event, counter_cache: true
   belongs_to :user
 
   validates :body, presence: true, length: { maximum: 2_000 }

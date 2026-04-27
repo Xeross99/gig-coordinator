@@ -1,5 +1,5 @@
 class EventChange < ApplicationRecord
-  belongs_to :event
+  belongs_to :event, counter_cache: :changes_count
   belongs_to :user, optional: true
 
   # Pola, które logujemy. Reszta `saved_changes` (timestampy, completed_at,

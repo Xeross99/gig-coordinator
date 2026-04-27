@@ -98,14 +98,8 @@ class Event < ApplicationRecord
   # broadcast — memoization helps within a single render).
   def roster_data
     @roster_data ||= begin
-      all_users   = User.with_attached_photo.order(title: :desc, last_name: :asc, first_name: :asc).to_a
-      users_by_id = all_users.index_by(&:id)
-
-      all_parts = participations.order(:position).to_a
-      all_parts.each do |p|
-        preloaded = users_by_id[p.user_id]
-        p.association(:user).target = preloaded if preloaded
-      end
+      all_users = User.with_attached_photo.order(title: :desc, last_name: :asc, first_name: :asc).to_a
+      all_parts = participations.includes(user: { photo_attachment: :blob }).order(:position).to_a
 
       by_status = all_parts.group_by(&:status)
 
