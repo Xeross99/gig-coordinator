@@ -18,12 +18,15 @@ class ParticipationsController < ApplicationController
         status, position = next_slot_for(@event)
         @event.participations.create!(user: Current.user, status: status, position: position)
         resulting_status = status
-      elsif existing.cancelled?
+      elsif existing.cancelled? || (existing.reserved? && existing.reservation_expired?)
+        # `reserved + expired` traktujemy jak cancelled — sweeper job mógł
+        # jeszcze nie zdążyć, a user klika „Akceptuję" w widoku, który już
+        # pokazuje generyczny przycisk (bo reservation_expired? = true).
         status, position = next_slot_for(@event)
-        existing.update!(status: status, position: position)
+        existing.update!(status: status, position: position, reserved_until: nil)
         resulting_status = status
       end
-      # reserved/confirmed/waitlist — no-op (dedicated accept/decline actions handle those).
+      # confirmed/waitlist/aktywne reserved — no-op (dedykowane akcje accept/decline).
     end
 
     respond_to do |format|

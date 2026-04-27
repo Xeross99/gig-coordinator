@@ -380,7 +380,7 @@ lexxy-editor {
    — a to większość browserów. Nadpisujemy var + content ma sztywny
    rozmiar przez height/min/max. */
 .chat-editor {
-  --lexxy-editor-rows: 3rem;
+  --lexxy-editor-rows: 1.5rem;
   --lexxy-editor-padding: 0;
   /* iOS Safari zoom-on-focus jeśli efektywny font-size focusowanego elementu
      < 16px. Lexxy montuje wewnątrz host-element własny shadow + contenteditable;
@@ -393,9 +393,9 @@ lexxy-editor {
   font-size: 16px;
 }
 .chat-editor .lexxy-editor__content {
-  height: 3rem !important;
-  min-height: 3rem !important;
-  max-height: 3rem !important;
+  height: 1.5rem !important;
+  min-height: 1.5rem !important;
+  max-height: 1.5rem !important;
   overflow-y: auto !important;
   font-size: 16px;
   line-height: 1.35;

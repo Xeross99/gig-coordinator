@@ -287,6 +287,19 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "span", text: /blokada/i
   end
 
+  test "POST create on an expired reserved participation re-activates it as confirmed" do
+    # Sweeper jeszcze nie przebiegł, user widzi generyczny „Akceptuję" (bo
+    # reservation_expired? = true) — kliknięcie musi zadziałać, nie wisieć.
+    p = Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1, reserved_until: 5.minutes.ago)
+    assert p.reservation_expired?
+
+    post event_participation_path(@event)
+    p.reload
+    assert p.confirmed?
+    assert_nil p.reserved_until
+    assert_redirected_to event_path(@event)
+  end
+
   # --- event lock (started?) ---------------------------------------------------
   # Wszystkie 4 mutujące akcje (create / destroy / accept / decline) są zamykane
   # przez `enforce_event_lock!` z momentem scheduled_at.

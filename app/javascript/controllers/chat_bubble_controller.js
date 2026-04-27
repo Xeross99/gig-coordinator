@@ -45,10 +45,12 @@ export default class extends Controller {
     row.querySelector(".message-meta")?.classList.add("flex-row-reverse")
     row.querySelector(".message-author")?.classList.add("hidden")
 
+    // Bąbelek zostaje w tej samej palecie co u innych — tylko zmieniamy
+    // zaokrąglenie po stronie autora (lewy „ogon" → prawy).
     const bubble = row.querySelector(".message-bubble")
     if (bubble) {
-      bubble.classList.remove("bg-stone-100", "text-stone-800", "rounded-tl-md")
-      bubble.classList.add("bg-indigo-600", "text-white", "rounded-tr-md")
+      bubble.classList.remove("rounded-tl-md")
+      bubble.classList.add("rounded-tr-md")
     }
   }
 }

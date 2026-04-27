@@ -13,7 +13,7 @@
     </div>
   <% end %>
 
-  <div class="flex items-end gap-2">
+  <div class="flex items-center gap-2">
     <%# Lexxy web component jako first-class form control. `insert-editable-text`
         na `<lexxy-prompt>` wkleja sam HTML item (span z data-user-id), zamiast
         Action Text attachmenta — tak unikamy zaciągania całej machinerii ActionText
@@ -22,8 +22,8 @@
                   placeholder="Wiadomość… (@ aby oznaczyć)"
                   attachments="false"
                   toolbar="false"
-                  rows="2"
-                  class="chat-editor lexxy-content flex-1 min-w-0 block px-3 pt-2 pb-1 rounded-full border border-stone-300 bg-stone-50">
+                  rows="1"
+                  class="chat-editor lexxy-content flex-1 min-w-0 block px-3 py-1.5 rounded-full border border-stone-300 bg-stone-50">
       <lexxy-prompt trigger="@"
                     src="<%= prompt_users_path %>"
                     name="mention"
@@ -33,8 +33,8 @@
     <button type="submit"
             data-haptic="tap"
             aria-label="Wyślij"
-            class="shrink-0 size-10 rounded-full bg-stone-900 text-white flex items-center justify-center hover:bg-stone-800 transition-transform active:scale-[0.93]">
-      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4">
+            class="shrink-0 size-9 rounded-full bg-stone-900 text-white flex items-center justify-center hover:bg-stone-800 transition-transform active:scale-[0.93]">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-3.5">
         <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.897 28.897 0 0 0 15.293-7.155.75.75 0 0 0 0-1.114A28.897 28.897 0 0 0 3.105 2.288Z" />
       </svg>
     </button>
