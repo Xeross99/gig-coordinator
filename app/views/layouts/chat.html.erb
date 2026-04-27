@@ -23,19 +23,11 @@
     <%= render "shared/navbar" %>
     <%= render "shared/toast" %>
 
-    <header class="shrink-0 bg-white border-b border-stone-200 px-3 py-2 flex items-center gap-3">
-      <%= link_to event_path(@event),
-                  class: "shrink-0 -ml-1 size-9 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-700",
-                  title: "Wróć do eventu",
-                  "aria-label": "Wróć do eventu" do %>
-        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
-          <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd" />
-        </svg>
-      <% end %>
-      <div class="min-w-0 flex-1 text-sm font-semibold text-stone-900 truncate"><%= @event.name %></div>
-    </header>
-
-    <main class="flex-1 min-h-0 flex flex-col w-full max-w-lg mx-auto px-3 py-2">
+    <main class="flex-1 min-h-0 flex flex-col w-full max-w-lg mx-auto px-4 py-3">
+      <%= render "shared/breadcrumbs", crumbs: [
+        [ @event.name, event_path(@event) ],
+        [ "Czat", nil ]
+      ] %>
       <%= yield %>
     </main>
   </body>
