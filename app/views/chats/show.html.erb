@@ -1,6 +1,5 @@
 <% content_for(:title) { "Czat — #{@event.name}" } %>
 <%= render "shared/breadcrumbs", crumbs: [
-  [ t("events.upcoming"), root_path ],
   [ @event.name, event_path(@event) ],
   [ "Czat", nil ]
 ] %>

@@ -1,5 +1,5 @@
 <% content_for(:title) { @event.name } %>
-<%= render "shared/breadcrumbs", crumbs: [[t("events.upcoming"), root_path], [@event.name, nil]] %>
+<%= render "shared/breadcrumbs", crumbs: [[@event.name, nil]] %>
 
 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
   <div class="p-5">

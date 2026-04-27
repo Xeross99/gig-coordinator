@@ -1,6 +1,5 @@
 <% content_for(:title) { t("events.edit_event") } %>
 <%= render "shared/breadcrumbs", crumbs: [
-  [ t("events.upcoming"), root_path ],
   [ @event.name, event_path(@event) ],
   [ t("events.edit_event"), nil ]
 ] %>
