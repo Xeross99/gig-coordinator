@@ -382,23 +382,27 @@ lexxy-editor {
 .chat-editor {
   --lexxy-editor-rows: 3rem;
   --lexxy-editor-padding: 0;
+  /* iOS Safari zoom-on-focus jeśli efektywny font-size focusowanego elementu
+     < 16px. Lexxy montuje wewnątrz host-element własny shadow + contenteditable;
+     ustawiamy 16px na CAŁEJ rodzinie żeby żaden zagnieżdżony fokus nie wywalił
+     auto-zoomu (i co za tym idzie — nie zepchnął navbara poza viewport). */
+  font-size: 16px;
+}
+.chat-editor *,
+.chat-editor [contenteditable] {
+  font-size: 16px;
 }
 .chat-editor .lexxy-editor__content {
   height: 3rem !important;
   min-height: 3rem !important;
   max-height: 3rem !important;
   overflow-y: auto !important;
-  /* iOS Safari zoomuje na każdy focus jeśli font-size < 16px. Trzymamy 16px
-     na poziomie content editable, żeby zapobiec "zjeżdżaniu" layoutu przy
-     otwieraniu klawiatury. */
   font-size: 16px;
   line-height: 1.35;
 }
-/* Lexxy rysuje placeholder jako `::before` na `.lexxy-editor__content` gdy
-   rodzic ma `.lexxy-editor--empty` — nadpisujemy rozmiar, żeby nie rozpychał
-   się na 2 linie i był wizualnie mniej dominujący. */
+/* Placeholder ::before — też 16px (poprzednie 13px było pułapką dla iOS). */
 .chat-editor .lexxy-editor--empty .lexxy-editor__content::before {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 400;
   letter-spacing: -0.005em;
 }

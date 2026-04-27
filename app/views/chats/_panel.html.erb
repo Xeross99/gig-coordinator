@@ -5,7 +5,7 @@
   <% if event.started? %>
     <%= render "chats/locked", event: event %>
   <% else %>
-    <section class="bg-white rounded-xl shadow-sm p-4 flex flex-col h-[calc(100dvh-13rem)]"
+    <section class="bg-white rounded-xl shadow-sm p-4 flex flex-col h-[calc(100svh-12rem)]"
              data-controller="chat-scroller">
       <div data-chat-scroller-target="viewport"
            class="chat-viewport flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-2 px-2">
