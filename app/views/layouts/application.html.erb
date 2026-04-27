@@ -30,7 +30,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="min-h-screen bg-stone-50 text-stone-900 antialiased" data-controller="pull-to-refresh">
+  <body class="min-h-screen bg-stone-50 text-stone-900 antialiased has-[.chat-page]:h-dvh has-[.chat-page]:overflow-hidden" data-controller="pull-to-refresh">
     <%# data-turbo-permanent — the indicator stays in the DOM across the
         Turbo.visit triggered by pull-to-refresh, so the spinner keeps
         rotating instead of vanishing mid-animation when body swaps. The
