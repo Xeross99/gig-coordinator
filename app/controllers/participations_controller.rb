@@ -4,6 +4,7 @@ class ParticipationsController < ApplicationController
   # POST /eventy/:event_id/uczestnictwo
   def create
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     if Current.user.blocked_from?(@event.host)
       redirect_to event_path(@event), alert: I18n.t("participations.blocked") and return
     end
@@ -45,6 +46,7 @@ class ParticipationsController < ApplicationController
   # DELETE /eventy/:event_id/uczestnictwo
   def destroy
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     promoted = nil
 
     Event.transaction do
@@ -68,6 +70,7 @@ class ParticipationsController < ApplicationController
   # User accepts a reservation offered by the priority seeding.
   def accept
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     accepted = false
 
     Event.transaction do
@@ -89,6 +92,7 @@ class ParticipationsController < ApplicationController
   # (or promotes from waitlist if the ranking pool is exhausted).
   def decline
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
 
     Event.transaction do
       @event.lock!

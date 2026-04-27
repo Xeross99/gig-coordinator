@@ -8,3 +8,13 @@
 <h1 class="text-2xl font-semibold mb-4"><%= t("admin.users.edit_title") %>: <%= @user.display_name %></h1>
 
 <%= render "form", user: @user %>
+
+<% if @user != Current.user %>
+  <div class="mt-6 pt-6 border-t border-stone-200">
+    <h2 class="text-sm font-semibold text-red-700 mb-1"><%= t("admin.users.danger_zone") %></h2>
+    <p class="text-xs text-stone-500 mb-3"><%= t("admin.users.delete_warning") %></p>
+    <%= button_to t("admin.users.delete"), user_path(@user), method: :delete,
+                  data: { turbo_confirm: t("admin.users.delete_confirm", name: @user.display_name) },
+                  class: "w-full py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-transform active:scale-[0.98]" %>
+  </div>
+<% end %>

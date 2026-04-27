@@ -13,6 +13,7 @@ class MessagesController < ApplicationController
   # POST /eventy/:event_id/czat/wiadomosci
   def create
     @event   = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     @message = @event.messages.build(user: Current.user, body: params.dig(:message, :body))
 
     if @message.save

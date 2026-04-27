@@ -286,4 +286,41 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     assert_match "blokada", response.body
     assert_select "span", text: /blokada/i
   end
+
+  # --- event lock (started?) ---------------------------------------------------
+  # Wszystkie 4 mutujące akcje (create / destroy / accept / decline) są zamykane
+  # przez `enforce_event_lock!` z momentem scheduled_at.
+
+  test "POST create blocked once event has started" do
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    assert_no_difference "Participation.count" do
+      post event_participation_path(@event)
+    end
+    assert_redirected_to event_path(@event)
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
+
+  test "DELETE destroy blocked once event has started" do
+    p = Participation.create!(event: @event, user: users(:ala), status: :confirmed, position: 1)
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    delete event_participation_path(@event)
+    assert p.reload.confirmed?, "participation should not be cancelled when event is locked"
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
+
+  test "POST accept blocked once event has started" do
+    p = Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1, reserved_until: 1.hour.from_now)
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    post accept_event_participation_path(@event)
+    assert p.reload.reserved?
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
+
+  test "POST decline blocked once event has started" do
+    p = Participation.create!(event: @event, user: users(:ala), status: :reserved, position: 1, reserved_until: 1.hour.from_now)
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    post decline_event_participation_path(@event)
+    assert p.reload.reserved?
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
 end

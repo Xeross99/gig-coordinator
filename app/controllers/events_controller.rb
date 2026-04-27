@@ -1,6 +1,7 @@
 class EventsController < ApplicationController
   before_action :require_user!
   before_action :require_event_creator!, only: %i[new create]
+  before_action :require_admin!,         only: %i[edit update destroy]
 
   FILTERS = %w[new completed].freeze
 
@@ -48,6 +49,28 @@ class EventsController < ApplicationController
     end
   end
 
+  def edit
+    @event = Event.find(params[:id])
+    @hosts = allowed_hosts.order(:last_name, :first_name)
+  end
+
+  def update
+    @event = Event.find(params[:id])
+    @event.edited_by = Current.user
+    if @event.update(event_params)
+      redirect_to event_path(@event), notice: I18n.t("events.updated")
+    else
+      @hosts = allowed_hosts.order(:last_name, :first_name)
+      render :edit, status: :unprocessable_content
+    end
+  end
+
+  def destroy
+    @event = Event.find(params[:id])
+    @event.destroy
+    redirect_to events_path, notice: I18n.t("events.deleted")
+  end
+
   private
 
   def build_history_entries(event)
@@ -57,6 +80,9 @@ class EventsController < ApplicationController
       if p.updated_at > p.created_at + 1.second
         entries << { at: p.updated_at, kind: :status_change, participation: p }
       end
+    end
+    event.changes_log.includes(:user).each do |c|
+      entries << { at: c.created_at, kind: :edited, change: c }
     end
     entries.sort_by { |e| e[:at] }.reverse
   end

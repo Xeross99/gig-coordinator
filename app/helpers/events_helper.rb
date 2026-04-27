@@ -76,6 +76,8 @@ module EventsHelper
     case entry[:kind]
     when :created
       [ "bg-stone-500", "M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" ]
+    when :edited
+      [ "bg-sky-500", "M2.695 14.763l-1.262 3.154a.5.5 0 0 0 .65.65l3.155-1.262a4 4 0 0 0 1.343-.885L17.5 5.5a2.121 2.121 0 0 0-3-3L3.58 13.42a4 4 0 0 0-.885 1.343Z" ]
     else
       case entry[:participation].status
       when "confirmed" then [ "bg-emerald-500", "M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" ]
@@ -97,6 +99,58 @@ module EventsHelper
       safe_join([ tag.strong(entry[:participation].user.display_name), " ", participation_action_verb(entry[:participation].status, :initial) ])
     when :status_change
       safe_join([ tag.strong(entry[:participation].user.display_name), " ", participation_action_verb(entry[:participation].status, :update) ])
+    when :edited
+      render_event_change_entry(entry[:change])
+    end
+  end
+
+  # Wpis edycji eventu — „<autor> zmienił/a <pole> z <prev> na <new>".
+  # Brak autora → „Zmieniono <pole>...".
+  def render_event_change_entry(change)
+    label = event_change_field_label(change.field)
+    prev_v = format_event_change_value(change.field, change.previous_value)
+    new_v  = format_event_change_value(change.field, change.new_value)
+
+    actor = change.user&.display_name
+    prefix = if actor
+      safe_join([ tag.strong(actor), " zmienił/a " ])
+    else
+      "Zmieniono ".html_safe
+    end
+
+    safe_join([
+      prefix,
+      tag.strong(label),
+      " z ",
+      tag.span(prev_v, class: "text-stone-500 line-through"),
+      " na ",
+      tag.strong(new_v)
+    ])
+  end
+
+  def event_change_field_label(field)
+    case field
+    when "name"           then "nazwę"
+    when "host_id"        then "organizatora"
+    when "scheduled_at"   then "datę startu"
+    when "ends_at"        then "datę zakończenia"
+    when "pay_per_person" then "stawkę"
+    when "capacity"       then "liczbę miejsc"
+    else field
+    end
+  end
+
+  def format_event_change_value(field, raw)
+    return "—" if raw.blank?
+    case field
+    when "scheduled_at", "ends_at"
+      l(Time.zone.parse(raw), format: :short)
+    when "pay_per_person"
+      number_to_currency(raw.to_f)
+    when "host_id"
+      Host.find_by(id: raw)&.display_name || raw
+    else
+      raw
     end
   end
 

@@ -101,6 +101,8 @@
   <% visible_users, hidden_users = all_users.first(initial_cap), all_users.drop(initial_cap) %>
   <% current_user_is_participant = event.participant?(Current.user) %>
   <% current_user_drives = Current.user && offers_by_user[Current.user.id].present? %>
+  <% current_user_request = Current.user && own_requests[Current.user.id] %>
+  <% current_user_is_passenger = current_user_request&.accepted? %>
   <div class="pt-4 border-t border-stone-200">
     <h3 class="text-stone-500 text-xs uppercase tracking-wide mb-2">
       Wszyscy pracownicy (<%= all_users.size %>)
@@ -116,7 +118,8 @@
                     driver_offer:  offers_by_user[user.id],
                     own_request:   own_requests[user.id],
                     current_user_is_participant: current_user_is_participant,
-                    current_user_drives: current_user_drives %>
+                    current_user_drives: current_user_drives,
+                    current_user_is_passenger: current_user_is_passenger %>
       <% end %>
     </ul>
 
@@ -136,7 +139,8 @@
                             driver_offer:  offers_by_user[user.id],
                             own_request:   own_requests[user.id],
                             current_user_is_participant: current_user_is_participant,
-                            current_user_drives: current_user_drives %>
+                            current_user_drives: current_user_drives,
+                            current_user_is_passenger: current_user_is_passenger %>
               <% end %>
             </ul>
           </div>

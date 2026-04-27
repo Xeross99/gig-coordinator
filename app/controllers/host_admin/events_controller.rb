@@ -30,6 +30,7 @@ module HostAdmin
     def edit; end
 
     def update
+      @event.edited_by = nil  # Host edits — log row landuje z user_id = nil → „przez organizatora".
       if @event.update(event_params)
         redirect_to host_event_path(@event)
       else

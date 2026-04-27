@@ -139,4 +139,43 @@ class CarpoolRequestsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_match "kierowcą na tym evencie", flash[:alert].to_s
   end
+
+  # --- event lock ------------------------------------------------------------
+
+  test "POST create blocked once event has started" do
+    sign_in_as(@passenger)
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    assert_no_difference "CarpoolRequest.count" do
+      post event_carpool_requests_path(@event), params: { carpool_offer_id: @offer.id }
+    end
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
+
+  test "POST accept blocked once event has started" do
+    sign_in_as(@driver)
+    req = CarpoolRequest.create!(carpool_offer: @offer, user: @passenger, status: :pending)
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    post accept_event_carpool_request_path(@event, req)
+    assert req.reload.pending?
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
+
+  test "POST decline blocked once event has started" do
+    sign_in_as(@driver)
+    req = CarpoolRequest.create!(carpool_offer: @offer, user: @passenger, status: :pending)
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    post decline_event_carpool_request_path(@event, req)
+    assert req.reload.pending?
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
+
+  test "DELETE blocked once event has started" do
+    sign_in_as(@passenger)
+    req = CarpoolRequest.create!(carpool_offer: @offer, user: @passenger, status: :pending)
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    assert_no_difference "CarpoolRequest.count" do
+      delete event_carpool_request_path(@event, req)
+    end
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
 end

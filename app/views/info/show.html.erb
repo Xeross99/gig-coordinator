@@ -158,6 +158,31 @@
     <span>nie mogą planować łapań - mogą tylko się zapisywać.</span>
   </p>
 
+  <h2>Podwózki - kierowca i pasażerowie</h2>
+  <p>Każdy event ma sekcję <em>Podwózki</em>, w której pracownicy mogą się umówić na wspólny dojazd autem. Reguły są proste:</p>
+  <ul>
+    <li><strong>Kierowcą</strong> może zostać tylko osoba <strong>potwierdzona na evencie</strong>, której admin nadał wcześniej uprawnienia kierowcy.</li>
+    <li>Każdy kierowca ma <strong>4 miejsca pasażerskie</strong> w aucie - sztywno, niezależnie od auta.</li>
+    <li><strong>Pasażerem</strong> może być każdy potwierdzony uczestnik tego samego eventu, który nie jest sam kierowcą i nie jedzie już z kimś innym.</li>
+  </ul>
+
+  <h3 class="mt-4 text-base font-semibold text-stone-900">Jak to działa krok po kroku</h3>
+  <ol>
+    <li>W rosterze przy swoim nazwisku widzisz przycisk <em>Zgłoś się jako kierowca</em> (jeśli masz uprawnienia). Klikasz - od razu pojawiasz się w sekcji <em>Podwózki</em> z 4 wolnymi miejscami.</li>
+    <li>Pozostali uczestnicy widzą przy Twoim wierszu (oraz w sekcji <em>Podwózki</em>) przycisk <em>Zapytaj o podwózkę</em>. Po kliknięciu lecisz na <em>Listę zapytań</em> kierowcy ze statusem <em>oczekuje</em>. Kierowca dostaje mail + push.</li>
+    <li>Kierowca decyduje: <em>Potwierdź</em> albo <em>Odrzuć</em>. Akceptacja przenosi pasażera do listy <em>Pasażerowie</em> i zmniejsza liczbę wolnych miejsc. Pasażer dostaje mail + push.</li>
+    <li>Kiedy auto jest pełne (4/4), przycisk <em>Zapytaj o podwózkę</em> u pozostałych chowa się i pokazujemy „Auto zajęte".</li>
+  </ol>
+
+  <h3 class="mt-4 text-base font-semibold text-stone-900">Wycofanie się</h3>
+  <ul>
+    <li><strong>Pasażer</strong> może w każdej chwili kliknąć ikonę wyjścia obok swojego nazwiska na liście pasażerów - opuszcza auto i odzyskuje przyciski <em>Zgłoś się jako kierowca</em> oraz <em>Zapytaj o podwózkę</em> u innych kierowców.</li>
+    <li><strong>Kierowca</strong> może zrezygnować z funkcji we własnym wierszu rosteru. Wszystkie zapytania pasażerów (zarówno oczekujące jak i potwierdzone) są wtedy <strong>kasowane</strong>.</li>
+    <li>Jeśli <strong>kierowca anuluje udział w evencie</strong>, jego rola kierowcy znika automatycznie razem ze wszystkimi pasażerami - bo skoro nie jedzie na wydarzenie, to nie ma kogo zabrać.</li>
+    <li>Jeśli <strong>pasażer anuluje udział w evencie</strong>, jego zapytanie/potwierdzenie u kierowcy znika automatycznie - inne osoby u tego samego kierowcy nie są dotknięte.</li>
+  </ul>
+  <p class="text-xs text-stone-500">Po starcie eventu (od momentu zaplanowanej godziny) wszystkie przyciski podwózek znikają - lista zostaje zamrożona w tym, co zostało ustalone.</p>
+
   <h2>Zmiana liczby miejsc w evencie</h2>
   <p>Organizator może w każdej chwili zwiększyć <em>liczbę miejsc</em> w swoim panelu. Jeśli event ma już listę rezerwową, a zmieści się więcej osób - system sam awansuje najstarsze osoby z rezerwy na <em>Potwierdzonych</em> (zgodnie z kolejnością zgłoszeń). Dostają powiadomienie push + mail. Zmniejszenie liczby miejsc <strong>nie wyrzuca</strong> nikogo, kto już jest potwierdzony.</p>
 

@@ -49,6 +49,24 @@ class EventTest < ActiveSupport::TestCase
     refute_includes Event.upcoming, past
   end
 
+  test "started? is false when scheduled_at is in the future" do
+    e = Event.new(valid_attrs(scheduled_at: 1.hour.from_now))
+    refute e.started?
+  end
+
+  test "started? is true when scheduled_at has passed" do
+    e = Event.new(valid_attrs(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now))
+    assert e.started?
+  end
+
+  test "started? is true when scheduled_at equals now (boundary uses <=)" do
+    frozen = Time.zone.local(2030, 6, 1, 12, 0, 0)
+    e = Event.new(valid_attrs(scheduled_at: frozen, ends_at: frozen + 1.hour))
+    travel_to(frozen) do
+      assert e.started?
+    end
+  end
+
   test "scope :awaiting_completion returns events past ends_at with no completed_at" do
     Event.delete_all
     ended  = Event.create!(valid_attrs(scheduled_at: 3.hours.ago, ends_at: 1.hour.ago, name: "ended"))

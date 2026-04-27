@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   before_action :require_user!
-  before_action :require_admin!, only: %i[new create edit update]
+  before_action :require_admin!, only: %i[new create edit update destroy]
 
   SORTS = {
     "rank"      => { title: :desc, id: :asc },
@@ -86,6 +86,15 @@ class UsersController < ApplicationController
     else
       render :edit, status: :unprocessable_content
     end
+  end
+
+  def destroy
+    @user = User.find(params[:id])
+    if @user == Current.user
+      redirect_to user_path(@user), alert: I18n.t("admin.users.cannot_delete_self") and return
+    end
+    @user.destroy
+    redirect_to users_path, notice: I18n.t("admin.users.deleted")
   end
 
   private

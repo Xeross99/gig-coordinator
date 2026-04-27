@@ -17,7 +17,7 @@ Rails.application.routes.draw do
 
   # Worker app (root = events feed)
   root "events#index"
-  resources :events, only: %i[index show new create], path: "eventy", path_names: { new: "nowy" } do
+  resources :events, only: %i[index show new create edit update destroy], path: "eventy", path_names: { new: "nowy", edit: "edytuj" } do
     member { get :history, path: "historia" }
     resource :participation, only: %i[create destroy], path: "uczestnictwo" do
       post :accept
@@ -35,7 +35,7 @@ Rails.application.routes.draw do
     end
   end
   resources :hosts, except: :destroy, path: "organizatorzy", path_names: { new: "nowy", edit: "edytuj" }
-  resources :users, except: :destroy, path: "pracownicy", path_names: { new: "nowy", edit: "edytuj" } do
+  resources :users, path: "pracownicy", path_names: { new: "nowy", edit: "edytuj" } do
     collection do
       get :prompt, path: "prompt" # endpoint dla Lexxy @mentions w czacie
     end

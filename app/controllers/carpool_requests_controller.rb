@@ -5,6 +5,7 @@ class CarpoolRequestsController < ApplicationController
   # params[:carpool_offer_id] identifies which driver the user wants to ride with.
   def create
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     offer = @event.carpool_offers.find(params.require(:carpool_offer_id))
 
     existing = offer.carpool_requests.find_by(user_id: Current.user.id)
@@ -31,6 +32,7 @@ class CarpoolRequestsController < ApplicationController
   # POST /eventy/:event_id/podwozki-zapytania/:id/accept
   def accept
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     req = find_request_for_driver
     unless req
       redirect_to event_path(@event), alert: "Nie znaleziono zapytania." and return
@@ -49,6 +51,7 @@ class CarpoolRequestsController < ApplicationController
   # POST /eventy/:event_id/podwozki-zapytania/:id/decline
   def decline
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     req = find_request_for_driver
     unless req
       redirect_to event_path(@event), alert: "Nie znaleziono zapytania." and return
@@ -64,6 +67,7 @@ class CarpoolRequestsController < ApplicationController
   # Passenger withdraws their own request.
   def destroy
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     req = CarpoolRequest.joins(:carpool_offer)
                         .where(carpool_offers: { event_id: @event.id })
                         .where(user_id: Current.user.id, id: params[:id])

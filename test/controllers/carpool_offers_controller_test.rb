@@ -88,4 +88,24 @@ class CarpoolOffersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to event_path(@event)
     assert_match "uprawnień", flash[:alert]
   end
+
+  test "POST blocked once event has started" do
+    sign_in_as(@user)
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    assert_no_difference "CarpoolOffer.count" do
+      post event_carpool_offer_path(@event)
+    end
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
+
+  test "DELETE blocked once event has started" do
+    sign_in_as(@user)
+    offer = CarpoolOffer.create!(event: @event, user: @user)
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    assert_no_difference "CarpoolOffer.count" do
+      delete event_carpool_offer_path(@event)
+    end
+    assert CarpoolOffer.exists?(offer.id)
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
 end

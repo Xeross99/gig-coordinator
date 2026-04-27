@@ -39,6 +39,15 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to event_chat_path(@event)
   end
 
+  test "POST create blocked once event has started" do
+    @event.update_columns(scheduled_at: 1.minute.ago, ends_at: 1.hour.from_now)
+    assert_no_difference "Message.count" do
+      post event_chat_messages_path(@event), params: { message: { body: "po starcie" } }
+    end
+    assert_redirected_to event_path(@event)
+    assert_equal I18n.t("events.locked"), flash[:alert]
+  end
+
   test "POST create rate-limits after 20 messages in a minute" do
     Rails.cache.clear
     20.times do |i|

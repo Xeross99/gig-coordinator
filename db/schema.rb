@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_23_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_27_081115) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -57,6 +57,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_090000) do
     t.integer "user_id", null: false
     t.index ["carpool_offer_id", "user_id"], name: "index_carpool_requests_on_carpool_offer_id_and_user_id", unique: true
     t.index ["user_id", "carpool_offer_id"], name: "index_carpool_requests_on_user_id_and_carpool_offer_id"
+  end
+
+  create_table "event_changes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "event_id", null: false
+    t.string "field", null: false
+    t.string "new_value"
+    t.string "previous_value"
+    t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["event_id", "created_at"], name: "index_event_changes_on_event_id_and_created_at"
+    t.index ["event_id"], name: "index_event_changes_on_event_id"
+    t.index ["user_id"], name: "index_event_changes_on_user_id"
   end
 
   create_table "events", force: :cascade do |t|
@@ -197,6 +210,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_090000) do
   add_foreign_key "carpool_offers", "users"
   add_foreign_key "carpool_requests", "carpool_offers"
   add_foreign_key "carpool_requests", "users"
+  add_foreign_key "event_changes", "events", on_delete: :cascade
+  add_foreign_key "event_changes", "users", on_delete: :nullify
   add_foreign_key "events", "hosts"
   add_foreign_key "host_blocks", "hosts"
   add_foreign_key "host_blocks", "users"

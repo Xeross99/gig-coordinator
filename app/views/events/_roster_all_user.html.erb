@@ -1,4 +1,4 @@
-<%# locals: (event:, user:, index:, participation:, blocked:, driver_offer:, own_request:, current_user_is_participant:, current_user_drives:) -%>
+<%# locals: (event:, user:, index:, participation:, blocked:, driver_offer:, own_request:, current_user_is_participant:, current_user_drives:, current_user_is_passenger:) -%>
 <% is_me = Current.user && Current.user.id == user.id %>
 <% is_driver = driver_offer.present? %>
 <% user_is_participant = participation && participation.status != "cancelled" %>
@@ -41,7 +41,9 @@
     <% end %>
   </div>
 
-  <% if is_me && current_user_is_participant %>
+  <% if event.started? %>
+    <%# Po starcie eventu: brak akcji kierowca/pasażer — sam wiersz pokazuje status. %>
+  <% elsif is_me && current_user_is_participant %>
     <%# Przycisk „zgłoś się jako kierowca" / „zrezygnuj" przy swoim własnym wierszu.
         Przycisk „zgłoś się" pokazujemy tylko gdy user ma uprawnienia kierowcy
         (flaga `can_drive` ustawiana przez admina). „Zrezygnuj" zostaje
@@ -53,13 +55,13 @@
                     class: "w-full text-xs font-medium py-1.5 rounded-md border border-stone-300 text-stone-700 bg-white hover:bg-stone-100 transition-colors" do %>
         Zrezygnuj z funkcji kierowcy
       <% end %>
-    <% elsif Current.user.can_drive? && participation&.confirmed? %>
+    <% elsif Current.user.can_drive? && participation&.confirmed? && !current_user_is_passenger %>
       <%= button_to event_carpool_offer_path(event), method: :post,
                     class: "w-full text-xs font-medium py-1.5 rounded-md bg-sky-600 text-white hover:bg-sky-700 transition-colors" do %>
         Zgłoś się jako kierowca
       <% end %>
     <% end %>
-  <% elsif !is_me && is_driver && current_user_is_participant && !current_user_drives %>
+  <% elsif !is_me && is_driver && current_user_is_participant && !current_user_drives && !current_user_is_passenger %>
     <%# Ktoś inny jest kierowcą — ja mogę zapytać. %>
     <% case own_request&.status %>
     <% when "pending" %>

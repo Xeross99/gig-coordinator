@@ -63,4 +63,22 @@ class ParticipationCarpoolCleanupTest < ActiveSupport::TestCase
     assert CarpoolRequest.exists?(other_req.id)
     assert_equal 1, offer.reload.seats_taken
   end
+
+  test "driver with multiple passengers loses driver role + all passenger links on cancel" do
+    cezary = users(:cezary)
+    Participation.create!(event: @event, user: cezary, status: :confirmed, position: 3)
+
+    offer = CarpoolOffer.create!(event: @event, user: @driver)
+    accepted = CarpoolRequest.create!(carpool_offer: offer, user: @passenger, status: :accepted)
+    pending  = CarpoolRequest.create!(carpool_offer: offer, user: cezary,     status: :pending)
+
+    assert CarpoolOffer.exists?(offer.id)
+    assert_equal 2, offer.carpool_requests.count
+
+    @driver_part.update!(status: :cancelled)
+
+    refute CarpoolOffer.exists?(offer.id),     "driver role must be wiped when driver cancels participation"
+    refute CarpoolRequest.exists?(accepted.id), "accepted passenger request must cascade with the offer"
+    refute CarpoolRequest.exists?(pending.id),  "pending passenger request must cascade with the offer"
+  end
 end

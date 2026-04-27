@@ -13,6 +13,11 @@ class Event < ApplicationRecord
   has_many :messages, -> { order(:created_at) }, dependent: :destroy
   has_many :carpool_offers, dependent: :destroy
   has_many :carpool_requests, through: :carpool_offers
+  has_many :changes_log, class_name: "EventChange", dependent: :destroy
+
+  # Ustawiane przez kontroler tuż przed zapisem — żeby `log_changes` umiał wpisać
+  # autora edycji do EventChange.user_id. Na nowych eventach zostawiamy nil.
+  attr_accessor :edited_by
 
   # Zapis od razu: virtual attribute set from the event-creation form. Handled
   # in-transaction (after_create, NOT after_create_commit) so the confirmed
@@ -26,8 +31,11 @@ class Event < ApplicationRecord
   after_create_commit  :broadcast_visit_to_feed,      if: :upcoming_now?
   after_create_commit  :notify_new_event_subscribers, if: :upcoming_now?
   after_create_commit  :seed_reservations,            if: :upcoming_now?
+  after_create_commit  :schedule_chat_purge,          if: :upcoming_now?
   after_update_commit  :broadcast_feed_replace
   after_update_commit  :refill_on_capacity_increase
+  after_update_commit  :reschedule_chat_purge_if_needed
+  after_update_commit  :log_changes
   after_destroy_commit :broadcast_feed_remove
 
   validates :name, presence: true
@@ -47,6 +55,13 @@ class Event < ApplicationRecord
 
   def completed?
     completed_at.present?
+  end
+
+  # Event jest „zablokowany" od momentu startu — żadnych zmian w roster, kierowcach,
+  # pasażerach, czacie. Predykat działa też dla eventów już zakończonych
+  # (`completed?`), więc lock obowiązuje od scheduled_at na zawsze.
+  def started?
+    scheduled_at.present? && scheduled_at <= Time.current
   end
 
   # Single GROUP BY query, memoized per instance. All count helpers below derive
@@ -179,6 +194,35 @@ class Event < ApplicationRecord
 
   def seed_reservations
     ReservationService.seed_on_create(self)
+  end
+
+  # Job czeka do scheduled_at i wtedy kasuje wiadomości czatu. Job jest idempotentny
+  # (sam sprawdza `started?`) — jeśli scheduled_at zostanie później przesunięte,
+  # ewentualny wcześniejszy job po prostu re-enqueue'uje siebie na nową godzinę.
+  def schedule_chat_purge
+    EventChatPurgeJob.set(wait_until: scheduled_at).perform_later(id)
+  end
+
+  def reschedule_chat_purge_if_needed
+    return unless saved_change_to_scheduled_at?
+    return if scheduled_at.blank? || scheduled_at <= Time.current
+    EventChatPurgeJob.set(wait_until: scheduled_at).perform_later(id)
+  end
+
+  # Zapisuje wpis do `event_changes` per zmienione pole z TRACKED_FIELDS.
+  # `edited_by` ustawia kontroler — gdy nil (callback z konsoli, jobów itd.),
+  # log idzie z user_id = nil.
+  def log_changes
+    EventChange::TRACKED_FIELDS.each do |field|
+      next unless saved_changes.key?(field)
+      prev_v, new_v = saved_changes[field]
+      changes_log.create!(
+        user:           edited_by,
+        field:          field,
+        previous_value: prev_v.to_s,
+        new_value:      new_v.to_s
+      )
+    end
   end
 
   def create_pre_registrations

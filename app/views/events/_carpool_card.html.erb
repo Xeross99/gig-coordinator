@@ -23,17 +23,29 @@
             <%= render "events/roster_avatar", user: req.user %>
             <span class="text-stone-800 truncate"><%= req.user.display_name %></span>
           </div>
-          <% if is_driver_me %>
-            <%= button_to "Usuń", decline_event_carpool_request_path(event, req), method: :post,
-                          data: { turbo_confirm: "Usunąć pasażera z auta?" },
-                          class: "text-xs font-medium py-0.5 px-2 rounded border border-stone-300 text-stone-700 bg-white hover:bg-stone-100" %>
+          <% if !event.started? %>
+            <% if is_driver_me %>
+              <%= button_to "Usuń", decline_event_carpool_request_path(event, req), method: :post,
+                            data: { turbo_confirm: "Usunąć pasażera z auta?" },
+                            class: "text-xs font-medium py-0.5 px-2 rounded border border-stone-300 text-stone-700 bg-white hover:bg-stone-100" %>
+            <% elsif Current.user && req.user_id == Current.user.id %>
+              <%= button_to event_carpool_request_path(event, req), method: :delete,
+                            data: { turbo_confirm: "Zrezygnujesz z podwózki?" },
+                            class: "text-xs font-medium py-0.5 px-2 rounded border border-stone-300 text-stone-700 bg-white hover:bg-stone-100",
+                            title: "Zrezygnuj z podwózki",
+                            "aria-label": "Zrezygnuj z podwózki" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true" class="size-3.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                </svg>
+              <% end %>
+            <% end %>
           <% end %>
         </li>
       <% end %>
     </ul>
   <% end %>
 
-  <% if is_driver_me && pending.any? %>
+  <% if is_driver_me && pending.any? && !event.started? %>
     <div class="mt-3 text-xs text-stone-600 uppercase tracking-wide">Zapytania (<%= pending.size %>)</div>
     <ul class="mt-1 space-y-1">
       <% pending.each do |req| %>

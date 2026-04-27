@@ -4,6 +4,7 @@ class CarpoolOffersController < ApplicationController
   # POST /eventy/:event_id/podwozka
   def create
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     offer = @event.carpool_offers.build(user: Current.user)
     unless offer.save
       redirect_to event_path(@event), alert: offer.errors.full_messages.first || "Nie udało się zgłosić jako kierowca." and return
@@ -14,6 +15,7 @@ class CarpoolOffersController < ApplicationController
   # DELETE /eventy/:event_id/podwozka
   def destroy
     @event = Event.find(params[:event_id])
+    return if enforce_event_lock!(@event)
     @event.carpool_offers.where(user_id: Current.user.id).destroy_all
     redirect_to event_path(@event), notice: "Rezygnacja z funkcji kierowcy potwierdzona."
   end

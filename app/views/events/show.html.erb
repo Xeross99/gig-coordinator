@@ -83,6 +83,20 @@
     <% end %>
   </div>
 
+  <% if admin_signed_in? %>
+    <div class="border-t border-stone-200 p-5">
+      <div class="text-stone-500 text-xs uppercase tracking-wide mb-2"><%= t("admin.events.tools") %></div>
+      <div class="grid grid-cols-2 gap-2">
+        <%= link_to t("admin.events.edit"), edit_event_path(@event),
+                    class: "text-center py-2 rounded-lg border border-stone-300 text-sm font-medium text-stone-800 hover:bg-stone-50 transition-transform active:scale-[0.98]" %>
+        <%= button_to t("admin.events.delete"), event_path(@event), method: :delete,
+                      data: { turbo_confirm: t("admin.events.delete_confirm", name: @event.name) },
+                      form: { class: "contents" },
+                      class: "w-full py-2 rounded-lg bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition-transform active:scale-[0.98]" %>
+      </div>
+    </div>
+  <% end %>
+
   <div class="border-t border-stone-200 p-5">
     <%= turbo_stream_from @event, :roster %>
     <%= render "events/roster", event: @event %>

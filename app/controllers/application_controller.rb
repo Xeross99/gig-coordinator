@@ -46,6 +46,15 @@ class ApplicationController < ActionController::Base
     redirect_to root_path, alert: I18n.t("auth.admin_required")
   end
 
+  # Po starcie eventu wszystkie mutacje (zapis, anulowanie, kierowca,
+  # pasażer, wiadomość) są zablokowane. Wywoływane inline w akcjach kontrolerów —
+  # zwraca true gdy redirectuje, false gdy event jest jeszcze otwarty.
+  def enforce_event_lock!(event)
+    return false unless event.started?
+    redirect_to event_path(event), alert: I18n.t("events.locked")
+    true
+  end
+
   def sign_in!(authenticatable)
     session_record = authenticatable.sessions.create!(
       user_agent: request.user_agent,
