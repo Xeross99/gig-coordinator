@@ -18,17 +18,11 @@ class MessagesController < ApplicationController
 
     if @message.save
       # Nowa wiadomość dosila czat broadcastem w Message#after_create_commit.
-      # Tu tylko zwracamy pusty formularz, żeby user mógł od razu pisać dalej.
+      # Na sukces NIE wymieniamy DOM-u formularza — `chat-form` controller
+      # czyści edytor po stronie klienta przez `editor.value = ""`. Dzięki
+      # temu na iOS klawiatura nie chowa się po wysłaniu (zachowany focus).
       respond_to do |format|
-        format.turbo_stream do
-          render turbo_stream: [
-            turbo_stream.replace(
-              ActionView::RecordIdentifier.dom_id(@event, :chat_form),
-              partial: "chats/form",
-              locals:  { event: @event, message: Message.new, autofocus: true }
-            )
-          ]
-        end
+        format.turbo_stream { head :no_content }
         format.html { redirect_to event_chat_path(@event) }
       end
     else

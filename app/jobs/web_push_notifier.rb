@@ -84,7 +84,7 @@ class WebPushNotifier < ApplicationJob
       {
         title: "#{message.user.display_name} oznaczył Cię w czacie",
         body:  snippet.presence || message.event.name,
-        url:   helpers.event_path(message.event, anchor: "event_chat")
+        url:   helpers.event_chat_path(message.event)
       }
     when :carpool_ask
       ev = carpool_request.carpool_offer.event

@@ -8,7 +8,7 @@
     <section class="bg-white rounded-xl shadow-sm flex flex-col flex-1 min-h-0"
              data-controller="chat-scroller">
       <div data-chat-scroller-target="viewport"
-           class="chat-viewport flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-3">
+           class="chat-viewport flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-3 pb-2">
         <%= render "chats/sentinel", event: event, messages: messages || [], has_more: has_more %>
         <ul id="<%= dom_id(event, :chat_messages) %>"
             data-controller="chat-bubble"
