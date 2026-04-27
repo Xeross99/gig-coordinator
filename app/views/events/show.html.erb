@@ -22,26 +22,30 @@
         </div>
       </div>
       <% chat_count    = @event.messages_count %>
-      <% history_count = @event.changes_count %>
+      <% history_count = @event.history_count %>
       <% capped_count  = ->(n) { n > 99 ? "99+" : n.to_s } %>
       <div class="shrink-0 flex flex-col items-end gap-2">
         <%= link_to event_chat_path(@event),
                     title: "Czat eventu",
-                    class: "w-32 inline-flex items-center gap-2 rounded-xl bg-stone-900 text-white hover:bg-stone-800 px-4 py-2 text-sm font-medium" do %>
-          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4 shrink-0">
+                    aria: { label: "Czat eventu" },
+                    class: "relative inline-flex items-center justify-center size-11 rounded-xl bg-stone-900 text-white hover:bg-stone-800" do %>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
             <path fill-rule="evenodd" d="M10 2c-4.418 0-8 3.134-8 7 0 1.892.856 3.611 2.249 4.872A6.49 6.49 0 0 1 2.5 16.5a.75.75 0 0 0 .574 1.213 7.5 7.5 0 0 0 4.075-1.341A9.22 9.22 0 0 0 10 16c4.418 0 8-3.134 8-7s-3.582-7-8-7Z" clip-rule="evenodd" />
           </svg>
-          <span>Czat</span>
-          <% if chat_count.positive? %><span class="ml-auto text-xs tabular-nums opacity-75"><%= capped_count.call(chat_count) %></span><% end %>
+          <% if chat_count.positive? %>
+            <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold tabular-nums flex items-center justify-center ring-2 ring-white"><%= capped_count.call(chat_count) %></span>
+          <% end %>
         <% end %>
         <%= link_to history_event_path(@event),
                     title: "Historia łapania",
-                    class: "w-32 inline-flex items-center gap-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 px-4 py-2 text-sm font-medium" do %>
-          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4 shrink-0">
+                    aria: { label: "Historia łapania" },
+                    class: "relative inline-flex items-center justify-center size-11 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200" do %>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
             <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .199.079.39.22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78V5Z" clip-rule="evenodd" />
           </svg>
-          <span>Historia</span>
-          <% if history_count.positive? %><span class="ml-auto text-xs tabular-nums opacity-75"><%= capped_count.call(history_count) %></span><% end %>
+          <% if history_count.positive? %>
+            <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-stone-700 text-white text-[10px] font-semibold tabular-nums flex items-center justify-center ring-2 ring-white"><%= capped_count.call(history_count) %></span>
+          <% end %>
         <% end %>
       </div>
     </div>

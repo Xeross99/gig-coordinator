@@ -132,6 +132,18 @@ class Event < ApplicationRecord
     participations.where(user_id: user.id, status: %i[confirmed reserved waitlist]).exists?
   end
 
+  # Liczba pozycji jakie pojawią się na stronie historii. Musi być spójna
+  # z `EventsController#build_history_entries` — stąd ta sama logika:
+  # 1 wpis „utworzono" + każda partycypacja + jej ewentualna zmiana statusu
+  # (updated_at > created_at + 1s) + zmiany pól z `changes_log`. Kolumna
+  # `changes_count` to counter cache, więc to jeden pluck + jeden COUNT
+  # — bezpieczne na renderze listy eventów.
+  def history_count
+    parts = participations.pluck(:created_at, :updated_at)
+    status_changes = parts.count { |created, updated| updated > created + 1.second }
+    1 + parts.size + status_changes + changes_count
+  end
+
   private
 
   def ends_at_after_scheduled_at
