@@ -6,30 +6,37 @@
                 controller: "chat-form",
                 chat_form_autofocus_value: autofocus
               },
-              class: "space-y-2 chat-form" do |f| %>
+              class: "chat-form space-y-2" do |f| %>
   <% if message.errors.any? %>
     <div class="bg-red-50 text-red-800 rounded-lg p-2 text-xs">
       <%= message.errors.full_messages.first %>
     </div>
   <% end %>
 
-  <%# Lexxy web component jako first-class form control. `insert-editable-text`
-      na `<lexxy-prompt>` wkleja sam HTML item (span z data-user-id), zamiast
-      Action Text attachmenta — tak unikamy zaciągania całej machinerii ActionText
-      i Trixa tylko po to, żeby mieć @mentions. %>
-  <lexxy-editor name="message[body]"
-                placeholder="Napisz wiadomość… (@ aby oznaczyć)"
-                attachments="false"
-                toolbar="false"
-                rows="2"
-                class="chat-editor lexxy-content block w-full px-3 pt-2 pb-1 rounded-lg border border-stone-300 bg-white">
-    <lexxy-prompt trigger="@"
-                  src="<%= prompt_users_path %>"
-                  name="mention"
-                  insert-editable-text
-                  supports-space-in-searches></lexxy-prompt>
-  </lexxy-editor>
-  <%= f.submit "Wyślij",
-               data: { haptic: "tap" },
-               class: "w-full py-2 rounded-lg bg-stone-900 text-white text-sm font-medium transition-transform active:scale-[0.97] hover:bg-stone-800" %>
+  <div class="flex items-end gap-2">
+    <%# Lexxy web component jako first-class form control. `insert-editable-text`
+        na `<lexxy-prompt>` wkleja sam HTML item (span z data-user-id), zamiast
+        Action Text attachmenta — tak unikamy zaciągania całej machinerii ActionText
+        i Trixa tylko po to, żeby mieć @mentions. %>
+    <lexxy-editor name="message[body]"
+                  placeholder="Wiadomość… (@ aby oznaczyć)"
+                  attachments="false"
+                  toolbar="false"
+                  rows="2"
+                  class="chat-editor lexxy-content flex-1 min-w-0 block px-3 pt-2 pb-1 rounded-full border border-stone-300 bg-stone-50">
+      <lexxy-prompt trigger="@"
+                    src="<%= prompt_users_path %>"
+                    name="mention"
+                    insert-editable-text
+                    supports-space-in-searches></lexxy-prompt>
+    </lexxy-editor>
+    <button type="submit"
+            data-haptic="tap"
+            aria-label="Wyślij"
+            class="shrink-0 size-10 rounded-full bg-stone-900 text-white flex items-center justify-center hover:bg-stone-800 transition-transform active:scale-[0.93]">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4">
+        <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.897 28.897 0 0 0 15.293-7.155.75.75 0 0 0 0-1.114A28.897 28.897 0 0 0 3.105 2.288Z" />
+      </svg>
+    </button>
+  </div>
 <% end %>

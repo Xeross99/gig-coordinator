@@ -1,20 +1,24 @@
 <%# locals: (message:) -%>
-<li id="<%= dom_id(message) %>" class="flex items-start gap-3 animate-pop-in">
-  <% if message.user.photo.attached? %>
-    <%= image_tag rails_representation_path(message.user.photo.variant(:small), only_path: true),
-                  alt: message.user.display_name,
-                  class: "size-8 rounded-full object-cover shrink-0" %>
-  <% else %>
-    <div class="size-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
+<%# Wyrównanie „moje vs cudze" jest robione klientowo przez chat-bubble Stimulus
+    controller — broadcast leci tym samym HTML-em do wszystkich subskrybentów,
+    więc nie możemy decydować server-side na podstawie Current.user. -%>
+<li id="<%= dom_id(message) %>"
+    data-user-id="<%= message.user_id %>"
+    class="message-row flex items-start gap-2 animate-pop-in">
+  <%= image_tag rails_representation_path(message.user.photo.variant(:small), only_path: true),
+                alt: message.user.display_name,
+                class: "message-avatar size-8 rounded-full object-cover shrink-0" if message.user.photo.attached? %>
+  <% unless message.user.photo.attached? %>
+    <div class="message-avatar size-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
       <%= message.user.first_name[0] %><%= message.user.last_name[0] %>
     </div>
   <% end %>
-  <div class="min-w-0 flex-1">
-    <div class="flex items-baseline gap-2 flex-wrap">
-      <span class="font-medium text-stone-900 text-sm"><%= message.user.display_name %></span>
+  <div class="message-body min-w-0 max-w-[80%]">
+    <div class="message-meta flex items-baseline gap-2 flex-wrap">
+      <span class="message-author font-medium text-stone-900 text-sm"><%= message.user.display_name %></span>
       <span class="text-[11px] text-stone-400 tabular-nums"><%= l(message.created_at, format: :short) %></span>
     </div>
-    <div class="text-sm text-stone-700 break-words lexxy-content">
+    <div class="message-bubble mt-0.5 inline-block break-words lexxy-content text-sm rounded-2xl rounded-tl-md px-3 py-1.5 bg-stone-100 text-stone-800">
       <%= render_message_body(message) %>
     </div>
   </div>

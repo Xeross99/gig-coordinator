@@ -5,12 +5,15 @@
   <% if event.started? %>
     <%= render "chats/locked", event: event %>
   <% else %>
-    <section class="bg-white rounded-xl shadow-sm p-4 flex flex-col h-[calc(100svh-12rem)]"
+    <section class="bg-white rounded-xl shadow-sm flex flex-col h-[calc(100dvh-10rem)]"
              data-controller="chat-scroller">
       <div data-chat-scroller-target="viewport"
-           class="chat-viewport flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-2 px-2">
+           class="chat-viewport flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-3">
         <%= render "chats/sentinel", event: event, messages: messages || [], has_more: has_more %>
-        <ul id="<%= dom_id(event, :chat_messages) %>" class="space-y-3 pt-4">
+        <ul id="<%= dom_id(event, :chat_messages) %>"
+            data-controller="chat-bubble"
+            data-chat-bubble-current-user-id-value="<%= Current.user&.id %>"
+            class="space-y-3 pt-1">
           <% if messages.present? && messages.any? %>
             <%= render messages %>
           <% else %>
@@ -21,7 +24,7 @@
         </ul>
       </div>
 
-      <div class="shrink-0 pt-3">
+      <div class="shrink-0 border-t border-stone-200 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <%= render "chats/form", event: event, message: message || Message.new, autofocus: true %>
       </div>
     </section>
