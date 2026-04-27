@@ -1,5 +1,5 @@
 <%# locals: (event:, messages: nil, has_more: false, message: nil) -%>
-<div id="<%= dom_id(event, :chat_panel) %>">
+<div id="<%= dom_id(event, :chat_panel) %>" class="flex-1 min-h-0 flex flex-col">
   <%= turbo_stream_from event, :chat %>
 
   <% if event.started? %>
