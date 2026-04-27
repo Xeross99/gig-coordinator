@@ -1,6 +1,8 @@
 class ChatsController < ApplicationController
   before_action :require_user!
 
+  layout "chat", only: :show
+
   PAGE_SIZE = 30
 
   # GET /eventy/:event_id/czat

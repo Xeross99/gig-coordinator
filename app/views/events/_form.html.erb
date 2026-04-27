@@ -77,7 +77,7 @@
       <%= f.label :pay_per_person, t("events.pay_per_person"), class: "block text-sm text-stone-700 mb-1" %>
       <%= f.select :pay_per_person,
                    (0..500).step(10).to_a,
-                   {},
+                   { selected: event.pay_per_person&.to_i },
                    required: true, class: "form-select w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" %>
     </div>
     <div>

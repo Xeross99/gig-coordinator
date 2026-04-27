@@ -1,17 +1,4 @@
 <% content_for(:title) { "Czat — #{@event.name}" } %>
-<div class="chat-page"></div>
-<%= render "shared/breadcrumbs", crumbs: [
-  [ @event.name, event_path(@event) ],
-  [ "Czat", nil ]
-] %>
-
-<div class="flex items-baseline justify-between gap-3 mb-3">
-  <h1 class="text-xl font-semibold text-stone-900 truncate"><%= @event.name %></h1>
-  <span class="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 shrink-0">
-    Beta testy
-  </span>
-</div>
-
 <%= render "chats/panel",
            event:    @event,
            messages: @messages,
