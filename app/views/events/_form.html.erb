@@ -108,7 +108,7 @@
     </div>
   <% end %>
 
-  <% if Current.user.can_submit_events? %>
+  <% if Current.user.can_create_events? %>
     <%= f.submit submit_label, class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium" %>
   <% else %>
     <div>

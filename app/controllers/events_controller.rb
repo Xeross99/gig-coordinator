@@ -22,7 +22,7 @@ class EventsController < ApplicationController
   end
 
   def history
-    @event = Event.includes(:host).find(params[:id])
+    @event = Event.includes(:host, :creator).find(params[:id])
     @entries = build_history_entries(@event)
   end
 
@@ -34,7 +34,8 @@ class EventsController < ApplicationController
 
   def create
     @event = Event.new(event_params)
-    unless Current.user.can_submit_events?
+    @event.creator = Current.user
+    unless Current.user.can_create_events?
       redirect_to events_path, alert: I18n.t("events.submit_disabled_hint") and return
     end
     unless allowed_hosts.exists?(id: @event.host_id)
@@ -74,7 +75,7 @@ class EventsController < ApplicationController
   private
 
   def build_history_entries(event)
-    entries = [ { at: event.created_at, kind: :created, host: event.host } ]
+    entries = [ { at: event.created_at, kind: :created, creator: event.creator, host: event.host } ]
     event.participations.includes(user: { photo_attachment: :blob }).each do |p|
       entries << { at: p.created_at, kind: :joined, participation: p }
       if p.updated_at > p.created_at + 1.second

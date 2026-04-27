@@ -35,25 +35,12 @@ class User < ApplicationRecord
 
   # Chwilowo tylko admin może tworzyć eventy — niezależnie od rangi.
   # Mistrz_piora / komendant nadal widzą UI rangowe, ale przycisk „Zaplanuj
-  # wydarzenie" oraz /eventy/nowy są gejtowane flagą admina. Kiedy wrócimy do
-  # rangowego gatingu, odkomentuj starą wersję poniżej i skasuj admin-only.
+  # Wpisy do feedu i przycisk „Zaplanuj wydarzenie" są widoczne dla mistrza pióra
+  # i komendantów którzy zarządzają przynajmniej jednym organizatorem. Submit
+  # jest tym samym gejtem — komendant po wejściu w formularz może go wysłać.
   def can_create_events?
-    admin?
+    master? || (captain? && managed_hosts.exists?)
   end
-
-  def can_submit_events?
-    admin?
-  end
-
-  # def can_create_events?
-  #   master? || (captain? && managed_hosts.exists?)
-  # end
-  #
-  # # Chwilowo tylko master może finalizować utworzenie eventu — komendanci
-  # # wchodzą w formularz, ale przycisk „Utwórz" jest zablokowany.
-  # def can_submit_events?
-  #   master?
-  # end
 
   def event_creator_rank?
     master? || captain?

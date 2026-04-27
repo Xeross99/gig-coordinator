@@ -94,7 +94,8 @@ module EventsHelper
   def history_entry_text(entry)
     case entry[:kind]
     when :created
-      safe_join([ "Utworzono wydarzenie przez ", tag.strong(entry[:host].display_name) ])
+      author = entry[:creator] || entry[:host]
+      safe_join([ "Utworzono wydarzenie przez ", tag.strong(author.display_name) ])
     when :joined
       safe_join([ tag.strong(entry[:participation].user.display_name), " ", participation_action_verb(entry[:participation].status, :initial) ])
     when :status_change

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_27_141919) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_27_145112) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -77,6 +77,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_141919) do
     t.integer "changes_count", default: 0, null: false
     t.datetime "completed_at"
     t.datetime "created_at", null: false
+    t.integer "creator_id"
     t.datetime "ends_at", null: false
     t.integer "host_id", null: false
     t.integer "messages_count", default: 0, null: false
@@ -84,6 +85,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_141919) do
     t.decimal "pay_per_person", precision: 8, scale: 2, null: false
     t.datetime "scheduled_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_events_on_creator_id"
     t.index ["ends_at"], name: "index_events_on_ends_at"
     t.index ["host_id"], name: "index_events_on_host_id"
     t.index ["scheduled_at"], name: "index_events_on_scheduled_at"
@@ -215,6 +217,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_141919) do
   add_foreign_key "event_changes", "events", on_delete: :cascade
   add_foreign_key "event_changes", "users", on_delete: :nullify
   add_foreign_key "events", "hosts"
+  add_foreign_key "events", "users", column: "creator_id"
   add_foreign_key "host_blocks", "hosts"
   add_foreign_key "host_blocks", "users"
   add_foreign_key "host_managers", "hosts"

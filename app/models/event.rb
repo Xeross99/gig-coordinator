@@ -8,6 +8,7 @@ class Event < ApplicationRecord
   NEW_EVENT_LAGGING_DELAY  = 5.minutes
 
   belongs_to :host
+  belongs_to :creator, class_name: "User", optional: true
   has_many :participations, dependent: :destroy
   has_many :users, through: :participations
   has_many :messages, -> { order(:created_at) }, dependent: :destroy
