@@ -36,7 +36,7 @@ Turbo.StreamActions.visit = function() {
 //   depth 2: sub-detail            (/eventy/:slug/historia)
 function navDepth(path) {
   if (path === "/" || path === "/eventy" || path === "/pracownicy" || path === "/organizatorzy") return 0
-  if (/^\/eventy\/[^/]+\/historia$/.test(path)) return 2
+  if (/^\/eventy\/[^/]+\/(historia|czat)$/.test(path)) return 2
   if (/^\/eventy\/[^/]+$/.test(path))           return 1
   if (/^\/pracownicy\/[^/]+$/.test(path))      return 1
   return null
