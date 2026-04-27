@@ -12,11 +12,11 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to login_path
   end
 
-  test "GET /eventy/:id/czat returns the chat frame with existing messages" do
+  test "GET /eventy/:id/czat returns the chat panel with existing messages" do
     Message.create!(event: @event, user: users(:bartek), body: "Pierwsza wiadomość")
     get event_chat_path(@event)
     assert_response :success
-    assert_select "turbo-frame#event_chat"
+    assert_select "##{ActionView::RecordIdentifier.dom_id(@event, :chat_panel)}"
     assert_select "##{ActionView::RecordIdentifier.dom_id(@event, :chat_messages)}" do
       assert_select "li", minimum: 1
     end
@@ -36,11 +36,12 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "lexxy-prompt[trigger='@'][src=?]", prompt_users_path
   end
 
-  test "event show page renders a lazy turbo-frame for the chat (no messages loaded inline)" do
-    # Hot path gwarancja: na stronie eventu sam czat NIE jest ładowany —
-    # jest tylko ramka z `src=` i `loading=lazy`, którą Turbo fetchuje osobno.
+  test "event show page links to the chat page (no inline chat loaded)" do
+    # Hot path: czat nie jest doklejany do strony eventu — jest tylko link
+    # do osobnego widoku /eventy/:id/czat w nagłówku.
     get event_path(@event)
     assert_response :success
-    assert_select "turbo-frame#event_chat[loading='lazy'][src=?]", event_chat_path(@event)
+    assert_select "a[href=?]", event_chat_path(@event)
+    assert_select "turbo-frame#event_chat", false
   end
 end

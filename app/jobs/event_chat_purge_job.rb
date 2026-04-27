@@ -21,8 +21,8 @@ class EventChatPurgeJob < ApplicationJob
     event.messages.delete_all
     Turbo::StreamsChannel.broadcast_replace_to(
       event, :chat,
-      target: "event_chat",
-      partial: "chats/locked",
+      target: ActionView::RecordIdentifier.dom_id(event, :chat_panel),
+      partial: "chats/panel",
       locals: { event: event }
     )
   end

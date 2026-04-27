@@ -1,0 +1,27 @@
+<%# locals: (event:, messages: nil, has_more: false, message: nil) -%>
+<div id="<%= dom_id(event, :chat_panel) %>">
+  <%= turbo_stream_from event, :chat %>
+
+  <% if event.started? %>
+    <%= render "chats/locked", event: event %>
+  <% else %>
+    <section class="bg-white rounded-xl shadow-sm p-4 space-y-3"
+             data-controller="chat-scroller">
+      <div data-chat-scroller-target="viewport"
+           class="chat-viewport h-[70dvh] overflow-y-auto overscroll-contain -mx-2 px-2">
+        <%= render "chats/sentinel", event: event, messages: messages || [], has_more: has_more %>
+        <ul id="<%= dom_id(event, :chat_messages) %>" class="space-y-3 pt-4">
+          <% if messages.present? && messages.any? %>
+            <%= render messages %>
+          <% else %>
+            <li class="text-sm text-stone-400 text-center py-4" data-empty-state>
+              Brak wiadomości. Zacznij rozmowę.
+            </li>
+          <% end %>
+        </ul>
+      </div>
+
+      <%= render "chats/form", event: event, message: message || Message.new, autofocus: true %>
+    </section>
+  <% end %>
+</div>

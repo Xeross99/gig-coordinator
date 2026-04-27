@@ -1,35 +1,19 @@
-<%# Zawartość turbo-frame'a `event_chat` — event show page dokleja ramkę lazy,
-    więc ta odpowiedź leci dopiero gdy user doscrolluje do sekcji. -%>
-<% if @event.started? %>
-  <%= render "chats/locked", event: @event %>
-<% else %>
-  <turbo-frame id="event_chat">
-    <%= turbo_stream_from @event, :chat %>
+<% content_for(:title) { "Czat — #{@event.name}" } %>
+<%= render "shared/breadcrumbs", crumbs: [
+  [ t("events.upcoming"), root_path ],
+  [ @event.name, event_path(@event) ],
+  [ "Czat", nil ]
+] %>
 
-    <section class="bg-white rounded-xl shadow-sm p-4 space-y-3"
-             data-controller="chat-scroller">
-      <div class="flex items-center gap-2 flex-wrap">
-        <h2 class="text-stone-500 text-xs uppercase tracking-wide">Czat eventu</h2>
-        <span class="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-          Beta testy
-        </span>
-      </div>
+<div class="flex items-baseline justify-between gap-3 mb-3">
+  <h1 class="text-xl font-semibold text-stone-900 truncate"><%= @event.name %></h1>
+  <span class="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 shrink-0">
+    Beta testy
+  </span>
+</div>
 
-      <div data-chat-scroller-target="viewport"
-           class="chat-viewport max-h-[60vh] overflow-y-auto overscroll-contain -mx-2 px-2">
-        <%= render "sentinel", event: @event, messages: @messages, has_more: @has_more %>
-        <ul id="<%= dom_id(@event, :chat_messages) %>" class="space-y-3 pt-4">
-          <% if @messages.any? %>
-            <%= render @messages %>
-          <% else %>
-            <li class="text-sm text-stone-400 text-center py-4" data-empty-state>
-              Brak wiadomości. Zacznij rozmowę.
-            </li>
-          <% end %>
-        </ul>
-      </div>
-
-      <%= render "chats/form", event: @event, message: @message %>
-    </section>
-  </turbo-frame>
-<% end %>
+<%= render "chats/panel",
+           event:    @event,
+           messages: @messages,
+           has_more: @has_more,
+           message:  @message %>

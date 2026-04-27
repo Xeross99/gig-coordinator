@@ -4,28 +4,40 @@
 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
   <div class="p-5">
     <div class="flex items-start justify-between gap-3">
-      <h1 class="text-2xl font-semibold text-stone-900 min-w-0"><%= @event.name %></h1>
-      <%= link_to history_event_path(@event),
-                  title: "Historia łapania",
-                  class: "shrink-0 inline-flex items-center gap-1.5 rounded-full bg-stone-100 text-stone-700 hover:bg-stone-200 px-3 py-1 text-xs font-medium mt-1.5" do %>
-        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-3.5">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .199.079.39.22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78V5Z" clip-rule="evenodd" />
-        </svg>
-        Historia
-      <% end %>
-    </div>
-    <div class="mt-1 text-sm text-stone-500 space-y-1">
-      <div class="flex items-center gap-1.5">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 shrink-0">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-        </svg>
-        <%= l(@event.scheduled_at, format: :long) %>
+      <div class="min-w-0 flex-1">
+        <h1 class="text-2xl font-semibold text-stone-900"><%= @event.name %></h1>
+        <div class="mt-1 text-sm text-stone-500 space-y-1">
+          <div class="flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 shrink-0">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+            </svg>
+            <%= l(@event.scheduled_at, format: :long) %>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 shrink-0">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            Przewidywany czas: <%= event_duration_text(@event) %>
+          </div>
+        </div>
       </div>
-      <div class="flex items-center gap-1.5">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 shrink-0">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        Przewidywany czas: <%= event_duration_text(@event) %>
+      <div class="shrink-0 flex flex-col items-end gap-1.5">
+        <%= link_to event_chat_path(@event),
+                    title: "Czat eventu",
+                    class: "inline-flex items-center gap-1.5 rounded-full bg-stone-900 text-white hover:bg-stone-800 px-3 py-1 text-xs font-medium" do %>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-3.5">
+            <path fill-rule="evenodd" d="M10 2c-4.418 0-8 3.134-8 7 0 1.892.856 3.611 2.249 4.872A6.49 6.49 0 0 1 2.5 16.5a.75.75 0 0 0 .574 1.213 7.5 7.5 0 0 0 4.075-1.341A9.22 9.22 0 0 0 10 16c4.418 0 8-3.134 8-7s-3.582-7-8-7Z" clip-rule="evenodd" />
+          </svg>
+          Czat<% if @event.messages.size.positive? %><span class="text-[10px] tabular-nums opacity-75 ml-0.5"><%= @event.messages.size %></span><% end %>
+        <% end %>
+        <%= link_to history_event_path(@event),
+                    title: "Historia łapania",
+                    class: "inline-flex items-center gap-1.5 rounded-full bg-stone-100 text-stone-700 hover:bg-stone-200 px-3 py-1 text-xs font-medium" do %>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-3.5">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .199.079.39.22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78V5Z" clip-rule="evenodd" />
+          </svg>
+          Historia
+        <% end %>
       </div>
     </div>
 
@@ -103,12 +115,3 @@
   </div>
 </div>
 
-<%# Czat dojeżdża lazy w osobnej ramce — pierwsze malowanie strony (roster +
-    przycisk zapisu) nie czeka na żadne zapytanie związane z wiadomościami. %>
-<div class="mt-4">
-  <%= turbo_frame_tag "event_chat", src: event_chat_path(@event), loading: "lazy" do %>
-    <div class="bg-white rounded-xl shadow-sm p-6 min-h-64 flex items-center justify-center text-stone-400 text-sm text-center">
-      Wczytuję czat…
-    </div>
-  <% end %>
-</div>
