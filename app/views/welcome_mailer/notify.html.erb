@@ -3,7 +3,7 @@
 <%= render "mailers/paragraph", html: safe_join([
   "Twoje konto ".html_safe,
   tag.strong("pracownika"),
-  " jest gotowe. Od teraz będziesz dostawać powiadomienia o nowych łapaniach kur u organizatorów."
+  " jest gotowe. Od teraz będziesz dostawać powiadomienia o nowych wydarzeniach u organizatorów."
 ]) %>
 
 <%= render "mailers/paragraph", html: "Zaloguj się tym samym adresem e-mail — wyślemy Ci 5-cyfrowy kod." %>
@@ -17,4 +17,4 @@
 <%= render "mailers/cta_button", label: "Otwórz aplikację", url: @url %>
 <%= render "mailers/raw_url", url: @url %>
 
-<%= render "mailers/paragraph", html: "Miłego łapania! 🐔" %>
+<%= render "mailers/paragraph", html: "Powodzenia!" %>

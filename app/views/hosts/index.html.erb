@@ -54,9 +54,9 @@
             <div class="text-stone-900 font-semibold tabular-nums"><%= upcoming_count %></div>
             <div class="text-stone-500">
               <% mod10 = upcoming_count % 10; mod100 = upcoming_count % 100 %>
-              <%= if upcoming_count == 1 then "chytanie"
-                  elsif (2..4).include?(mod10) && !(12..14).include?(mod100) then "chytania"
-                  else "chytań" end %>
+              <%= if upcoming_count == 1 then "wydarzenie"
+                  elsif (2..4).include?(mod10) && !(12..14).include?(mod100) then "wydarzenia"
+                  else "wydarzeń" end %>
             </div>
           </div>
         <% end %>

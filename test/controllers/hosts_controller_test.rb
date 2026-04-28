@@ -36,9 +36,9 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     # Fixtures: jan owns gig-coordinators_tomorrow (1), anna owns harvest_next_week (1).
     sign_in_as(users(:ala))
     get hosts_path
-    assert_match "chytanie", response.body
-    assert_no_match(/chytania\b/, response.body)
-    assert_no_match(/chytań\b/,   response.body)
+    assert_match "wydarzenie", response.body
+    assert_no_match(/wydarzenia\b/, response.body)
+    assert_no_match(/wydarzeń\b/,   response.body)
   end
 
   test "GET index uses Polish 2-4 plural when a host has 2 upcoming events" do
@@ -48,8 +48,8 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
 
     sign_in_as(users(:ala))
     get hosts_path
-    assert_match(/chytania\b/, response.body)  # jan: 2
-    assert_match "chytanie",   response.body   # anna still has 1
+    assert_match(/wydarzenia\b/, response.body)  # jan: 2
+    assert_match "wydarzenie",   response.body   # anna still has 1
   end
 
   test "GET index uses Polish >=5 plural when a host has 5 upcoming events" do
@@ -61,7 +61,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
 
     sign_in_as(users(:ala))
     get hosts_path
-    assert_match(/chytań\b/, response.body)
+    assert_match(/wydarzeń\b/, response.body)
   end
 
   # --- "Zarządzam" filter (komendant-only) -----------------------------------

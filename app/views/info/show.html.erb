@@ -18,8 +18,8 @@
          when :rookie          then "starter, każdy nowy tu zaczyna; powiadomienia o nowych eventach dostaje 5 min po reszcie, żeby wyższe rangi miały pierwszeństwo zapisu"
          when :member      then "brak specjalnych uprawnień"
          when :veteran  then "brak specjalnych uprawnień"
-         when :captain then "może planować łapania, ale tylko u przypisanych mu organizatorów"
-         when :master        then "może planować łapania u dowolnego organizatora oraz otrzymuje automatyczne rezerwacje na nowe zlecenia"
+         when :captain then "może planować wydarzenia, ale tylko u przypisanych mu organizatorów"
+         when :master        then "może planować wydarzenia u dowolnego organizatora oraz otrzymuje automatyczne rezerwacje na nowe zlecenia"
          end %>
       <li class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4">
         <div class="size-14 rounded-full bg-amber-100 flex items-center justify-center text-3xl leading-none shrink-0" aria-hidden="true">
@@ -76,7 +76,7 @@
   <p>W dowolnej chwili możesz kliknąć <em>Anuluj</em>. Jeśli byłeś potwierdzony, Twoje miejsce przejmuje pierwsza osoba z listy rezerwowej. Jeśli byłeś w kolejce - po prostu znikasz z listy.</p>
 
   <h2>Blokada u organizatora</h2>
-  <p>Admin może założyć <strong>blokadę</strong> między konkretnym pracownicym a konkretnym organizatorem. To nie wyrzuca Cię z systemu - dalej masz konto, rangę, możesz łapać u innych organizatorów. Blokada działa punktowo:</p>
+  <p>Admin może założyć <strong>blokadę</strong> między konkretnym pracownicym a konkretnym organizatorem. To nie wyrzuca Cię z systemu - dalej masz konto, rangę, możesz zapisywać się u innych organizatorów. Blokada działa punktowo:</p>
   <ul>
     <li><strong>Widzisz eventy</strong> tego organizatora w feedzie i na stronie eventu - normalnie, bez różnicy.</li>
     <li><strong>Dostajesz powiadomienia push</strong> o nowych eventach (bo push leci do wszystkich - to nie filtr).</li>
@@ -126,7 +126,7 @@
   </div>
 
   <h2 class="flex flex-wrap items-center gap-x-2 gap-y-1">
-    <span>Planowanie łapań</span>
+    <span>Planowanie wydarzeń</span>
     <span class="not-prose inline-flex items-center gap-1 text-sm font-normal">
       <span class="text-stone-500">(</span>
       <%= render "users/title_badge", user: User.new(title: :master) %>
@@ -155,7 +155,7 @@
       <span class="text-stone-500">i</span>
       <%= render "users/title_badge", user: User.new(title: :veteran) %>
     </span>
-    <span>nie mogą planować łapań - mogą tylko się zapisywać.</span>
+    <span>nie mogą planować wydarzeń - mogą tylko się zapisywać.</span>
   </p>
 
   <h2>Podwózki - kierowca i pasażerowie</h2>

@@ -96,7 +96,7 @@ class ParticipationsController < ApplicationController
     end
 
     flash[:confetti] = true if accepted
-    redirect_to event_path(@event), notice: "Potwierdzone - do zobaczenia na łapaniu!"
+    redirect_to event_path(@event), notice: "Potwierdzone - do zobaczenia na miejscu!"
   end
 
   # POST /eventy/:event_id/uczestnictwo/decline

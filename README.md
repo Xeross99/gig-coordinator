@@ -28,8 +28,6 @@
 
 Cały interfejs jest zaprojektowany pod telefon (`max-w-lg`, sticky navbar, `<el-dropdown>` popover menu, animacje Tailwind v4). PWA instaluje się jak natywna aplikacja, działa offline (service worker), wysyła powiadomienia push.
 
-![Architektura — schemat blokowy](docs/screenshots/architecture.png)
-
 ---
 
 ## Główne funkcje
@@ -100,8 +98,6 @@ Powiadomienia push działają na iOS (Safari/PWA) i Androidzie (Chrome/FCM):
 - **Wydarzenie zakończone** → push z podsumowaniem
 
 VAPID `sub` musi być routowalnym mailem — Apple Push odrzuca JWT z fake mailto.
-
-![Push notification](docs/screenshots/push.png)
 
 ### Panel organizatora
 
