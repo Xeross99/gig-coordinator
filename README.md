@@ -269,9 +269,3 @@ kamal shell       # ssh do kontenera
 ```
 
 Konfiguracja w `config/deploy.yml`. Sekrety w `.kamal/secrets` (czyta z gitignored plików, nie zawiera raw values).
-
----
-
-## Licencja
-
-Projekt edukacyjny / portfolio. Forki i fragmenty kodu — proszę o referencję.
