@@ -7,7 +7,7 @@ class EventsHelperTest < ActionView::TestCase
     src = google_maps_embed_src("Słoneczna 12, 00-001 Warszawa")
     assert_match "maps.google.com/maps", src
     assert_match "output=embed", src
-    assert_match "Pawia+112", URI.decode_www_form_component(src).tr(" ", "+")
+    assert_match "Słoneczna+12", URI.decode_www_form_component(src).tr(" ", "+")
   end
 
   test "google_maps_open_url returns a google.com/maps/search URL" do

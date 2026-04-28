@@ -2,7 +2,7 @@ require "test_helper"
 
 class ParticipationsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @event = events(:gig-coordinators_tomorrow) # capacity: 4
+    @event = events(:gig_coordinators_tomorrow) # capacity: 4
     sign_in_as(users(:ala))
   end
 

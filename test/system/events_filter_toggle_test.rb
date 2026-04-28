@@ -2,7 +2,7 @@ require "application_system_test_case"
 
 class EventsFilterToggleTest < ApplicationSystemTestCase
   test "filter pills switch the feed between upcoming and completed events" do
-    upcoming = events(:gig-coordinators_tomorrow)
+    upcoming = events(:gig_coordinators_tomorrow)
     done = Event.create!(
       host: hosts(:jan), name: "Zakończone wydarzenie",
       scheduled_at: 3.days.ago, ends_at: 3.days.ago + 2.hours,

@@ -2,7 +2,7 @@ require "test_helper"
 
 class MessagesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @event = events(:gig-coordinators_tomorrow)
+    @event = events(:gig_coordinators_tomorrow)
     sign_in_as(users(:ala))
   end
 

@@ -2,7 +2,7 @@ require "test_helper"
 
 class ParticipationTest < ActiveSupport::TestCase
   setup do
-    @event = events(:gig-coordinators_tomorrow) # capacity: 4
+    @event = events(:gig_coordinators_tomorrow) # capacity: 4
     @user  = users(:ala)
   end
 

@@ -4,7 +4,7 @@ class MessageTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
 
   setup do
-    @event = events(:gig-coordinators_tomorrow)
+    @event = events(:gig_coordinators_tomorrow)
     @user  = users(:ala)
   end
 

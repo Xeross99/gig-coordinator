@@ -2,7 +2,7 @@ require "application_system_test_case"
 
 class CancelLiveUpdateTest < ApplicationSystemTestCase
   test "user on event show sees counts and roster update live when another user cancels" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     # Confirmed cancels są dozwolone tylko gdy lista jest pełna i ktoś
     # czeka w rezerwie — odpowiednio dopełniamy event (capacity=2, dwóch
     # confirmed, jeden waitlist).

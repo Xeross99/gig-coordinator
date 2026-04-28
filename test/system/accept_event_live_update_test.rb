@@ -2,7 +2,7 @@ require "application_system_test_case"
 
 class AcceptEventLiveUpdateTest < ApplicationSystemTestCase
   test "host sees roster update live when user accepts event" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     host  = hosts(:jan)
     user  = users(:ala)
 

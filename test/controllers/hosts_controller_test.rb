@@ -33,7 +33,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "GET index uses Polish singular when a host has exactly 1 upcoming event" do
-    # Fixtures: jan owns gig-coordinators_tomorrow (1), anna owns harvest_next_week (1).
+    # Fixtures: jan owns gig_coordinators_tomorrow (1), anna owns harvest_next_week (1).
     sign_in_as(users(:ala))
     get hosts_path
     assert_match "wydarzenie", response.body
@@ -57,7 +57,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
       Event.create!(host: hosts(:jan), name: "E#{i}", scheduled_at: (i + 3).days.from_now,
                     ends_at: (i + 3).days.from_now + 2.hours, pay_per_person: 50, capacity: 2)
     end
-    # Note: jan started with 1 (gig-coordinators_tomorrow) → now 6.
+    # Note: jan started with 1 (gig_coordinators_tomorrow) → now 6.
 
     sign_in_as(users(:ala))
     get hosts_path

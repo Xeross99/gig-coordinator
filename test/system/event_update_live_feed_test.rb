@@ -2,7 +2,7 @@ require "application_system_test_case"
 
 class EventUpdateLiveFeedTest < ApplicationSystemTestCase
   test "feed card replaces live when an event is renamed" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     user  = users(:bartek)
 
     sign_in_as(user)

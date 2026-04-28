@@ -2,7 +2,7 @@ require "application_system_test_case"
 
 class ReservationPendingCardTest < ApplicationSystemTestCase
   test "feed card flips to the pending-reservation state live when the user is invited" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     user  = users(:bartek)
 
     sign_in_as(user)

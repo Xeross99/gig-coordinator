@@ -2,7 +2,7 @@ require "test_helper"
 
 class ParticipationPromotionTest < ActionDispatch::IntegrationTest
   setup do
-    @event = events(:gig-coordinators_tomorrow) # capacity: 4
+    @event = events(:gig_coordinators_tomorrow) # capacity: 4
   end
 
   def fill_event_and_queue_waitlist(waitlist_size: 2)

@@ -2,7 +2,7 @@ require "test_helper"
 
 class CarpoolOffersControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @event = events(:gig-coordinators_tomorrow)
+    @event = events(:gig_coordinators_tomorrow)
     @user  = users(:ala)
     Participation.create!(event: @event, user: @user, status: :confirmed, position: 1)
   end

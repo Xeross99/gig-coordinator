@@ -5,7 +5,7 @@ class LoginFlowTest < ApplicationSystemTestCase
     user = users(:bartek)
     sign_in_as(user)
     assert_current_path root_path, wait: 5
-    assert_text events(:gig-coordinators_tomorrow).name
+    assert_text events(:gig_coordinators_tomorrow).name
   end
 
   test "host signs in with a 5-digit code and lands on the host panel" do

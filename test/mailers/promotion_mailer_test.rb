@@ -2,7 +2,7 @@ require "test_helper"
 
 class PromotionMailerTest < ActionMailer::TestCase
   test "notify is addressed to user and mentions event name" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     user  = users(:ala)
     p = Participation.create!(event: event, user: user, status: :confirmed, position: 1)
 

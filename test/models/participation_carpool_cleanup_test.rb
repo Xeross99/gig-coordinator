@@ -2,7 +2,7 @@ require "test_helper"
 
 class ParticipationCarpoolCleanupTest < ActiveSupport::TestCase
   setup do
-    @event     = events(:gig-coordinators_tomorrow)
+    @event     = events(:gig_coordinators_tomorrow)
     @driver    = users(:ala)
     @passenger = users(:bartek)
     @driver_part    = Participation.create!(event: @event, user: @driver,    status: :confirmed, position: 1)

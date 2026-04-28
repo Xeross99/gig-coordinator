@@ -1,6 +1,6 @@
 # Gig Coordinator
 
-> Mobilna PWA (Polish-first) do koordynacji pracy dorywczej w zespołach — organizatorzy ogłaszają jednorazowe wydarzenia, pracownicy zapisują się z telefonu, system pilnuje slotów, listy rezerwowej i priorytetów po randze.
+> Mobilna PWA do koordynacji pracy dorywczej w zespołach — organizatorzy ogłaszają jednorazowe wydarzenia, pracownicy zapisują się z telefonu, system pilnuje slotów, listy rezerwowej i priorytetów po randze.
 
 ![Hero — feed wydarzeń na telefonie](docs/screenshots/hero.png)
 

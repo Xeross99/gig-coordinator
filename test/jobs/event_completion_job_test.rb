@@ -4,7 +4,7 @@ class EventCompletionJobTest < ActiveJob::TestCase
   include ActionMailer::TestHelper
 
   test "marks past events as completed and enqueues one push notification per confirmed participant" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     event.update!(scheduled_at: 3.hours.ago, ends_at: 1.hour.ago)
     u1 = users(:ala); u2 = users(:bartek); u3 = users(:cezary)
     Participation.create!(event: event, user: u1, status: :confirmed, position: 1)
@@ -19,7 +19,7 @@ class EventCompletionJobTest < ActiveJob::TestCase
   end
 
   test "is idempotent — running twice does not re-notify" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     event.update!(scheduled_at: 3.hours.ago, ends_at: 1.hour.ago)
     Participation.create!(event: event, user: users(:ala), status: :confirmed, position: 1)
 
@@ -30,7 +30,7 @@ class EventCompletionJobTest < ActiveJob::TestCase
   end
 
   test "does not touch future events" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     Participation.create!(event: event, user: users(:ala), status: :confirmed, position: 1)
     EventCompletionJob.perform_now
     assert_nil event.reload.completed_at

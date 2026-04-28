@@ -46,7 +46,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     #   Participation.confirmed.joins(:event).where.not(events: { completed_at: nil })
     #                .group(:user_id).count
     # We mirror it directly to guard the behavior without depending on assigns.
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     done = Event.create!(host: hosts(:jan), name: "Zakonczone",
                          scheduled_at: 2.days.ago, ends_at: 2.days.ago + 2.hours,
                          pay_per_person: 100, capacity: 4,
@@ -113,7 +113,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "GET /pracownicy/:id lists upcoming participations" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     Participation.create!(event: event, user: users(:ala), status: :confirmed, position: 1)
 
     sign_in_as(users(:bartek))

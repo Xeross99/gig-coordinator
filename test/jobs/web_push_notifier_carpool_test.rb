@@ -2,7 +2,7 @@ require "test_helper"
 
 class WebPushNotifierCarpoolTest < ActiveJob::TestCase
   setup do
-    @event     = events(:gig-coordinators_tomorrow)
+    @event     = events(:gig_coordinators_tomorrow)
     @driver    = users(:ala)
     @passenger = users(:bartek)
     Participation.create!(event: @event, user: @driver,    status: :confirmed, position: 1)

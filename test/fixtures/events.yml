@@ -1,4 +1,4 @@
-gig-coordinators_tomorrow:
+gig_coordinators_tomorrow:
   host: jan
   name: "Lapanie kur"
   scheduled_at: <%= 2.days.from_now %>

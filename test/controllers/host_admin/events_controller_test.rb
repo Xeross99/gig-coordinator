@@ -62,7 +62,7 @@ module HostAdmin
     end
 
     test "GET show renders event" do
-      get host_event_path(events(:gig-coordinators_tomorrow))
+      get host_event_path(events(:gig_coordinators_tomorrow))
       assert_response :success
       assert_match "Lapanie kur", response.body
     end
@@ -73,14 +73,14 @@ module HostAdmin
     end
 
     test "PATCH update with valid attributes updates and redirects" do
-      event = events(:gig-coordinators_tomorrow)
+      event = events(:gig_coordinators_tomorrow)
       patch host_event_path(event), params: { event: { name: "Nowa nazwa" } }
       assert_equal "Nowa nazwa", event.reload.name
       assert_redirected_to host_event_path(event)
     end
 
     test "DELETE destroys own event" do
-      event = events(:gig-coordinators_tomorrow)
+      event = events(:gig_coordinators_tomorrow)
       assert_difference "Event.count", -1 do
         delete host_event_path(event)
       end
@@ -98,7 +98,7 @@ module HostAdmin
     end
 
     test "GET show renders empty-state for event with no participations" do
-      event = events(:gig-coordinators_tomorrow)
+      event = events(:gig_coordinators_tomorrow)
       get host_event_path(event)
       assert_response :success
 
@@ -108,7 +108,7 @@ module HostAdmin
     end
 
     test "GET show renders Polish labels for each event_type" do
-      event = events(:gig-coordinators_tomorrow)
+      event = events(:gig_coordinators_tomorrow)
       # Zbudujmy ręcznie po jednym wpisie każdego typu, podpinając pod
       # participation istniejącego usera — wystarczy jeden, bo testujemy
       # tylko render etykiet.
@@ -132,7 +132,7 @@ module HostAdmin
     end
 
     test "GET show lists history newest-first (desc order)" do
-      event = events(:gig-coordinators_tomorrow)
+      event = events(:gig_coordinators_tomorrow)
       p_ala     = travel_to(5.minutes.ago) { Participation.create!(event: event, user: users(:ala),    status: :confirmed, position: 1) }
       p_bartek  = travel_to(3.minutes.ago) { Participation.create!(event: event, user: users(:bartek), status: :confirmed, position: 2) }
       p_cezary  = travel_to(1.minute.ago)  { Participation.create!(event: event, user: users(:cezary), status: :confirmed, position: 3) }
@@ -152,7 +152,7 @@ module HostAdmin
     end
 
     test "GET show scopes history to current event only (nie pokazuje wpisów z innych eventów)" do
-      event       = events(:gig-coordinators_tomorrow)
+      event       = events(:gig_coordinators_tomorrow)
       other_event = events(:harvest_next_week)
       # Ala zapisuje się na „nasz" event...
       Participation.create!(event: event,       user: users(:ala),    status: :confirmed, position: 1)
@@ -170,7 +170,7 @@ module HostAdmin
     end
 
     test "GET show history count matches number of entries" do
-      event = events(:gig-coordinators_tomorrow)
+      event = events(:gig_coordinators_tomorrow)
       p = Participation.create!(event: event, user: users(:ala), status: :reserved, position: 1,
                                 reserved_until: 1.hour.from_now)
       p.update!(status: :confirmed, reserved_until: nil)

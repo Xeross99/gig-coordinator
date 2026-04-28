@@ -2,7 +2,7 @@ require "application_system_test_case"
 
 class JoinLiveUpdateTest < ApplicationSystemTestCase
   test "user on event show sees counts and roster update live when another user joins" do
-    event  = events(:gig-coordinators_tomorrow)
+    event  = events(:gig_coordinators_tomorrow)
     user_a = users(:bartek)
     user_b = users(:cezary)
 

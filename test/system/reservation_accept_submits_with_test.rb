@@ -2,7 +2,7 @@ require "application_system_test_case"
 
 class ReservationAcceptSubmitsWithTest < ApplicationSystemTestCase
   test "reservation accept button shows turbo-submits-with text and becomes disabled during submit" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     user  = users(:bartek)
 
     sign_in_as(user)

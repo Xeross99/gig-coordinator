@@ -7,7 +7,7 @@ class NewEventLiveFeedTest < ApplicationSystemTestCase
 
     sign_in_as(user)
     assert_current_path root_path
-    assert_text events(:gig-coordinators_tomorrow).name
+    assert_text events(:gig_coordinators_tomorrow).name
 
     event = host.events.create!(
       name: "Wiosenne sprzątanie",

@@ -12,7 +12,7 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
   test "GET / lists upcoming events across all hosts" do
     get root_path
     assert_response :success
-    assert_match events(:gig-coordinators_tomorrow).name, response.body
+    assert_match events(:gig_coordinators_tomorrow).name, response.body
     assert_match events(:harvest_next_week).name, response.body
   end
 
@@ -28,7 +28,7 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
                          scheduled_at: 3.days.ago, ends_at: 3.days.ago + 2.hours,
                          completed_at: 2.days.ago, pay_per_person: 100, capacity: 3)
     get root_path
-    assert_match events(:gig-coordinators_tomorrow).name, response.body
+    assert_match events(:gig_coordinators_tomorrow).name, response.body
     assert_no_match done.name, response.body
   end
 
@@ -39,17 +39,17 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     get root_path(filter: "completed")
     assert_response :success
     assert_match done.name, response.body
-    assert_no_match events(:gig-coordinators_tomorrow).name, response.body
+    assert_no_match events(:gig_coordinators_tomorrow).name, response.body
   end
 
   test "GET /?filter=bogus falls back to 'new'" do
     get root_path(filter: "bogus")
     assert_response :success
-    assert_match events(:gig-coordinators_tomorrow).name, response.body
+    assert_match events(:gig_coordinators_tomorrow).name, response.body
   end
 
   test "GET /events/:id shows event with host details and map iframe" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     get event_path(event)
     assert_response :success
     assert_match event.name, response.body
@@ -59,12 +59,12 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "GET /eventy/:id/historia requires login" do
     delete session_path
-    get history_event_path(events(:gig-coordinators_tomorrow))
+    get history_event_path(events(:gig_coordinators_tomorrow))
     assert_redirected_to login_path
   end
 
   test "GET /eventy/:id/historia renders event creation + participation entries" do
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
     Participation.create!(event: event, user: users(:bartek), status: :confirmed, position: 1)
     p = Participation.create!(event: event, user: users(:cezary), status: :waitlist, position: 1)
     # Bump updated_at so the controller emits a separate status_change entry.

@@ -3,7 +3,7 @@ require "test_helper"
 class InvitationMailerTest < ActionMailer::TestCase
   test "notify is addressed to user, mentions event, and includes deadline + link" do
     user  = users(:ala)
-    event = events(:gig-coordinators_tomorrow)
+    event = events(:gig_coordinators_tomorrow)
 
     mail = InvitationMailer.with(event: event, user: user).notify
 

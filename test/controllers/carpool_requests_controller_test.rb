@@ -2,7 +2,7 @@ require "test_helper"
 
 class CarpoolRequestsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @event     = events(:gig-coordinators_tomorrow)
+    @event     = events(:gig_coordinators_tomorrow)
     @driver    = users(:ala)
     @passenger = users(:bartek)
     @other     = users(:cezary)
