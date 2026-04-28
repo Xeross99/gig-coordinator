@@ -52,7 +52,7 @@ gem "rails-i18n", "~> 8.0"
 # Beta — pinujemy dokładną wersję. Gem dostarcza zarówno asset (JS+CSS) jak
 # i helpery Rails. W naszym setupie używamy tylko `<lexxy-editor>` jako web
 # component (bez Action Text), więc wyłączamy override Trixa.
-gem "lexxy", "~> 0.9.9.beta"
+gem "lexxy", "~> 0.9.10.beta"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
