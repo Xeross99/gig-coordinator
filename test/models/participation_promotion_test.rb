@@ -44,13 +44,18 @@ class ParticipationPromotionTest < ActionDispatch::IntegrationTest
     assert_equal 4, @event.participations.confirmed.count
   end
 
-  test "canceling confirmed when waitlist is empty leaves a free spot" do
+  test "canceling confirmed when waitlist is empty is REJECTED (keeps the list full)" do
+    # Reguła: confirmed wypisuje się tylko gdy lista jest pełna i ktoś
+    # czeka w rezerwie. Bez waitlisty nie ma promocji → wypis zerwałby
+    # ciągłość pełnej listy, więc go blokujemy.
     confirmed, _ = fill_event_and_queue_waitlist(waitlist_size: 0)
 
     sign_in_as(confirmed.first.user)
     delete event_participation_path(@event)
 
-    assert_equal 3, @event.participations.confirmed.count
+    assert confirmed.first.reload.confirmed?,
+           "confirmed cancel must be rejected when nobody is on the waitlist"
+    assert_equal @event.capacity, @event.participations.confirmed.count
     assert_equal 0, @event.participations.waitlist.count
   end
 

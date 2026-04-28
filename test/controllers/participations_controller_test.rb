@@ -43,11 +43,49 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to event_path(@event)
   end
 
-  test "DELETE destroys own confirmed participation (marks cancelled)" do
-    Participation.create!(event: @event, user: users(:ala), status: :confirmed, position: 1)
+  test "DELETE destroys own confirmed participation (marks cancelled) when event is full and waitlist exists" do
+    @event.update!(capacity: 2)
+    Participation.create!(event: @event, user: users(:ala),    status: :confirmed, position: 1)
+    Participation.create!(event: @event, user: users(:bartek), status: :confirmed, position: 2)
+    Participation.create!(event: @event, user: users(:cezary), status: :waitlist,  position: 1)
+
     delete event_participation_path(@event)
-    p = Participation.find_by(event: @event, user: users(:ala))
-    assert p.cancelled?
+
+    assert Participation.find_by(event: @event, user: users(:ala)).cancelled?
+    assert_redirected_to event_path(@event)
+    # Cezary z waitlisty awansuje — lista zostaje pełna.
+    assert Participation.find_by(event: @event, user: users(:cezary)).confirmed?
+  end
+
+  test "DELETE on confirmed is rejected when event is not full" do
+    Participation.create!(event: @event, user: users(:ala), status: :confirmed, position: 1)
+    # capacity=4, slots_taken=1 → cancel zablokowany.
+    delete event_participation_path(@event)
+    assert Participation.find_by(event: @event, user: users(:ala)).confirmed?,
+           "confirmed cancel must be rejected when list is not full"
+    assert_equal I18n.t("participations.cancel_locked_alert"), flash[:alert]
+  end
+
+  test "DELETE on confirmed is rejected when event is full but waitlist is empty" do
+    @event.update!(capacity: 2)
+    Participation.create!(event: @event, user: users(:ala),    status: :confirmed, position: 1)
+    Participation.create!(event: @event, user: users(:bartek), status: :confirmed, position: 2)
+    # full=2/2, waitlist=0 → cancel zablokowany.
+    delete event_participation_path(@event)
+    assert Participation.find_by(event: @event, user: users(:ala)).confirmed?,
+           "confirmed cancel must be rejected when nobody is waiting"
+    assert_equal I18n.t("participations.cancel_locked_alert"), flash[:alert]
+  end
+
+  test "DELETE on waitlist is always allowed (no full+waitlist gate)" do
+    @event.update!(capacity: 1)
+    Participation.create!(event: @event, user: users(:bartek), status: :confirmed, position: 1)
+    Participation.create!(event: @event, user: users(:ala),    status: :waitlist,  position: 1)
+
+    delete event_participation_path(@event)
+
+    assert Participation.find_by(event: @event, user: users(:ala)).cancelled?,
+           "waitlist cancel must always be allowed"
     assert_redirected_to event_path(@event)
   end
 
@@ -253,8 +291,13 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
   test "blocked user with EXISTING confirmed participation keeps the cancel form" do
     # Edge case: user zapisał się zanim dostał blokadę. Zachowuje własne
     # kontrolki (może anulować), bo banner blokady odpala się tylko przy
-    # braku aktywnego participation.
-    Participation.create!(event: @event, user: users(:ala), status: :confirmed, position: 1)
+    # braku aktywnego participation. Dodatkowo musi być spełniony nowy
+    # warunek (lista pełna + ktoś w rezerwie), inaczej przycisk się
+    # wyszarza — testujemy że formularz jest aktywny.
+    @event.update!(capacity: 2)
+    Participation.create!(event: @event, user: users(:ala),    status: :confirmed, position: 1)
+    Participation.create!(event: @event, user: users(:bartek), status: :confirmed, position: 2)
+    Participation.create!(event: @event, user: users(:cezary), status: :waitlist,  position: 1)
     HostBlock.create!(user: users(:ala), host: @event.host)
 
     get event_path(@event)
@@ -270,10 +313,15 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
 
   test "participation buttons carry data-haptic attributes for iOS/Android feedback" do
     # „Akceptuję" na pustym evencie → confirm; „Anuluj" dla confirmed → error.
+    # Cancel-haptic pojawia się tylko gdy faktycznie można anulować
+    # (lista pełna + ktoś w rezerwie), więc dopełniamy event.
     get event_path(@event)
     assert_select "button[data-haptic='confirm']"
 
-    Participation.create!(event: @event, user: users(:ala), status: :confirmed, position: 1)
+    @event.update!(capacity: 2)
+    Participation.create!(event: @event, user: users(:ala),    status: :confirmed, position: 1)
+    Participation.create!(event: @event, user: users(:bartek), status: :confirmed, position: 2)
+    Participation.create!(event: @event, user: users(:cezary), status: :waitlist,  position: 1)
     get event_path(@event)
     assert_select "button[data-haptic='error']"
   end

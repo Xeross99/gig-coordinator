@@ -98,6 +98,8 @@ pl:
     blocked: "Masz blokadę u tego organizatora — nie możesz zapisać się na ten event."
     blocked_badge: "Blokada u organizatora"
     rate_limited: "Za dużo wiadomości - zwolnij i spróbuj za chwilę."
+    cancel_locked_hint: "Wypisać się możesz dopiero gdy lista będzie pełna i ktoś będzie czekał w rezerwie."
+    cancel_locked_alert: "Nie możesz się wypisać — lista nie jest pełna albo nikt nie czeka w rezerwie."
   host_panel:
     title: "Panel organizatora"
     my_events: "Moje eventy"

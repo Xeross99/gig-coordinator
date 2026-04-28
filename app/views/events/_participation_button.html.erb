@@ -52,9 +52,17 @@
   </div>
 <% elsif participation&.confirmed? %>
   <div class="rounded-lg bg-emerald-50 text-emerald-800 px-3 py-2 text-sm mb-3 animate-pop-in"><%= t("events.confirmed_badge") %></div>
-  <%= button_to t("events.cancel"), event_participation_path(event), method: :delete,
-                data: { turbo_confirm: "Na pewno anulujesz udział w tym evencie?", haptic: "error" },
-                class: "w-full py-3 rounded-lg border border-stone-300 text-stone-800 font-medium transition-transform active:scale-[0.97]" %>
+  <% if event.confirmed_cancellable? %>
+    <%= button_to t("events.cancel"), event_participation_path(event), method: :delete,
+                  data: { turbo_confirm: "Na pewno anulujesz udział w tym evencie?", haptic: "error" },
+                  class: "w-full py-3 rounded-lg border border-stone-300 text-stone-800 font-medium transition-transform active:scale-[0.97]" %>
+  <% else %>
+    <button type="button" disabled aria-disabled="true"
+            class="w-full py-3 rounded-lg bg-stone-200 text-stone-500 font-medium cursor-not-allowed">
+      <%= t("events.cancel") %>
+    </button>
+    <p class="text-xs text-stone-500 mt-2 text-center"><%= t("participations.cancel_locked_hint") %></p>
+  <% end %>
 <% elsif participation&.waitlist? %>
   <div class="rounded-lg bg-amber-50 text-amber-800 px-3 py-2 text-sm mb-3 animate-pop-in"><%= t("events.waitlist_badge") %></div>
   <%= button_to t("events.cancel"), event_participation_path(event), method: :delete,

@@ -51,15 +51,24 @@ class ParticipationsController < ApplicationController
     @event = Event.find(params[:event_id])
     return if enforce_event_lock!(@event)
     promoted = nil
+    cancel_blocked = false
 
     Event.transaction do
       @event.lock!
       participation = @event.participations.active.find_by(user_id: Current.user.id)
       if participation
-        was_confirmed = participation.confirmed?
-        participation.update!(status: :cancelled, reserved_until: nil)
-        promoted = promote_from_waitlist(@event) if was_confirmed
+        if participation.confirmed? && !@event.confirmed_cancellable?
+          cancel_blocked = true
+        else
+          was_confirmed = participation.confirmed?
+          participation.update!(status: :cancelled, reserved_until: nil)
+          promoted = promote_from_waitlist(@event) if was_confirmed
+        end
       end
+    end
+
+    if cancel_blocked
+      redirect_to event_path(@event), alert: I18n.t("participations.cancel_locked_alert") and return
     end
 
     if promoted

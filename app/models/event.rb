@@ -93,6 +93,15 @@ class Event < ApplicationRecord
     slots_taken >= capacity
   end
 
+  # Confirmed (potwierdzeni) mogą się wypisać dopiero gdy lista jest PEŁNA
+  # i ktoś czeka w rezerwie — wtedy waitlist wskakuje na ich miejsce i lista
+  # zostaje pełna. Inaczej zerwałoby to ciągłość listy głównej. Anulowanie
+  # z waitlisty / odrzucenie reservation nie podlega tej regule (nie zwalnia
+  # potwierdzonego slotu).
+  def confirmed_cancellable?
+    full? && waitlist_count.positive?
+  end
+
   # Everything the roster partial needs, loaded in a handful of queries and
   # memoized on the instance. Called from the user+host show pages and from
   # Participation#broadcast_event_updates (on a fresh Event instance each
