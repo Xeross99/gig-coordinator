@@ -1,6 +1,6 @@
 class PromoteTomaszWisniewskiToKomendant < ActiveRecord::Migration[8.1]
   def up
-    user = User.find_by(first_name: "Michał", last_name: "Wiśniewski")
+    user = User.find_by(first_name: "Tomasz", last_name: "Wiśniewski")
     return unless user
 
     user.update!(title: :captain)
@@ -8,7 +8,7 @@ class PromoteTomaszWisniewskiToKomendant < ActiveRecord::Migration[8.1]
   end
 
   def down
-    user = User.find_by(first_name: "Michał", last_name: "Wiśniewski")
+    user = User.find_by(first_name: "Tomasz", last_name: "Wiśniewski")
     return unless user
 
     user.update!(title: :rookie)

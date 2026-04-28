@@ -47,8 +47,8 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "same first_name with different last_name is allowed" do
-    User.create!(first_name: "Michał", last_name: "Kowalska", email: "a1@example.com")
-    other = User.new(first_name: "Michał", last_name: "Wiśniewski", email: "a2@example.com")
+    User.create!(first_name: "Anna", last_name: "Kowalska", email: "a1@example.com")
+    other = User.new(first_name: "Anna", last_name: "Wiśniewska", email: "a2@example.com")
     assert other.valid?, other.errors.full_messages.inspect
   end
 

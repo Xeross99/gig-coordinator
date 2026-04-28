@@ -15,9 +15,9 @@ if Rails.env.development?
   end
 
   [
-    { first_name: "Michał",   last_name: "Kowalska",  email: "admin@gigcoordinator.pl",       title: :master, admin: true },
-    { first_name: "Adam",     last_name: "Nowak",      email: "example1@gigcoordinator.pl",         title: :master },
-    { first_name: "Michał",   last_name: "Wiśniewski",  email: "example2@gigcoordinator.pl",    title: :rookie },
+    { first_name: "Anna",     last_name: "Kowalska",   email: "admin@gigcoordinator.pl",     title: :master, admin: true },
+    { first_name: "Adam",     last_name: "Nowak",      email: "example1@gigcoordinator.pl",  title: :master },
+    { first_name: "Tomasz",   last_name: "Wiśniewski", email: "example2@gigcoordinator.pl",  title: :rookie },
     { first_name: "Marcin",   last_name: "Lewandowski",       email: "example3@gigcoordinator.pl",    title: :member },
     { first_name: "Mateusz",  last_name: "Zieliński",  email: "example4@gigcoordinator.pl",    title: :veteran },
     { first_name: "Ksawery",  last_name: "Szymański",     email: "example5@gigcoordinator.pl",    title: :member },
