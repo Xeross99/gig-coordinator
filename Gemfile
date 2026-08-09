@@ -49,7 +49,7 @@ gem "web-push", "~> 3.0"
 gem "rails-i18n", "~> 8.0"
 
 # Cloud Storage upload for nightly DB backups (Maintenance::DatabaseBackupJob)
-gem "google-cloud-storage", "~> 1.50", require: false
+gem "google-cloud-storage", "~> 1.62", require: false
 
 
 group :development, :test do
