@@ -1,0 +1,41 @@
+<%# Locals: f: (FormBuilder dla nested events). %>
+<% event = f.object %>
+<div data-sub-event-row class="rounded-xl border border-stone-200 bg-stone-50 p-3 space-y-3">
+  <%= f.hidden_field :id %>
+  <%= f.hidden_field :_destroy, value: "0" %>
+
+  <div class="flex items-center justify-between gap-2">
+    <h3 class="text-sm font-semibold text-stone-700"><%= "Zlecenie w serii" %></h3>
+    <button type="button"
+            data-action="nested-events#remove"
+            class="text-xs font-medium text-red-700 underline decoration-dotted underline-offset-2 hover:text-red-900">
+      <%= "Usuń to zlecenie" %>
+    </button>
+  </div>
+
+  <div>
+    <%= f.label :name, "Nazwa zlecenia", class: "block text-xs text-stone-700 mb-1" %>
+    <%= f.text_field :name, required: true,
+                     class: "w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-sm" %>
+  </div>
+
+  <%= render "events/schedule_fields", event: event, name_prefix: f.object_name,
+             default_start_hour: 7, compact: true %>
+
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <%= f.label :pay_per_person, Copy::Events::PAY_PER_PERSON, class: "block text-xs text-stone-700 mb-1" %>
+      <%= f.select :pay_per_person, (0..500).step(10).to_a,
+                   { selected: event.pay_per_person&.to_i || 100 },
+                   required: true,
+                   class: "form-select w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-sm" %>
+    </div>
+    <div>
+      <%= f.label :capacity, "Liczba miejsc", class: "block text-xs text-stone-700 mb-1" %>
+      <%= f.select :capacity, (1..20).to_a,
+                   { selected: event.capacity || 4 },
+                   required: true,
+                   class: "form-select w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-sm" %>
+    </div>
+  </div>
+</div>

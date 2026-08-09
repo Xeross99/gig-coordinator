@@ -1,0 +1,8 @@
+Cześć <%= @user.first_name %>!
+
+Jako jeden z najwyższych w rankingu dostajesz slot na zleceniu "<%= @event.name %>". Masz 2,5 godziny na potwierdzenie - jeśli nie zdążysz, miejsce przejdzie do kolejnej osoby z rankingu.
+
+Start: <%= l(@event.scheduled_at, format: :long) %>
+Potwierdź do: <%= l(@deadline, format: :short) %>
+
+<%= event_url(@event) %>

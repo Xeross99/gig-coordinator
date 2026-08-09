@@ -1,0 +1,11 @@
+<%= mail_title "Cześć #{@record.first_name}!" %>
+
+<%= mail_paragraph do %>
+  Oto Twój 5-cyfrowy kod logowania. Wpisz go w aplikacji, aby się zalogować.
+  <br>
+  Kod wygaśnie za <%= mail_strong "15 minut" %>.
+<% end %>
+
+<%= mail_code @code %>
+
+<%= mail_paragraph "Jeśli to nie Ty prosiłeś o logowanie, po prostu zignoruj tego maila." %>

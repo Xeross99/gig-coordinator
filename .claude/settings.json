@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git *)",
+            "command": "cmd=$(jq -r '.tool_input.command'); echo \"$cmd\" | grep -qE '\\bgit[[:space:]]+(commit|push)\\b' || exit 0; bin/ci > /tmp/claude-bin-ci.log 2>&1 || jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"bin/ci failed — fix issues before committing or pushing. Output: /tmp/claude-bin-ci.log\"}}'",
+            "statusMessage": "Running bin/ci before commit/push…",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}

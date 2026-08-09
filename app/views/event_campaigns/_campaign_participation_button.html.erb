@@ -1,0 +1,75 @@
+<%# Locals: campaign:. %>
+<% campaign = local_assigns[:campaign] || event_campaign %>
+<% participation = campaign.campaign_participations.active.find_by(user_id: Current.user&.id) %>
+<% blocked = Current.user&.blocked_from?(campaign.host) %>
+
+<% if campaign.completed? %>
+  <div class="rounded-lg bg-stone-100 text-stone-700 px-3 py-3 text-sm">
+    <span class="font-medium"><%= "Seria zleceń zakończona." %></span>
+  </div>
+<% elsif Current.user && !Current.user.can_join_events? && participation.nil? %>
+  <div class="rounded-lg bg-amber-50 text-amber-900 px-3 py-2 text-sm mb-3">
+    <span class="font-semibold"><%= Copy::Participations::ZOLTODZIOB_BADGE %></span>
+    <div class="text-xs mt-1 text-amber-800"><%= Copy::Participations::ZOLTODZIOB_VIEW_ONLY %></div>
+  </div>
+<% elsif blocked && participation.nil? %>
+  <div class="rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm">
+    <span class="font-semibold"><%= Copy::Participations::BLOCKED_BADGE %></span>
+    <div class="text-xs mt-1 text-red-700"><%= Copy::Participations::BLOCKED %></div>
+  </div>
+<% elsif participation&.reserved? && !participation.reservation_expired? %>
+  <% remaining_min = ((participation.reserved_until - Time.current) / 60).to_i %>
+  <div class="rounded-lg bg-indigo-50 text-indigo-900 px-3 py-2 text-sm mb-3">
+    <div class="flex items-center gap-2">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="size-4 text-indigo-500 animate-spin shrink-0">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 40"/>
+      </svg>
+      <span class="font-semibold">Masz zaproszenie do serii zleceń</span>
+    </div>
+    <div class="text-xs mt-1 text-indigo-700">
+      Deadline: <%= l(participation.reserved_until, format: :short) %> (ok. <%= [ remaining_min, 0 ].max %> min)
+    </div>
+  </div>
+  <div class="grid grid-cols-2 gap-2">
+    <%= button_to "Akceptuję", accept_event_campaign_campaign_participation_path(campaign), method: :post,
+                  form: { class: "contents", data: { turbo_frame: "_top" } },
+                  data: { turbo_submits_with: "Akceptuję…" },
+                  class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium hover:bg-stone-800 disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
+    <%= button_to "Odrzuć", decline_event_campaign_campaign_participation_path(campaign), method: :post,
+                  form: { class: "contents", data: { turbo_frame: "_top" } },
+                  data: { turbo_submits_with: "Odrzucam…" },
+                  class: "w-full py-3 rounded-lg border border-stone-300 text-stone-800 font-medium disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
+  </div>
+<% elsif participation&.confirmed? %>
+  <% my_active_count, total_count = campaign.sub_event_progress_for(Current.user) %>
+  <div class="rounded-lg bg-emerald-50 text-emerald-800 px-3 py-2 text-sm mb-3">
+    <div class="font-semibold">Masz miejsce na głównej liście serii</div>
+    <div class="text-xs mt-0.5 text-emerald-700">
+      <% if total_count.zero? %>
+        W tej serii nie ma jeszcze zaplanowanych zleceń. Gdy gospodarz doda pierwsze, lista uczestników zostanie skopiowana z głównej listy serii — wskoczysz na nie bez klikania.
+      <% elsif my_active_count == total_count %>
+        Zapisany na wszystkie zaplanowane zlecenia (<%= my_active_count %>/<%= total_count %>). Każde nowe zlecenie w tym rzucie kopiuje listę uczestników z głównej — Ty trafisz tam automatycznie.
+      <% elsif my_active_count.zero? %>
+        Wypisałeś się ze wszystkich zaplanowanych zleceń (<%= my_active_count %>/<%= total_count %>), ale nadal trzymasz miejsce na głównej liście. Każde nowe zlecenie w tym rzucie kopiuje listę z głównej — automatycznie wskoczysz, a jeśli akurat nie pasuje, wypiszesz się tylko z tego jednego terminu.
+      <% else %>
+        Zapisany na <%= my_active_count %>/<%= total_count %> zaplanowanych zleceń — pojedyncze terminy możesz pomijać. Każde nowe zlecenie w tym rzucie kopiuje listę uczestników z głównej — Ty trafisz tam automatycznie.
+      <% end %>
+    </div>
+  </div>
+  <%= button_to "Anuluj udział", event_campaign_campaign_participation_path(campaign), method: :delete,
+                data: { turbo_confirm: "Anulowanie wypisze Cię ze wszystkich zleceń w tym rzucie. Jeśli chcesz zrezygnować tylko z jednego terminu, wejdź na stronę tego zlecenia i anuluj tam.", turbo_submits_with: "Anuluję…" },
+                class: "w-full py-3 rounded-lg border border-stone-300 text-stone-800 font-medium disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
+<% elsif participation&.waitlist? %>
+  <div class="rounded-lg bg-amber-50 text-amber-800 px-3 py-2 text-sm mb-3"><%= Copy::Events::WAITLIST_BADGE %></div>
+  <%= button_to Copy::Events::CANCEL, event_campaign_campaign_participation_path(campaign), method: :delete,
+                data: { turbo_confirm: "Na pewno zejdziesz z listy rezerwowej serii?", turbo_submits_with: "Wypisuję…" },
+                class: "w-full py-3 rounded-lg border border-stone-300 text-stone-800 font-medium disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
+<% elsif campaign.full? %>
+  <%= button_to Copy::Events::WAITLIST_ACCEPT, event_campaign_campaign_participation_path(campaign), method: :post,
+                data: { turbo_submits_with: "Zapisuję na rezerwę…" },
+                class: "w-full py-3 rounded-lg bg-amber-500 text-white font-medium hover:bg-amber-600 disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
+<% else %>
+  <%= button_to "Zapisz mnie na wszystkie zlecenia", event_campaign_campaign_participation_path(campaign), method: :post,
+                data: { turbo_submits_with: "Zapisuję…" },
+                class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium hover:bg-stone-800 disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
+<% end %>

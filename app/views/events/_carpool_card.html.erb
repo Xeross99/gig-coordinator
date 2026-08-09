@@ -1,0 +1,154 @@
+<%# locals: (event:, offer:) -%>
+<% is_driver_me = Current.user && Current.user.id == offer.user_id %>
+<% accepted = offer.carpool_requests.select(&:accepted?) %>
+<% pending  = offer.carpool_requests.select(&:pending?) %>
+<% seats_left = offer.seats_left %>
+<% am_passenger = Current.user && accepted.any? { |r| r.user_id == Current.user.id } %>
+<% trip_active  = !offer.not_started? %>
+<%# „Zapytaj o podwózkę" / „Czekasz…" / „Zapytaj ponownie" / „Auto zajęte" —
+    przycisk akcji widoczny dla confirmed uczestnika, który nie jest kierowcą
+    nigdzie na tym zleceniu i nie ma już zaakceptowanej podwózki gdzie indziej.
+    Pasażer u tego kierowcy ma własny przycisk „Zrezygnuj" w sekcji niżej. -%>
+<% can_ask = false %>
+<% my_request_here = nil %>
+<% if Current.user && !is_driver_me && !event.started? %>
+  <% data = event.roster_data %>
+  <% on_main_list = data[:participations_by_user][Current.user.id]&.confirmed? %>
+  <% drives_on_event = data[:carpool_offers_by_user][Current.user.id].present? %>
+  <% accepted_elsewhere = data[:carpool_offers].any? { |o| o.id != offer.id && o.carpool_requests.any? { |r| r.user_id == Current.user.id && r.accepted? } } %>
+  <% my_request_here = offer.carpool_requests.find { |r| r.user_id == Current.user.id } %>
+  <% can_ask = on_main_list && !drives_on_event && !accepted_elsewhere && !am_passenger %>
+<% end %>
+<% has_card = offer.user.player_card? %>
+<li class="rounded-lg bg-sky-50 text-sm shadow-md animate-pop-in overflow-hidden">
+  <%# Nagłówek kierowcy w formacie paska rosteru: pełnowysokościowy avatar,
+      chip Online, tło karty gracza dla premium. Interaktywna treść (trasa,
+      przyciski, pasażerowie) zostaje pod spodem na sky-50. %>
+  <div class="relative overflow-hidden flex items-center gap-3 aspect-[5/1] sm:aspect-[6/1] min-h-fit">
+    <%= render "events/roster_card_bg", user: offer.user %>
+    <%= render "events/roster_online_chip", user: offer.user, has_card: has_card %>
+    <%= render "events/roster_row_avatar", user: offer.user %>
+    <div class="relative min-w-0 flex-1 py-2 pr-3">
+      <div class="text-sm font-semibold truncate <%= has_card ? "text-white drop-shadow-sm" : "text-stone-900" %>"><%= offer.user.display_name %></div>
+      <div class="text-xs mt-0.5 <%= has_card ? "text-sky-100 drop-shadow-sm" : "text-sky-800" %>">
+        Kierowca · wolne miejsca: <%= seats_left %>/<%= CarpoolOffer::SEATS %>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-3 pb-3">
+
+  <%# Trip status panel — kierowca widzi przyciski sterujące, pasażer widzi
+      tylko aktualny stan trasy. Renderowany w obu przypadkach gdy trasa
+      jest w toku, plus dla kierowcy gdy ma jakichkolwiek pasażerów (żeby
+      mógł nacisnąć „Wyjeżdżam"). %>
+  <% if !event.started? && (is_driver_me && accepted.any?) %>
+    <%= render "events/carpool_trip_driver", event: event, offer: offer, accepted: accepted %>
+  <% elsif trip_active && am_passenger %>
+    <%= render "events/carpool_trip_passenger", event: event, offer: offer %>
+  <% end %>
+
+  <% if can_ask %>
+    <% case my_request_here&.status %>
+    <% when "pending" %>
+      <div class="mt-3 flex items-center justify-between gap-2">
+        <span class="text-xs text-amber-700">Czekasz na potwierdzenie kierowcy…</span>
+        <%= button_to "Wycofaj", event_carpool_request_path(event, my_request_here), method: :delete,
+                      class: "text-xs font-medium py-1 px-2 rounded-md border border-stone-300 text-stone-700 bg-white hover:bg-stone-100" %>
+      </div>
+    <% when "declined" %>
+      <div class="mt-3 flex items-center justify-between gap-2">
+        <span class="text-xs text-red-700">Kierowca odrzucił prośbę.</span>
+        <% if seats_left > 0 %>
+          <%= button_to "Zapytaj ponownie", event_carpool_requests_path(event, carpool_offer_id: offer.id), method: :post,
+                        class: "text-xs font-medium py-1 px-2 rounded-md bg-sky-600 text-white hover:bg-sky-700" %>
+        <% end %>
+      </div>
+    <% else %>
+      <% if seats_left > 0 %>
+        <%= button_to event_carpool_requests_path(event, carpool_offer_id: offer.id), method: :post,
+                      class: "mt-3 w-full text-xs font-medium py-1.5 rounded-md bg-sky-600 text-white hover:bg-sky-700 transition-colors" do %>
+          Zapytaj o podwózkę (<%= seats_left %>/<%= CarpoolOffer::SEATS %> wolne)
+        <% end %>
+      <% else %>
+        <div class="mt-3 text-xs text-stone-500">Auto zajęte (<%= offer.seats_taken %>/<%= CarpoolOffer::SEATS %>)</div>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if accepted.any? %>
+    <div class="mt-3 text-xs text-stone-600 uppercase tracking-wide">Pasażerowie</div>
+    <ul class="mt-1.5 space-y-2">
+      <% accepted.each do |req| %>
+        <% p_card = req.user.player_card? %>
+        <li class="relative overflow-hidden flex items-center gap-3 rounded-lg bg-white/70 shadow-sm aspect-[5/1] sm:aspect-[6/1] min-h-fit">
+          <%= render "events/roster_card_bg", user: req.user %>
+          <%= render "events/roster_online_chip", user: req.user, has_card: p_card %>
+          <%= render "events/roster_row_avatar", user: req.user %>
+          <div class="relative min-w-0 flex-1 py-2">
+            <div class="text-sm font-semibold truncate <%= p_card ? "text-white drop-shadow-sm" : "text-stone-800" %>"><%= req.user.display_name %></div>
+            <div class="mt-0.5"><%= render "users/title_badge", user: req.user %></div>
+          </div>
+          <% if !event.started? %>
+            <% if is_driver_me %>
+              <%= button_to "Usuń", decline_event_carpool_request_path(event, req), method: :post,
+                            data: { turbo_confirm: "Usunąć pasażera z auta?" },
+                            form: { class: "absolute bottom-2 right-3 z-10" },
+                            class: "text-xs font-medium py-1 px-3 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-transform active:scale-[0.98]" %>
+            <% elsif Current.user && req.user_id == Current.user.id %>
+              <%= button_to event_carpool_request_path(event, req), method: :delete,
+                            data: { turbo_confirm: "Zrezygnujesz z podwózki?" },
+                            form: { class: "relative shrink-0 mr-3" },
+                            class: "text-xs font-medium py-0.5 px-2 rounded border border-stone-300 text-stone-700 bg-white hover:bg-stone-100",
+                            title: "Zrezygnuj z podwózki",
+                            "aria-label": "Zrezygnuj z podwózki" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true" class="size-3.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                </svg>
+              <% end %>
+            <% end %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <% if is_driver_me && pending.any? && !event.started? %>
+    <div class="mt-3 text-xs text-stone-600 uppercase tracking-wide">Zapytania (<%= pending.size %>)</div>
+    <ul class="mt-1.5 space-y-2">
+      <% pending.each do |req| %>
+        <% p_card = req.user.player_card? %>
+        <li class="relative overflow-hidden flex items-center gap-3 rounded-lg bg-white shadow-sm aspect-[5/1] sm:aspect-[6/1] min-h-fit">
+          <%= render "events/roster_card_bg", user: req.user %>
+          <%= render "events/roster_row_avatar", user: req.user %>
+          <div class="relative min-w-0 flex-1 py-2">
+            <div class="text-sm font-semibold truncate <%= p_card ? "text-white drop-shadow-sm" : "text-stone-800" %>"><%= req.user.display_name %></div>
+            <div class="mt-0.5"><%= render "users/title_badge", user: req.user %></div>
+          </div>
+          <div class="relative flex items-center gap-1 shrink-0 mr-3">
+            <%= button_to "Potwierdź", accept_event_carpool_request_path(event, req), method: :post,
+                          class: "text-xs font-medium py-1 px-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 #{'opacity-50 cursor-not-allowed' if seats_left < 1}",
+                          disabled: seats_left < 1 %>
+            <%= button_to "Odrzuć", decline_event_carpool_request_path(event, req), method: :post,
+                          class: "text-xs font-medium py-1 px-2 rounded border border-stone-300 text-stone-700 bg-white hover:bg-stone-100" %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% elsif !is_driver_me && pending.any? %>
+    <ul class="mt-2 space-y-2">
+      <% pending.each do |req| %>
+        <% p_card = req.user.player_card? %>
+        <li class="relative overflow-hidden flex items-center gap-3 rounded-lg bg-white/70 shadow-sm aspect-[5/1] sm:aspect-[6/1] min-h-fit animate-pulse opacity-60">
+          <%= render "events/roster_card_bg", user: req.user %>
+          <%= render "events/roster_row_avatar", user: req.user %>
+          <div class="relative min-w-0 flex-1 py-2">
+            <div class="text-sm font-semibold truncate <%= p_card ? "text-white drop-shadow-sm" : "text-stone-800" %>"><%= req.user.display_name %></div>
+            <div class="mt-0.5 text-xs <%= p_card ? "text-sky-100 drop-shadow-sm" : "text-stone-500" %>">Czeka na odpowiedź kierowcy…</div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+  </div>
+</li>

@@ -1,0 +1,11 @@
+<%= mail_title "Brak miejsca w aucie" %>
+<%= mail_paragraph "Cześć #{@passenger.first_name}!" %>
+
+<%= mail_paragraph do %>
+  <%= mail_strong @driver.display_name %> niestety nie może zabrać Cię
+  na event <%= mail_strong @event.name %>.
+  Sprawdź, czy ktoś inny nie zgłosił się jako kierowca.
+<% end %>
+
+<%= mail_button "Otwórz zlecenie", event_url(@event) %>
+<%= mail_raw_url event_url(@event) %>

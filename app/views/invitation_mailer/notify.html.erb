@@ -1,0 +1,16 @@
+<%= mail_title "Cześć #{@user.first_name}!" %>
+
+<%= mail_paragraph do %>
+  Jako jeden z najwyższych w rankingu dostajesz slot na zleceniu
+  <%= mail_strong @event.name %>. Masz 2,5 godziny na potwierdzenie -
+  jeśli nie zdążysz, miejsce przejdzie do kolejnej osoby z rankingu.
+<% end %>
+
+<%= mail_paragraph do %>
+  Start: <%= mail_strong l(@event.scheduled_at, format: :long) %>
+  <br>
+  Potwierdź do: <%= mail_strong l(@deadline, format: :short) %>
+<% end %>
+
+<%= mail_button "Otwórz zlecenie", event_url(@event) %>
+<%= mail_raw_url event_url(@event) %>

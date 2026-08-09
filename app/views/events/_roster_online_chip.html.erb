@@ -1,0 +1,15 @@
+<%# locals: (user:, has_card:) -%>
+<%# Status obecności w prawym górnym rogu paska rosteru. Na karcie gracza
+    (tło-grafika) chip dostaje białą pastylkę z cieniem — prawa strona karty
+    nie ma scrima, a sceny bywają jasne (słońce, śnieg), więc półprzezroczyste
+    warianty ginęły w tle. %>
+<span class="absolute top-2 right-2 z-10 inline-flex items-center gap-1 text-[10px] font-medium
+             <%= has_card ? "bg-white/60 shadow-sm rounded-full px-1.5 py-0.5" : "" %>
+             <%= if user.online?
+                   has_card ? "text-emerald-700" : "text-emerald-600"
+                 else
+                   has_card ? "text-stone-500" : "text-stone-400"
+                 end %>">
+  <span class="size-2 rounded-full <%= user.online? ? "bg-emerald-500" : "bg-stone-300" %>"></span>
+  <%= user.online? ? "Online" : "Offline" %>
+</span>

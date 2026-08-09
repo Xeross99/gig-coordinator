@@ -1,0 +1,69 @@
+<% content_for(:title) { "Wszyscy kurołapacze" } %>
+<%= render "shared/breadcrumbs", crumbs: [["Wszyscy kurołapacze", nil]] %>
+
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold">Wszyscy kurołapacze</h1>
+  <% if admin_signed_in? %>
+    <%= link_to "Dodaj kurołapacza", new_user_path, class: "shrink-0 px-3 py-2 rounded-lg bg-stone-900 text-white text-sm font-medium" %>
+  <% end %>
+</div>
+
+<div class="mb-4">
+  <%= render "shared/sort_toggle",
+             options: [["rank", "Ranga"], ["name_asc", "Od A do Z"], ["name_desc", "Od Z do A"]],
+             current: @sort,
+             path_helper: :users_path,
+             full_width: true %>
+</div>
+
+<% if @users.any? %>
+  <div class="sort-target">
+  <div class="flex items-center justify-between px-4 pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+    <span>Kurołapacz</span>
+    <span class="flex items-center gap-1">
+      <span aria-hidden="true">🐔</span>
+      <span>Zaliczone zlecenia</span>
+    </span>
+  </div>
+  <ul class="space-y-3">
+    <% @users.each do |user| %>
+      <% catches = @catch_counts[user.id] || 0 %>
+      <% has_card = user.player_card? && !user.disabled? %>
+      <li class="bg-white rounded-xl shadow-md overflow-hidden">
+        <% if user.disabled? %>
+          <div class="flex items-center gap-2 bg-stone-100 border-b border-stone-200 px-4 py-2 text-xs font-medium text-stone-600">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" class="size-3.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+            <%= Copy::Users::DISABLED_BADGE %>
+          </div>
+        <% end %>
+        <%= link_to user_path(user),
+                    class: "relative overflow-hidden flex items-center gap-4 aspect-[5/1] sm:aspect-[6/1] min-h-fit hover:bg-stone-50 active:bg-stone-100 transition-colors #{"opacity-50 grayscale" if user.disabled?}" do %>
+          <%= render "events/roster_card_bg", user: user unless user.disabled? %>
+          <%= render "events/roster_row_avatar", user: user %>
+          <div class="relative min-w-0 flex-1 py-2">
+            <div class="text-sm font-semibold truncate <%= has_card ? "text-white drop-shadow-sm" : "text-stone-900" %>"><%= user.display_name %></div>
+            <div class="mt-0.5"><%= render "users/title_badge", user: user %></div>
+            <div class="mt-0.5 text-xs <%= has_card ? "text-stone-200 drop-shadow-sm" : "text-stone-500" %>">
+              <% if user.online? && !user.disabled? %>
+                <span class="font-medium <%= has_card ? "text-emerald-300" : "text-emerald-600" %>">● Online</span>
+              <% elsif user.last_seen_at.present? %>
+                Online <%= time_ago_in_words(user.last_seen_at) %> temu
+              <% else %>
+                Nigdy się nie logował
+              <% end %>
+            </div>
+          </div>
+          <div class="relative flex items-center gap-1.5 shrink-0 mr-4" title="Zaliczone zlecenia">
+            <span class="text-lg leading-none" aria-hidden="true">🐔</span>
+            <span class="text-sm font-semibold tabular-nums <%= has_card ? "text-white drop-shadow-sm" : "text-stone-900" %>"><%= catches %></span>
+          </div>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+  </div>
+<% else %>
+  <div class="text-stone-500 py-8 text-center">Brak kurołapaczy.</div>
+<% end %>

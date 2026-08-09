@@ -1,0 +1,281 @@
+<% content_for(:title) { "Mój profil" } %>
+<%= render "shared/breadcrumbs", crumbs: [["Mój profil", nil]] %>
+
+<h1 class="text-2xl font-semibold mb-4">Mój profil</h1>
+
+<div class="bg-white rounded-xl shadow-sm p-6 mb-4 flex flex-col items-center text-center">
+  <div class="size-20 rounded-full bg-amber-100 flex items-center justify-center text-4xl leading-none mb-4" aria-hidden="true">
+    <%= @user.title_icon %>
+  </div>
+
+  <h2 class="text-3xl font-semibold text-stone-900 leading-tight wrap-break-word">
+    <%= @user.first_name %> <%= @user.last_name %>
+  </h2>
+
+  <div class="mt-3 flex justify-center">
+    <%= render "users/title_badge", user: @user %>
+  </div>
+
+  <dl class="mt-6 w-full divide-y divide-stone-100 border-t border-stone-100 text-sm text-left">
+    <div class="flex items-center justify-between gap-4 py-3">
+      <dt class="text-stone-500 shrink-0">E-mail</dt>
+      <dd class="font-medium text-stone-900 truncate"><%= @user.email %></dd>
+    </div>
+    <div class="flex items-center justify-between gap-4 py-3">
+      <dt class="text-stone-500 shrink-0">Telefon</dt>
+      <dd class="font-medium <%= "text-stone-400" if @user.phone.blank? %>">
+        <%= @user.phone.presence || "Nie podano" %>
+      </dd>
+    </div>
+    <div class="flex items-center justify-between gap-4 py-3">
+      <dt class="text-stone-500 shrink-0">Kierowca</dt>
+      <dd class="font-medium <%= @user.can_drive? ? "text-emerald-700" : "text-stone-400" %>">
+        <% if @user.can_drive? %>
+          <span class="inline-flex items-center gap-1">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/>
+            </svg>
+            Tak
+          </span>
+        <% else %>
+          Nie
+        <% end %>
+      </dd>
+    </div>
+  </dl>
+
+  <p class="mt-4 text-xs text-stone-500">Zmiana imienia, nazwiska lub adresu e-mail wymaga kontaktu z administratorem.</p>
+</div>
+
+<%= form_with model: @user, url: profile_path, method: :patch,
+              class: "space-y-4 bg-white rounded-xl shadow-sm p-5",
+              data: { turbo: false, controller: "photo-upload", photo_upload_url_value: rails_direct_uploads_path } do |f| %>
+  <% if @user.errors.any? %>
+    <div class="bg-red-50 text-red-800 rounded-lg p-3 text-sm">
+      <ul class="list-disc list-inside">
+        <% @user.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @user.photo.attached? %>
+    <div class="flex items-center gap-3">
+      <%= image_tag @user.photo.variant(:small), alt: "#{@user.display_name} photo", class: "size-16 rounded-full object-cover" %>
+      <div class="text-sm text-stone-500">Obecne zdjęcie</div>
+    </div>
+  <% end %>
+
+  <div>
+    <label class="block text-sm text-stone-700 mb-1">Zdjęcie profilowe</label>
+
+    <input type="file" accept="image/*" class="sr-only"
+           data-photo-upload-target="input"
+           data-action="change->photo-upload#upload">
+
+    <input type="hidden" name="user[photo]" data-photo-upload-target="hiddenInput" disabled>
+
+    <button type="button"
+            class="w-full py-2.5 rounded-lg border border-stone-300 bg-white text-stone-900 font-medium hover:bg-stone-50"
+            data-action="click->photo-upload#selectFile">
+      Wybierz zdjęcie
+    </button>
+
+    <p class="mt-2 text-sm text-stone-600 truncate" data-photo-upload-target="filename"></p>
+
+    <div class="mt-2 hidden" data-photo-upload-target="progress">
+      <div class="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
+        <div class="h-full bg-stone-900 transition-[width] duration-150" style="width: 0%" data-photo-upload-target="progressBar"></div>
+      </div>
+      <p class="mt-1 text-xs text-stone-500" data-photo-upload-target="status"></p>
+    </div>
+  </div>
+
+  <%= f.submit "Zapisz zdjęcie", class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium",
+               data: { photo_upload_target: "submit", turbo_submits_with: "Zapisuję…" } %>
+<% end %>
+
+<%# Karta kurołapacza — tło profilu à la Call of Duty. Sekcja tylko dla kont
+    premium (sam wybór karty); cennik i zajawka kart żyją na /wesprzyj. %>
+<% if @user.premium? %>
+  <div class="bg-white rounded-xl shadow-sm p-5 mt-4">
+    <h2 class="font-medium mb-1 flex items-center gap-2">
+      Karta kurołapacza
+      <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-3">
+          <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd"/>
+        </svg>
+        <%= Copy::Users::PREMIUM_BADGE %>
+      </span>
+    </h2>
+
+    <p class="text-xs text-stone-500 mb-3">
+      Wybierz tło, które będzie się wyświetlać na Twoim profilu.
+      <% if @user.premium_active? %>
+        <span class="block mt-1 text-amber-700 font-medium">Dzięki za wsparcie! Aktywne do <%= l(@user.premium_until.to_date, format: :long) %>.</span>
+      <% end %>
+    </p>
+
+    <%= form_with model: @user, url: profile_path, method: :patch do |f| %>
+      <div class="space-y-3">
+        <% User::PLAYER_CARDS.each do |card| %>
+          <label class="block cursor-pointer">
+            <%= f.radio_button :player_card, card, class: "peer sr-only" %>
+            <span class="block rounded-lg overflow-hidden ring-1 ring-stone-200 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-stone-900 transition-shadow">
+              <%= image_tag "player_cards/#{card}.svg", alt: User::PLAYER_CARD_LABELS.fetch(card),
+                            class: "w-full aspect-[6/1]" %>
+            </span>
+            <span class="mt-1.5 block text-center text-xs text-stone-600"><%= User::PLAYER_CARD_LABELS.fetch(card) %></span>
+          </label>
+        <% end %>
+
+        <label class="block cursor-pointer">
+          <%= f.radio_button :player_card, "", checked: @user.player_card.blank?, class: "peer sr-only" %>
+          <span class="flex items-center justify-center rounded-lg py-4 border border-dashed border-stone-300 text-xs text-stone-500 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-stone-900 transition-shadow">
+            Brak tła
+          </span>
+        </label>
+      </div>
+
+      <%= f.submit "Zapisz kartę", class: "w-full mt-4 py-3 rounded-lg bg-stone-900 text-white font-medium",
+                   data: { turbo_submits_with: "Zapisuję…" } %>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="bg-white rounded-xl shadow-sm p-5 mt-4"
+     data-controller="push-subscription"
+     data-push-subscription-vapid-public-key-value="<%= Rails.application.credentials.dig(:vapid, :public_key) %>"
+     data-push-subscription-endpoint-url-value="<%= push_subscriptions_path %>"
+     data-push-subscription-csrf-token-value="<%= form_authenticity_token %>">
+  <h2 class="font-medium mb-1">Powiadomienia push</h2>
+  <p class="text-xs text-stone-500 mb-3">
+    Powiadomienia o nowych zleceniach, awansach z rezerwy i zaproszeniach. Na iPhonie wymagany iOS 16.4+ i otwarcie aplikacji z ikony na ekranie głównym (nie z Safari).
+  </p>
+
+  <%= button_to test_push_subscriptions_path,
+                method: :post,
+                data: { turbo_submits_with: "Wysyłam…" },
+                class: "w-full py-2.5 rounded-lg border border-stone-300 bg-white text-stone-900 font-medium hover:bg-stone-50 mb-3" do %>
+    Wyślij testowe powiadomienie
+  <% end %>
+
+  <button type="button"
+          data-push-subscription-target="enable"
+          data-action="click->push-subscription#enable"
+          style="display:none"
+          class="w-full py-2.5 rounded-lg bg-stone-900 text-white font-medium hover:bg-stone-800">
+    Włącz powiadomienia
+  </button>
+
+  <p data-push-subscription-target="granted"
+     style="display:none"
+     class="inline-flex items-center gap-1.5 text-sm text-emerald-700 font-medium">
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
+      <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/>
+    </svg>
+    Powiadomienia włączone
+  </p>
+
+  <div data-push-subscription-target="denied"
+       style="display:none"
+       class="text-sm text-red-700 bg-red-50 rounded-lg p-3">
+    Powiadomienia są zablokowane na poziomie systemu. Włącz je w
+    <strong>Ustawienia → Powiadomienia → Gig Coordinator</strong> (iOS) lub w ustawieniach przeglądarki (Android/desktop).
+  </div>
+
+  <div data-push-subscription-target="unsupported"
+       style="display:none"
+       class="text-sm text-stone-600 bg-stone-100 rounded-lg p-3">
+    Ta przeglądarka nie obsługuje powiadomień push. Na iPhonie dodaj aplikację do ekranu głównego (Udostępnij → Dodaj do ekranu głównego) i otwórz ją z ikony — wymagany iOS 16.4 lub nowszy.
+  </div>
+</div>
+
+<%# Subskrypcja kalendarza — feed .ics z Twoimi nadchodzącymi zleceniami,
+    Apple Calendar / Google Calendar / Outlook synchronizują automatycznie. %>
+<%
+  # `webcal://` to schemat który iOS / macOS Calendar rozpoznaje natywnie —
+  # tap otwiera dialog „Add Subscription Calendar". Apple traktuje webcal://
+  # jako legacy HTTP (stąd jednorazowy warning „Insecure Connection" przy
+  # subskrypcji), ALE po kliknięciu Continue subskrypcja idzie pod spodem
+  # przez HTTPS i synchronizuje się normalnie. `webcals://` Safari odrzuca
+  # jako invalid URL — nie używamy.
+  https_url  = url_for(controller: "calendar_feeds", action: "show", token: Current.user.calendar_token, format: :ics, only_path: false, protocol: Rails.env.production? ? "https" : "http")
+  webcal_url = https_url.sub(/\Ahttps?/, "webcal")
+%>
+<% google_url = "https://calendar.google.com/calendar/r?cid=#{ERB::Util.url_encode(https_url)}" %>
+<div class="bg-white rounded-xl shadow-sm p-5 mt-4"
+     data-controller="calendar-subscribe copy-to-clipboard"
+     data-calendar-subscribe-webcal-value="<%= webcal_url %>"
+     data-calendar-subscribe-google-value="<%= google_url %>">
+  <h2 class="font-medium mb-1">Subskrypcja kalendarza</h2>
+  <p class="text-xs text-stone-500 mb-3">
+    Dodaj wszystkie nadchodzące zlecenia do swojego kalendarza (Apple Calendar, Google Calendar, Outlook). Synchronizuje się automatycznie — gdy zapiszesz się na nowy event, pojawi się w kalendarzu sam.
+  </p>
+
+  <button type="button"
+          data-action="click->calendar-subscribe#add"
+          class="w-full py-2.5 mb-2 rounded-lg bg-stone-900 text-white font-medium text-center hover:bg-stone-800">
+    Dodaj do kalendarza
+  </button>
+
+  <div class="flex items-stretch gap-2 mb-3">
+    <input type="text" readonly value="<%= https_url %>"
+           data-copy-to-clipboard-target="source"
+           class="flex-1 min-w-0 px-3 py-2 rounded-lg border border-stone-300 bg-stone-50 text-xs font-mono text-stone-700 truncate">
+    <button type="button"
+            data-action="click->copy-to-clipboard#copy"
+            class="px-3 py-2 rounded-lg border border-stone-300 text-sm font-medium text-stone-800 hover:bg-stone-50 shrink-0">
+      <span data-copy-to-clipboard-target="label">Skopiuj</span>
+    </button>
+  </div>
+
+  <%= button_to regenerate_calendar_token_profile_path, method: :post,
+                data: { turbo_confirm: "Wygenerujemy nowy URL — stary adres przestanie się synchronizować w Twoich kalendarzach. Kontynuować?" },
+                class: "w-full py-2 rounded-lg border border-stone-300 text-sm font-medium text-stone-700 hover:bg-stone-50" do %>
+    Wygeneruj nowy URL (unieważnia stary)
+  <% end %>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm p-5 mt-4">
+  <h2 class="font-medium mb-1">Urządzenia i sesje</h2>
+  <p class="text-xs text-stone-500 mb-3">Tu widzisz każde urządzenie, z którego się logowałeś. Oznaczone „to urządzenie" to aktualna sesja.</p>
+  <ul class="divide-y divide-stone-100">
+    <% @sessions.each do |session| %>
+      <% is_current = session.id == Current.session.id %>
+      <% os, browser = session_ua_labels(session.user_agent) %>
+      <li class="py-3 flex items-center gap-3">
+        <div class="shrink-0 size-10 rounded-full <%= is_current ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500" %> flex items-center justify-center">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
+            <% if session_mobile?(session.user_agent) %>
+
+              <path fill-rule="evenodd" d="M8 2a1.5 1.5 0 0 0-1.5 1.5v13a1.5 1.5 0 0 0 1.5 1.5h4a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 12 2H8Zm1.75 13a.75.75 0 0 0 0 1.5h.5a.75.75 0 0 0 0-1.5h-.5Z" clip-rule="evenodd" />
+
+            <% else %>
+
+              <path fill-rule="evenodd" d="M2 4.25A2.25 2.25 0 0 1 4.25 2h11.5A2.25 2.25 0 0 1 18 4.25v8.5A2.25 2.25 0 0 1 15.75 15h-3.105a3.501 3.501 0 0 0 1.1 1.667.75.75 0 0 1-.47 1.333h-6.55a.75.75 0 0 1-.47-1.333A3.5 3.5 0 0 0 7.355 15H4.25A2.25 2.25 0 0 1 2 12.75v-8.5Zm1.5 0a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 .75.75v7.5a.75.75 0 0 1-.75.75H4.25a.75.75 0 0 1-.75-.75v-7.5Z" clip-rule="evenodd" />
+
+            <% end %>
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-sm font-medium text-stone-900 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span><%= os %><% if browser %> · <%= browser %><% end %></span>
+            <% if is_current %>
+              <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">to urządzenie</span>
+            <% end %>
+          </div>
+          <div class="text-xs text-stone-500">
+            Ostatnio aktywne <%= time_ago_in_words(session.last_seen_at || session.created_at) %> temu<% if session.ip_address.present? %> · <%= session.ip_address %><% end %>
+          </div>
+        </div>
+        <% unless is_current %>
+          <%= button_to remote_session_path(session), method: :delete,
+                class: "shrink-0 px-3 py-1.5 rounded-lg border border-stone-300 bg-white text-stone-700 text-xs font-medium hover:bg-stone-50",
+                data: { turbo_confirm: "Wylogować to urządzenie?" } do %>
+            Wyloguj
+          <% end %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</div>

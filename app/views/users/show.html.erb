@@ -1,0 +1,269 @@
+<% content_for(:title) { @user.display_name } %>
+<%= render "shared/breadcrumbs", crumbs: [
+  ["Wszyscy kurołapacze", users_path],
+  [@user.display_name, nil]
+] %>
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <%# Hero: original-resolution photo (no :small variant), falls back to initials.
+      Rank badge (icon + nazwa rangi) przyklejony do prawego dolnego rogu zdjęcia,
+      żeby długie imiona/nazwiska nie musiały go omijać w sekcji tekstowej.
+      Wyłączone konto: całe hero przygaszone (opacity + grayscale) + plakietka. %>
+  <% if @user.disabled? %>
+    <div class="flex items-center gap-2 bg-stone-100 border-b border-stone-200 px-4 py-2.5 text-sm font-medium text-stone-600">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" class="size-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+      </svg>
+      <%= Copy::Users::DISABLED_BADGE %>
+    </div>
+  <% end %>
+  <div class="relative <%= "opacity-50 grayscale" if @user.disabled? %>">
+    <% if @user.photo.attached? %>
+      <div class="bg-stone-100">
+        <%= image_tag rails_blob_path(@user.photo, only_path: true),
+                      alt: @user.display_name,
+                      class: "w-full aspect-square object-cover" %>
+      </div>
+    <% else %>
+      <div class="w-full aspect-square bg-stone-200 flex items-center justify-center">
+        <span class="text-6xl font-semibold text-stone-500">
+          <%= @user.first_name[0] %><%= @user.last_name[0] %>
+        </span>
+      </div>
+    <% end %>
+
+    <%# Gradient scrim daje kontrast pod rangą niezależnie od tego jak jasne/ciemne
+        jest zdjęcie. Wyłączony z interakcji, żeby nie blokował ewentualnych
+        klików/hoverów na samym hero. %>
+    <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 via-black/25 to-transparent"></div>
+
+    <div class="absolute bottom-3 right-3 flex items-center gap-2">
+      <%= render "users/title_badge", user: @user %>
+      <div class="size-9 rounded-full bg-amber-100 flex items-center justify-center text-base leading-none shadow-sm" aria-hidden="true">
+        <%= @user.title_icon %>
+      </div>
+    </div>
+  </div>
+
+  <%# Karta kurołapacza celowo NIE renderuje się na stronie profilu —
+      tam króluje duże zdjęcie hero; tła kart żyją w paskach rosteru,
+      podwózek i na liście /kurolapacze. %>
+  <div class="p-6 min-w-0">
+    <h1 class="text-2xl sm:text-3xl font-semibold leading-tight break-words text-stone-900">
+      <%= @user.display_name %>
+    </h1>
+    <div class="mt-2 flex items-center gap-2 text-xs">
+      <% if @user.online? %>
+        <span class="inline-flex items-center gap-1 font-medium text-emerald-600">
+          <span class="size-2 rounded-full bg-emerald-500"></span> Online teraz
+        </span>
+      <% elsif @user.last_seen_at.present? %>
+        <span class="inline-flex items-center gap-1 text-stone-500">
+          <span class="size-2 rounded-full bg-stone-300"></span>
+          Ostatnio <%= time_ago_in_words(@user.last_seen_at) %> temu
+        </span>
+      <% else %>
+        <span class="text-stone-400">Nigdy się nie logował</span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="px-6 pb-6">
+    <dl class="w-full divide-y divide-stone-100 border-t border-stone-100 text-sm">
+      <div class="flex items-center justify-between gap-4 py-3">
+        <dt class="text-stone-500 shrink-0">E-mail</dt>
+        <dd class="font-medium break-all text-right min-w-0 <%= "text-stone-400" if @user.email.blank? %>">
+          <% if @user.email.present? %>
+            <%= link_to @user.email, "mailto:#{@user.email}", class: "text-stone-900 hover:underline" %>
+          <% else %>
+            Nie podano
+          <% end %>
+        </dd>
+      </div>
+      <div class="flex items-center justify-between gap-4 py-3">
+        <dt class="text-stone-500 shrink-0">Telefon</dt>
+        <dd class="font-medium text-right <%= "text-stone-400" if @user.phone.blank? %>">
+          <% if @user.phone.present? %>
+            <%= link_to @user.phone, "tel:#{@user.phone}", class: "text-stone-900 hover:underline" %>
+          <% else %>
+            Nie podano
+          <% end %>
+        </dd>
+      </div>
+      <div class="flex items-center justify-between gap-4 py-3">
+        <dt class="text-stone-500 shrink-0">Dołączył</dt>
+        <dd class="font-medium"><%= l(@user.created_at.to_date, format: :long) %></dd>
+      </div>
+      <div class="flex items-center justify-between gap-4 py-3">
+        <dt class="text-stone-500 shrink-0">Kierowca</dt>
+        <dd class="font-medium">
+          <% if @user.can_drive? %>
+            <span class="inline-flex items-center gap-1 text-sky-700 bg-sky-100 rounded-full px-2 py-0.5 text-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="size-3.5">
+                <path d="M3.375 8.25A3.375 3.375 0 0 1 6.72 5.25h10.56a3.375 3.375 0 0 1 3.345 3l.226 2.05a.75.75 0 0 0 .176.392l.777.856A2.25 2.25 0 0 1 22.5 13.058V16.5A1.5 1.5 0 0 1 21 18h-.75v.75a1.5 1.5 0 0 1-3 0V18h-10.5v.75a1.5 1.5 0 0 1-3 0V18H3a1.5 1.5 0 0 1-1.5-1.5v-3.442a2.25 2.25 0 0 1 .696-1.51l.777-.856a.75.75 0 0 0 .176-.392l.226-2.05Zm3.345-1.5a1.875 1.875 0 0 0-1.861 1.667l-.184 1.666h14.65l-.184-1.666A1.875 1.875 0 0 0 17.28 6.75H6.72ZM6 14.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm12 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+              </svg>
+              Tak
+            </span>
+          <% else %>
+            <span class="text-stone-400">Nie</span>
+          <% end %>
+        </dd>
+      </div>
+    </dl>
+
+    <% if admin_signed_in? %>
+      <%= link_to "Edytuj", edit_user_path(@user),
+                  class: "block w-full mt-5 py-3 rounded-lg bg-stone-900 text-white font-medium text-center" %>
+      <% unless @user.disabled? %>
+        <%= button_to "Wyślij testowy push", test_push_user_path(@user),
+                      method: :post,
+                      form: { data: { turbo_frame: "_top" } },
+                      class: "block w-full mt-2 py-3 rounded-lg border border-stone-300 text-stone-800 font-medium text-center hover:bg-stone-50 transition-colors" %>
+      <% end %>
+      <% if @user != Current.user %>
+        <% if @user.disabled? %>
+          <%= button_to "Włącz konto", toggle_disabled_user_path(@user),
+                        method: :post,
+                        form: { data: { turbo_frame: "_top" } },
+                        class: "block w-full mt-2 py-3 rounded-lg bg-emerald-50 text-emerald-700 font-medium text-center hover:bg-emerald-100 transition-colors" %>
+        <% else %>
+          <%= button_to "Wyłącz konto", toggle_disabled_user_path(@user),
+                        method: :post,
+                        form: { data: { turbo_frame: "_top" } },
+                        data: { turbo_confirm: "Wyłączyć konto #{@user.display_name}? Straci dostęp do aplikacji i przestanie dostawać powiadomienia." },
+                        class: "block w-full mt-2 py-3 rounded-lg bg-red-50 text-red-700 font-medium text-center hover:bg-red-100 transition-colors" %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @managed_hosts.any? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3"><%= @user.mistrz_piora? ? "Zarządza wszystkimi gospodarzami" : Copy::Users::MANAGES %></h2>
+      <ul class="space-y-2">
+        <% @managed_hosts.each do |host| %>
+          <li>
+            <%= link_to host_path(host), class: "flex items-center gap-3 text-sm" do %>
+              <% if host.photo.attached? %>
+                <%= image_tag rails_representation_path(host.photo.variant(:small), only_path: true),
+                              alt: host.display_name,
+                              class: "size-10 rounded-full object-cover shrink-0" %>
+              <% else %>
+                <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
+                  <%= host.first_name[0] %><%= host.last_name[0] %>
+                </div>
+              <% end %>
+              <div class="min-w-0">
+                <div class="font-medium text-stone-900 truncate"><%= host.display_name %></div>
+                <div class="text-stone-500 text-xs truncate"><%= host.location %></div>
+              </div>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @blocked_hosts.any? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3 flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" class="size-3.5 text-red-500">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+        <%= "Zablokowany u" %>
+      </h2>
+      <ul class="space-y-2">
+        <% @blocked_hosts.each do |host| %>
+          <li>
+            <%= link_to host_path(host), class: "flex items-center gap-3 text-sm" do %>
+              <% if host.photo.attached? %>
+                <%= image_tag rails_representation_path(host.photo.variant(:small), only_path: true),
+                              alt: host.display_name,
+                              class: "size-10 rounded-full object-cover shrink-0" %>
+              <% else %>
+                <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
+                  <%= host.first_name[0] %><%= host.last_name[0] %>
+                </div>
+              <% end %>
+              <div class="min-w-0">
+                <div class="font-medium text-stone-900 truncate"><%= host.display_name %></div>
+                <div class="text-stone-500 text-xs truncate"><%= host.location %></div>
+              </div>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @upcoming.any? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3">Nadchodzące zlecenia</h2>
+      <ul class="space-y-2">
+        <% @upcoming.each do |p| %>
+          <li class="flex items-center justify-between gap-3 text-sm">
+            <%= link_to p.event.name, event_path(p.event),
+                        class: "font-medium text-stone-900 hover:underline truncate min-w-0 flex-1" %>
+            <span class="shrink-0 text-xs text-stone-500 tabular-nums">
+              <%= l(p.event.scheduled_at, format: :short) %>
+            </span>
+            <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium
+                         <%= { 'confirmed' => 'bg-emerald-100 text-emerald-700',
+                               'waitlist'  => 'bg-amber-100 text-amber-700',
+                               'reserved'  => 'bg-indigo-100 text-indigo-700' }[p.status] %>">
+              <%= { 'confirmed' => 'zapisany',
+                    'waitlist'  => 'rezerwa',
+                    'reserved'  => 'oczekuje' }[p.status] %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @catches_count.positive? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3">Statystyki</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="rounded-lg bg-stone-50 border border-stone-100 p-3 text-center">
+          <div class="text-2xl font-semibold tabular-nums text-stone-900"><%= @catches_count %></div>
+          <div class="text-[11px] text-stone-500 leading-tight mt-1">zleceń</div>
+        </div>
+        <div class="rounded-lg bg-stone-50 border border-stone-100 p-3 text-center">
+          <div class="text-2xl font-semibold tabular-nums text-stone-900">
+            <%= @stats_total_hours %><span class="text-base font-medium text-stone-500">h</span>
+          </div>
+          <div class="text-[11px] text-stone-500 leading-tight mt-1">w kurniku</div>
+        </div>
+      </div>
+
+      <% if @top_hosts.any? %>
+        <h3 class="text-stone-500 text-xs uppercase tracking-wide mt-5 mb-3">Ulubieni gospodarze</h3>
+        <ul class="space-y-2">
+          <% @top_hosts.each do |host, count| %>
+            <li>
+              <%= link_to host_path(host), class: "flex items-center gap-3 text-sm" do %>
+                <% if host.photo.attached? %>
+                  <%= image_tag rails_representation_path(host.photo.variant(:small), only_path: true),
+                                alt: host.display_name,
+                                class: "size-10 rounded-full object-cover shrink-0" %>
+                <% else %>
+                  <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
+                    <%= host.first_name[0] %><%= host.last_name[0] %>
+                  </div>
+                <% end %>
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium text-stone-900 truncate"><%= host.display_name %></div>
+                  <div class="text-stone-500 text-xs truncate"><%= host.location %></div>
+                </div>
+                <span class="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-stone-700 tabular-nums">
+                  <%= count %> 🐔
+                </span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,12 @@
+<%= mail_title "Masz podwózkę!" %>
+<%= mail_paragraph "Cześć #{@passenger.first_name}!" %>
+
+<%= mail_paragraph do %>
+  <%= mail_strong @driver.display_name %> potwierdził, że zabiera Cię
+  na event <%= mail_strong @event.name %>.
+  <br><br>
+  Start: <%= mail_strong l(@event.scheduled_at, format: :long) %>
+<% end %>
+
+<%= mail_button "Otwórz zlecenie", event_url(@event) %>
+<%= mail_raw_url event_url(@event) %>

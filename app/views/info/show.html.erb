@@ -1,0 +1,178 @@
+<% content_for(:title) { "O aplikacji" } %>
+<%= render "shared/breadcrumbs", crumbs: [ [ "O aplikacji", nil ] ] %>
+
+<article class="prose prose-stone max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h1:mb-4 prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-2 prose-p:text-stone-700 prose-li:text-stone-700 prose-strong:text-stone-900 prose-a:text-stone-900">
+  <h1>O aplikacji</h1>
+
+  <p>Gig Coordinator łączy gospodarzy z kurołapaczami. Gospodarz wrzuca zlecenie (np. odłów kur na fermie), Ty decydujesz, czy się piszesz.</p>
+
+  <h2>Logowanie</h2>
+  <p>Żadnych haseł. Wpisujesz maila, dostajesz <strong>5-cyfrowy kod</strong> w mailu i przepisujesz go w aplikacji. Kod jest ważny <strong>15 minut</strong> - potem trzeba poprosić o nowy. Masz 5 prób na poprawne wpisanie; po piątej kod przestaje działać i trzeba zamówić kolejny.</p>
+
+  <h2>Rangi</h2>
+  <p>Każdy kurołapacz ma rangę. Rangi nadaje admin. W kolejności od startowej do najwyższej:</p>
+  <ul class="not-prose space-y-3 my-4">
+    <% User.titles.keys.each do |title_key| %>
+      <% sample = User.new(title: title_key) %>
+      <% description = User::TITLE_DESCRIPTIONS.fetch(title_key) %>
+      <li class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4">
+        <div class="size-14 rounded-full bg-amber-100 flex items-center justify-center text-3xl leading-none shrink-0" aria-hidden="true">
+          <%= User::TITLE_ICONS.fetch(title_key) %>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="font-medium text-stone-900"><%= sample.display_title %></div>
+          <div class="mt-1"><%= render "users/title_badge", user: sample %></div>
+          <% if description %>
+            <div class="mt-1 text-xs text-stone-500"><%= description %></div>
+          <% end %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+
+  <h2 class="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <span>Rezerwacje</span>
+    <span class="not-prose inline-flex items-center gap-1 text-sm font-normal">
+      <span class="text-stone-500">(</span>
+      <%= render "users/title_badge", user: User.new(title: :mistrz_piora) %>
+      <span class="text-stone-500">)</span>
+    </span>
+  </h2>
+  <p>Kiedy gospodarz wrzuca nowe zlecenie, system <strong>automatycznie rezerwuje</strong> miejsca dla osób z najwyższą aktualnie rangą. Dostajesz na telefon powiadomienie i masz <strong>2,5 godziny</strong>, żeby kliknąć <em>Akceptuję</em> albo <em>Odrzuć</em>.</p>
+  <ul>
+    <li><strong>Akceptuję</strong> - miejsce jest Twoje, widzimy się na zleceniu.</li>
+    <li><strong>Odrzuć</strong> - slot idzie do kolejnej osoby z najwyższą rangą albo (jeśli nikt nie czeka) zostaje otwarty dla wszystkich.</li>
+    <li><strong>Brak reakcji przez 2,5 godziny</strong> - rezerwacja wygasa, slot leci dalej tym samym torem.</li>
+  </ul>
+  <p>Jeśli nie masz aktualnie najwyższej rangi, system Ci nie zarezerwuje - ale możesz sam wejść na zlecenie z listy.</p>
+
+  <h2 class="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <span>Zapisywanie się z listy</span>
+    <span class="not-prose inline-flex flex-wrap items-center gap-1 text-sm font-normal">
+      <span class="text-stone-500">(</span>
+      <%= render "users/title_badge", user: User.new(title: :kurzy_pacholek) %>
+      <span class="text-stone-500">,</span>
+      <%= render "users/title_badge", user: User.new(title: :kurnikowy_gangster) %>
+      <span class="text-stone-500">i</span>
+      <%= render "users/title_badge", user: User.new(title: :kurnikowy_komendant) %>
+      <span class="text-stone-500">)</span>
+    </span>
+  </h2>
+  <p>Klikasz zlecenie w feedzie → <em>Akceptuję</em>. Dwa warianty:</p>
+  <ul>
+    <li><strong>Są wolne miejsca</strong> - jesteś potwierdzony od razu.</li>
+    <li><strong>Zlecenie pełne</strong> - trafiasz na listę rezerwową w kolejności zgłoszeń. Jak ktoś odpadnie (anuluje lub nie potwierdzi rezerwacji), awansujesz automatycznie.</li>
+  </ul>
+
+  <h2>Anulowanie udziału</h2>
+  <p>W dowolnej chwili możesz kliknąć <em>Anuluj</em>. Jeśli byłeś potwierdzony, Twoje miejsce przejmuje pierwsza osoba z listy rezerwowej. Jeśli byłeś w kolejce - po prostu znikasz z listy.</p>
+
+  <h2>Blokada u gospodarza</h2>
+  <p>Admin może założyć <strong>blokadę</strong> między konkretnym kurołapaczem a konkretnym gospodarzem. To nie wyrzuca Cię z systemu - dalej masz konto, rangę, możesz łapać u innych gospodarzy. Blokada działa punktowo:</p>
+  <ul>
+    <li><strong>Widzisz zlecenia</strong> tego gospodarza w feedzie i na stronie zlecenia - normalnie, bez różnicy.</li>
+    <li><strong>Dostajesz powiadomienia push</strong> o nowych zleceniach (bo push leci do wszystkich - to nie filtr).</li>
+    <li><strong>Nie możesz się zapisać</strong> - zamiast przycisku <em>Akceptuję</em> widzisz czerwony banner „Blokada u gospodarza" i wyszarzony przycisk. Próba zapisania się przez URL też zostanie odrzucona.</li>
+  </ul>
+
+  <p>Tak wygląda blokada na stronie zlecenia:</p>
+  <div class="not-prose bg-white rounded-xl shadow-sm p-4 my-4">
+    <div class="rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm mb-3">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" class="size-4 text-red-500 shrink-0">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+        <span class="font-semibold"><%= Copy::Participations::BLOCKED_BADGE %></span>
+      </div>
+      <div class="text-xs mt-1 text-red-700">
+        <%= Copy::Participations::BLOCKED %>
+      </div>
+    </div>
+    <button type="button" disabled aria-disabled="true"
+            class="w-full py-3 rounded-lg bg-stone-300 text-stone-500 font-medium cursor-not-allowed">
+      <%= Copy::Events::ACCEPT %>
+    </button>
+  </div>
+
+  <p>Status blokady widać na profilu kurołapacza (sekcja <em>Zablokowany u</em>) oraz na stronie gospodarza (sekcja <em>Zablokowani kurołapacze</em>).</p>
+
+  <h2 class="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <span>Planowanie zleceń</span>
+    <span class="not-prose inline-flex items-center gap-1 text-sm font-normal">
+      <span class="text-stone-500">(</span>
+      <%= render "users/title_badge", user: User.new(title: :mistrz_piora) %>
+      <span class="text-stone-500">i</span>
+      <%= render "users/title_badge", user: User.new(title: :kurnikowy_komendant) %>
+      <span class="text-stone-500">)</span>
+    </span>
+  </h2>
+  <p>Jeśli masz odpowiednią rangę, w menu pojawia się opcja <em>Zaplanuj zlecenie</em>. Wypełniasz krótki formularz: gospodarz, nazwa, data, początek, długość, stawka na osobę, liczba miejsc.</p>
+  <ul>
+    <li><strong>Mistrz Pióra</strong> - wybierasz z listy <strong>dowolnego</strong> gospodarza w systemie.</li>
+    <li><strong>Kurnikowy Komendant</strong> - w dropdownie widzisz tylko tych gospodarzy, do których zostałeś przypisany. Jeśli nie masz jeszcze żadnego przypisanego - przycisk <em>Zaplanuj zlecenie</em> widzisz wyszarzony, kliknięcie nic nie zrobi.</li>
+  </ul>
+  <p>Po zatwierdzeniu:</p>
+  <ul>
+    <li>Zlecenie od razu ląduje na feedzie wszystkich kurołapaczy.</li>
+    <li>Wszyscy zalogowani zostają automatycznie przeniesieni na stronę nowego zlecenia - pierwsi klikają <em>Akceptuję</em>.</li>
+    <li>System rezerwuje tyle miejsc ile wynosi liczba miejsc na zleceniu - ale tylko dla osób z aktualnie najwyższą rangą w systemie. Pozostałe sloty są otwarte dla wszystkich.</li>
+    <li>Pachołkowie i wyżej dostają powiadomienie push o nowym zleceniu - <strong>kurzy pachołek 5 min później</strong> niż reszta, żeby wyższe rangi miały chwilę fory na zapis. <strong>Żółtodzioby w ogóle nie dostają tego pusha</strong> (i tak nie mogą się zapisać).</li>
+  </ul>
+  <p class="flex flex-wrap items-center gap-x-1 gap-y-1">
+    <span class="not-prose inline-flex flex-wrap items-center gap-1">
+      <%= render "users/title_badge", user: User.new(title: :kurzy_pacholek) %>
+      <span class="text-stone-500">i</span>
+      <%= render "users/title_badge", user: User.new(title: :kurnikowy_gangster) %>
+    </span>
+    <span>nie mogą planować zleceń - mogą tylko się zapisywać.</span>
+  </p>
+  <p class="flex flex-wrap items-center gap-x-1 gap-y-1">
+    <span class="not-prose inline-flex flex-wrap items-center gap-1">
+      <%= render "users/title_badge", user: User.new(title: :zoltodziob) %>
+    </span>
+    <span>w ogóle się nie zapisuje — przegląda zlecenia w trybie obserwatora, dopóki admin nie awansuje go wyżej.</span>
+  </p>
+
+  <h2>Podwózki - kierowca i pasażerowie</h2>
+  <p>Każdy event ma sekcję <em>Podwózki</em>, w której kurołapacze mogą się umówić na wspólny dojazd autem. Reguły są proste:</p>
+  <ul>
+    <li><strong>Kierowcą</strong> może zostać tylko osoba <strong>potwierdzona na zleceniu</strong>, której admin nadał wcześniej uprawnienia kierowcy.</li>
+    <li>Każdy kierowca ma <strong>4 miejsca pasażerskie</strong> w aucie - sztywno, niezależnie od auta.</li>
+    <li><strong>Pasażerem</strong> może być każdy potwierdzony uczestnik tego samego zlecenia, który nie jest sam kierowcą i nie jedzie już z kimś innym.</li>
+  </ul>
+
+  <h3 class="mt-4 text-base font-semibold text-stone-900">Jak to działa krok po kroku</h3>
+  <ol>
+    <li>W rosterze przy swoim nazwisku widzisz przycisk <em>Zgłoś się jako kierowca</em> (jeśli masz uprawnienia). Klikasz - od razu pojawiasz się w sekcji <em>Podwózki</em> z 4 wolnymi miejscami.</li>
+    <li>Pozostali uczestnicy widzą przy Twoim wierszu (oraz w sekcji <em>Podwózki</em>) przycisk <em>Zapytaj o podwózkę</em>. Po kliknięciu lecisz na <em>Listę zapytań</em> kierowcy ze statusem <em>oczekuje</em>. Kierowca dostaje mail + push.</li>
+    <li>Kierowca decyduje: <em>Potwierdź</em> albo <em>Odrzuć</em>. Akceptacja przenosi pasażera do listy <em>Pasażerowie</em> i zmniejsza liczbę wolnych miejsc. Pasażer dostaje mail + push.</li>
+    <li>Kiedy auto jest pełne (4/4), przycisk <em>Zapytaj o podwózkę</em> u pozostałych chowa się i pokazujemy „Auto zajęte".</li>
+  </ol>
+
+  <h3 class="mt-4 text-base font-semibold text-stone-900">Wycofanie się</h3>
+  <ul>
+    <li><strong>Pasażer</strong> może w każdej chwili kliknąć ikonę wyjścia obok swojego nazwiska na liście pasażerów - opuszcza auto i odzyskuje przyciski <em>Zgłoś się jako kierowca</em> oraz <em>Zapytaj o podwózkę</em> u innych kierowców.</li>
+    <li><strong>Kierowca</strong> może zrezygnować z funkcji we własnym wierszu rosteru. Wszystkie zapytania pasażerów (zarówno oczekujące jak i potwierdzone) są wtedy <strong>kasowane</strong>.</li>
+    <li>Jeśli <strong>kierowca anuluje udział w zleceniu</strong>, jego rola kierowcy znika automatycznie razem ze wszystkimi pasażerami - bo skoro nie jedzie na zlecenie, to nie ma kogo zabrać.</li>
+    <li>Jeśli <strong>pasażer anuluje udział w zleceniu</strong>, jego zapytanie/potwierdzenie u kierowcy znika automatycznie - inne osoby u tego samego kierowcy nie są dotknięte.</li>
+  </ul>
+  <p class="text-xs text-stone-500">Po starcie zlecenia (od momentu zaplanowanej godziny) wszystkie przyciski podwózek znikają - lista zostaje zamrożona w tym, co zostało ustalone.</p>
+
+  <h2>Zmiana liczby miejsc w zleceniu</h2>
+  <p>Gospodarz może w każdej chwili zwiększyć <em>liczbę miejsc</em> w swoim panelu. Jeśli zlecenie ma już listę rezerwową, a zmieści się więcej osób - system sam awansuje najstarsze osoby z rezerwy na <em>Potwierdzonych</em> (zgodnie z kolejnością zgłoszeń). Dostają powiadomienie push + mail. Zmniejszenie liczby miejsc <strong>nie wyrzuca</strong> nikogo, kto już jest potwierdzony.</p>
+
+  <h2>Powiadomienia</h2>
+  <p>Dostajesz je na dwa sposoby:</p>
+  <ul>
+    <li><strong>E-mail</strong> - o zaproszeniach (2,5h deadline), awansach z listy rezerwowej oraz <strong>każdym awansie rangi</strong> (zmiana tytułu w górę = mail z gratulacjami i opisem nowych uprawnień).</li>
+    <li><strong>Push</strong> na telefon - o nowych zleceniach, zaproszeniach i awansach z rezerwy. Żeby zadziałał, <strong>zainstaluj aplikację</strong> (patrz niżej) i pozwól na powiadomienia przy pierwszym wejściu. <strong>Kurzy pachołek</strong> dostaje push o nowym zleceniu 5 min po wyższych rangach. <strong>Żółtodziób</strong> nie dostaje pusha o nowym zleceniu wcale.</li>
+  </ul>
+  <p>Po wejściu w <em>Menu → Mój profil</em> możesz sprawdzić, czy push faktycznie dochodzi na telefon - klikasz <em>Wyślij testowe powiadomienie</em> i powinieneś dostać je od razu.</p>
+  <%= render "install_screenshot", name: "profile-test-push", caption: "Mój profil → sekcja Powiadomienia push z przyciskiem testowym." %>
+  <p>Po naciśnięciu, za chwilkę powinieneś dostać takie powiadomienie:</p>
+  <%= render "install_screenshot", name: "profile-test-push-result", caption: 'Testowy push „Powiadomienia push działają poprawnie." na ekranie blokady.' %>
+
+  <h2>Instalacja na telefonie</h2>
+  <p>Pełna instrukcja (iPhone / Android, krok po kroku): <%= link_to "Jak zainstalować", install_guide_path %>.</p>
+
+</article>

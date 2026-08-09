@@ -1,0 +1,30 @@
+ala:
+  first_name: Ala
+  last_name: Nowak
+  email: ala@example.com
+  admin: true
+  can_drive: true
+  calendar_token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  title: 2 # kurnikowy_gangster — zoltodziob (DB default 0) nie zapisuje się na eventy,
+            # a większość testów zakłada, że ala potrafi dołączyć do eventów.
+
+bartek:
+  first_name: Bartek
+  last_name: Wiśniewski
+  email: bartek@example.com
+  calendar_token: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  title: 2 # kurnikowy_gangster — patrz wyżej
+
+cezary:
+  first_name: Cezary
+  last_name: Lewandowski
+  email: cezary@example.com
+  calendar_token: cccccccccccccccccccccccccccccccccccccccc
+  title: 2 # kurnikowy_gangster
+
+dominika:
+  first_name: Dominika
+  last_name: Dąbrowska
+  email: dominika@example.com
+  calendar_token: dddddddddddddddddddddddddddddddddddddddd
+  title: 2 # kurnikowy_gangster

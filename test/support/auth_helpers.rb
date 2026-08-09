@@ -1,0 +1,34 @@
+module AuthHelpers
+  # Integration/controller tests: drive the actual login flow — POST email to get
+  # a LoginCode, then POST that code to /logowanie/weryfikacja. Cookie lands in
+  # the integration session. Two requests, but realistic and exercises the flow.
+  def sign_in_as(record)
+    post login_codes_path, params: { login_code: { email: record.email } }
+    code = LoginCode.where(
+      authenticatable_type: record.class.polymorphic_name,
+      authenticatable_id:   record.id
+    ).order(created_at: :desc).first
+    post verify_login_path, params: { code: code.code }
+    record
+  end
+end
+
+# System tests (Capybara/Selenium) walk through the UI: submit email, read the
+# freshly-generated LoginCode, fill the single OTP input, submit.
+module SystemAuthHelpers
+  def sign_in_as(record)
+    visit login_path
+    fill_in "login_code[email]", with: record.email
+    click_on "Wyślij kod logowania"
+
+    assert_current_path verify_login_path, wait: 5
+
+    code = LoginCode.where(
+      authenticatable_type: record.class.polymorphic_name,
+      authenticatable_id:   record.id
+    ).order(created_at: :desc).first
+    raise "No LoginCode generated for #{record.email}" unless code
+
+    find("input[data-code-input-target='input']", visible: :all).send_keys(code.code)
+  end
+end

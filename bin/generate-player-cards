@@ -1,0 +1,416 @@
+#!/usr/bin/env ruby
+# Generator pixel-artowych kart gracza (192x32, 6:1) w stylu public/icon.svg.
+# Kompozycja pod pasek rosteru: avatar + imię + ranga zajmują lewą stronę,
+# więc lewa połowa sceny to spokojne tło, a bohaterowie siedzą po prawej.
+# Animacje: SMIL (<animate>/<animateTransform>) — działa w <img>, zero JS.
+# Uruchamianie: bin/generate-player-cards (z dowolnego katalogu).
+# Emituje SVG do app/assets/images/player_cards/ (crispEdges, zmergowane runy).
+
+OUT_DIR = File.expand_path("../app/assets/images/player_cards", __dir__)
+require "fileutils"
+FileUtils.mkdir_p(OUT_DIR)
+
+W = 192
+H = 32
+
+class Grid
+  attr_reader :w, :h, :px
+
+  def initialize(w = W, h = H)
+    @w = w
+    @h = h
+    @px = Array.new(h) { Array.new(w) }
+  end
+
+  def set(x, y, color)
+    return if x.negative? || y.negative? || x >= w || y >= h
+    @px[y][x] = color
+  end
+
+  def rect(x, y, rw, rh, color)
+    rh.times { |dy| rw.times { |dx| set(x + dx, y + dy, color) } }
+  end
+
+  # sprite: tablica stringów, legend: { "A" => "#hex" }, "." = przezroczysty
+  def stamp(sprite, legend, x, y, scale: 1, flip: false)
+    sprite.each_with_index do |row, sy|
+      chars = row.chars
+      chars = chars.reverse if flip
+      chars.each_with_index do |ch, sx|
+        next if ch == "."
+        color = legend.fetch(ch)
+        rect(x + sx * scale, y + sy * scale, scale, scale, color)
+      end
+    end
+  end
+
+  # Zmergowane poziome runy pogrupowane po kolorze (bez wrappera <svg>).
+  def to_groups(indent = "  ")
+    runs = Hash.new { |h2, k| h2[k] = [] }
+    @px.each_with_index do |row, y|
+      x = 0
+      while x < w
+        color = row[x]
+        if color.nil?
+          x += 1
+          next
+        end
+        len = 1
+        len += 1 while x + len < w && row[x + len] == color
+        runs[color] << [x, y, len]
+        x += len
+      end
+    end
+    parts = +""
+    runs.each do |color, rects|
+      parts << %(#{indent}<g fill="#{color}">\n)
+      rects.each { |(x, y, len)| parts << %(#{indent}  <rect x="#{x}" y="#{y}" width="#{len}" height="1"/>\n) }
+      parts << "#{indent}</g>\n"
+    end
+    parts
+  end
+end
+
+# Scena = statyczna baza + animowane warstwy [grid, anim_xml].
+def compose(base, layers)
+  out = +%(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 #{W} #{H}" shape-rendering="crispEdges">\n)
+  out << base.to_groups
+  layers.each do |grid, anim|
+    out << "  <g>\n"
+    out << "    #{anim}\n"
+    out << grid.to_groups("    ")
+    out << "  </g>\n"
+  end
+  out << "</svg>\n"
+  out
+end
+
+# Skokowe (pixel-artowe) bujanie w pionie o 1px.
+def bob(dur: "1s", dy: -1, begin_at: "0s")
+  %(<animateTransform attributeName="transform" type="translate" values="0 0;0 #{dy}" keyTimes="0;0.5" calcMode="discrete" dur="#{dur}" begin="#{begin_at}" repeatCount="indefinite"/>)
+end
+
+def blink(values: "1;0.15;1", dur: "1.6s", begin_at: "0s")
+  %(<animate attributeName="opacity" values="#{values}" dur="#{dur}" begin="#{begin_at}" repeatCount="indefinite"/>)
+end
+
+def slide(from:, to:, dur:, calc_mode: "linear")
+  %(<animateTransform attributeName="transform" type="translate" values="#{from};#{to}" calcMode="#{calc_mode}" dur="#{dur}" repeatCount="indefinite"/>)
+end
+
+CHICKEN_LEGEND = {
+  "R" => "#d53838", # grzebień
+  "W" => "#ffffff", # korpus
+  "E" => "#222222", # oko
+  "O" => "#f5a623"  # dziób + nogi
+}.freeze
+
+# Kura z profilu, patrzy w prawo, 7x7
+CHICKEN_R = [
+  "..RR...",
+  ".WWWW..",
+  ".WWEWO.",
+  "WWWWWW.",
+  "WWWWWW.",
+  ".WWWW..",
+  "..O.O.."
+].freeze
+
+def chicken(grid, x, y, scale: 1, flip: false, legend: CHICKEN_LEGEND)
+  grid.stamp(CHICKEN_R, legend, x, y, scale: scale, flip: flip)
+end
+
+def stars(grid, coords, color: "#ffffff")
+  coords.each { |(x, y)| grid.set(x, y, color) }
+end
+
+cards = {}
+
+# ── 1. traktor — kury na traktorze ────────────────────────────────────────────
+base = Grid.new
+base.rect(0, 0, W, 20, "#8ed0f0")           # niebo
+base.rect(0, 0, W, 5, "#a8ddf5")            # jaśniejszy pas u góry
+base.rect(174, 2, 8, 8, "#ffd94d")          # słońce w prawym górnym rogu
+base.rect(0, 20, W, 4, "#69a544")           # trawa
+base.rect(0, 24, W, 8, "#4d8a2f")           # ciemniejsza ziemia
+(4..76).step(8) { |x| base.rect(x, 18, 1, 2, "#d9b53f") }  # płotek po lewej
+
+rays = Grid.new                             # promienie słońca pulsują
+rays.rect(176, 1, 4, 1, "#ffd94d")
+rays.rect(176, 10, 4, 1, "#ffd94d")
+rays.rect(173, 4, 1, 4, "#ffd94d")
+rays.rect(182, 4, 1, 4, "#ffd94d")
+
+clouds = Grid.new                           # chmurki suną skokowo
+[[10, 2], [44, 4], [78, 2], [112, 3]].each do |(cx, cy)|
+  clouds.rect(cx, cy, 10, 2, "#ffffff")
+  clouds.rect(cx + 2, cy - 1, 6, 1, "#ffffff")
+end
+
+TRACTOR = [
+  "..KK....................",
+  "..KK....................",
+  "TTTTTTTTT...............",
+  "TGGGGGTTT...............",
+  "TGGGGGTTTTTTTTTTTTTT....",
+  "TTTTTTTTTTTTTTTTTTTT....",
+  "TTTTTTTTTTTTTTTTTTTTTT..",
+  ".DDDDDD........DDDD.....",
+  "DDDDDDDD......DDDDDD....",
+  "DDDHHDDD......DDHHDD....",
+  "DDDDDDDD......DDDDDD....",
+  ".DDDDDD........DDDD....."
+].freeze
+TRACTOR_LEGEND = {
+  "T" => "#d53838", "G" => "#cdeefb", "D" => "#2b2b2b", "H" => "#9a9a9a", "K" => "#555555"
+}.freeze
+tractor = Grid.new                          # traktor z kurami buja się w rytmie jazdy
+tractor.stamp(TRACTOR, TRACTOR_LEGEND, 132, 14)
+chicken(tractor, 134, 10)                   # kura-kierowca w kabinie
+chicken(tractor, 146, 12)                   # pasażerka na masce
+
+cards["traktor"] = compose(base, [
+  [rays,    blink(values: "1;0.3;1", dur: "2.4s")],
+  [clouds,  %(<animateTransform attributeName="transform" type="translate" values="0 0;2 0;0 0;-2 0;0 0" calcMode="discrete" dur="7s" repeatCount="indefinite"/>)],
+  [tractor, bob(dur: "0.9s")]
+])
+
+# ── 2. kontener — kontener pełen kur ─────────────────────────────────────────
+base = Grid.new
+base.rect(0, 0, W, 20, "#8ed0f0")           # niebo
+base.rect(0, 0, W, 5, "#a8ddf5")
+[[12, 3], [54, 2], [96, 4]].each do |(cx, cy)|
+  base.rect(cx, cy, 10, 2, "#ffffff")
+  base.rect(cx + 2, cy - 1, 6, 1, "#ffffff")
+end
+base.rect(0, 20, W, 4, "#69a544")           # trawa
+base.rect(0, 24, W, 8, "#4d8a2f")           # ziemia
+(6..80).step(8) { |x| base.rect(x, 18, 1, 2, "#d9b53f") }  # płotek po lewej
+# mała ładowarka w tle po lewej (odwożą skrzynki)
+base.rect(20, 6, 6, 4, "#8a5a2b")           # skrzynka na wysięgniku
+5.times { |i| base.rect(26 + i * 3, 8 + i, 4, 1, "#c69a1a") }  # wysięgnik
+base.rect(32, 10, 7, 5, "#e8b422")          # kabina
+base.rect(33, 11, 4, 3, "#cdeefb")          # szyba
+base.rect(34, 14, 16, 4, "#e8b422")         # korpus
+base.rect(33, 18, 4, 4, "#2b2b2b")          # koła
+base.rect(44, 18, 4, 4, "#2b2b2b")
+
+CRATE_YELLOW = "#f2b32a"
+CRATE_SLAT   = "#d99b18"
+CRATE_RIM    = "#ffd75e"
+FRAME_GRAY   = "#8b98a3"
+
+def crate(grid, x, y, w = 14)
+  grid.rect(x, y, w, 6, CRATE_YELLOW)
+  grid.rect(x, y, w, 1, CRATE_RIM)                       # górny brzeg
+  (x + 2).step(x + w - 3, 3) { |sx| grid.rect(sx, y + 2, 1, 4, CRATE_SLAT) }  # ażur
+end
+
+rack = Grid.new
+# stelaż: słupki + półki
+rack.rect(120, 7, 2, 22, FRAME_GRAY)
+rack.rect(166, 7, 2, 22, FRAME_GRAY)
+[7, 14, 21, 28].each { |y| rack.rect(120, y, 48, 1, FRAME_GRAY) }
+# skrzynki 3x3; dwie wysunięte jak na sortowni
+crate(rack, 122, 8);  crate(rack, 137, 8);  crate(rack, 152, 8)
+crate(rack, 122, 15); crate(rack, 137, 15)
+crate(rack, 122, 22); crate(rack, 152, 22)
+crate(rack, 116, 22)                                      # wysunięta w lewo (dolny rząd)
+
+pulled = Grid.new                                         # wysunięta skrzynka (środek)
+crate(pulled, 158, 15)
+
+# łby kur wystające ze skrzynek górnego rzędu
+def peeking_head(grid, x, y)
+  grid.rect(x, y + 1, 5, 2, "#ffffff")
+  grid.rect(x + 1, y, 2, 1, "#d53838")                    # grzebień
+  grid.set(x + 3, y + 1, "#222222")                       # oko
+  grid.set(x + 4, y + 2, "#f5a623")                       # dziób
+end
+
+heads_a = Grid.new
+peeking_head(heads_a, 126, 5)
+heads_b = Grid.new
+peeking_head(heads_b, 141, 5)
+peeking_head(heads_b, 160, 12)                            # łeb z wysuniętej skrzynki
+
+cards["kontener"] = compose(base, [
+  [rack,    blink(values: "1;1", dur: "1s")],
+  [pulled,  %(<animateTransform attributeName="transform" type="translate" values="0 0;1 0" keyTimes="0;0.5" calcMode="discrete" dur="1.8s" repeatCount="indefinite"/>)],
+  [heads_a, %(<animateTransform attributeName="transform" type="translate" values="0 0;0 2" keyTimes="0;0.5" calcMode="discrete" dur="1.4s" repeatCount="indefinite"/>)],
+  [heads_b, %(<animateTransform attributeName="transform" type="translate" values="0 2;0 0" keyTimes="0;0.5" calcMode="discrete" dur="1.4s" repeatCount="indefinite"/>)]
+])
+
+# ── 3. wakacje — kura w okularach na plaży ────────────────────────────────────
+base = Grid.new
+base.rect(0, 0, W, 8, "#f7a34d")            # zachód: pasy
+base.rect(0, 8, W, 6, "#f47f57")
+base.rect(0, 14, W, 6, "#e85e75")
+base.rect(106, 8, 12, 6, "#ffd94d")         # słońce na horyzoncie
+base.rect(108, 6, 8, 2, "#ffd94d")
+base.rect(0, 20, W, 6, "#3f7fbf")           # morze
+base.rect(0, 20, W, 1, "#77aede")           # linia horyzontu
+base.rect(0, 26, W, 6, "#eede9c")           # plaża
+base.rect(180, 12, 2, 14, "#8a5a2b")        # pień palmy
+PALM_LEAF_LEGEND = { "L" => "#2f8f4e" }.freeze
+palm = Grid.new
+palm.stamp([ "LLLL....", ".LLLLL..", "...LLLL." ], PALM_LEAF_LEGEND, 172, 9)
+palm.stamp([ "....LLLL", "..LLLLL.", ".LLLL..." ], PALM_LEAF_LEGEND, 182, 9)
+palm.stamp([ ".LL.", "LLLL" ], PALM_LEAF_LEGEND, 179, 7)
+
+waves = Grid.new                            # fale suną w prawo (okres 14px → pętla)
+(-8..190).step(14) { |x| waves.rect(x, 23, 4, 1, "#77aede") }
+
+beach_chicken = Grid.new                    # kura w okularach buja się
+chicken(beach_chicken, 146, 8, scale: 2)
+beach_chicken.rect(146, 12, 14, 2, "#111111")
+beach_chicken.rect(148, 14, 4, 1, "#111111")
+beach_chicken.rect(154, 14, 4, 1, "#111111")
+
+cards["wakacje"] = compose(base, [
+  [waves,         slide(from: "0 0", to: "14 0", dur: "4s")],
+  [palm,          %(<animateTransform attributeName="transform" type="translate" values="0 0;1 0" keyTimes="0;0.5" calcMode="discrete" dur="2.2s" repeatCount="indefinite"/>)],
+  [beach_chicken, bob(dur: "1.2s")]
+])
+
+# ── 4. ladowarka — kura na ładowarce teleskopowej ze skrzynią ─────────────────
+base = Grid.new
+base.rect(0, 0, W, 20, "#8ed0f0")           # niebo
+base.rect(0, 0, W, 5, "#a8ddf5")
+[[12, 3], [52, 2], [94, 4]].each do |(cx, cy)|
+  base.rect(cx, cy, 10, 2, "#ffffff")
+  base.rect(cx + 2, cy - 1, 6, 1, "#ffffff")
+end
+base.rect(0, 20, W, 4, "#69a544")           # trawa
+base.rect(0, 24, W, 8, "#4d8a2f")           # ziemia
+(6..90).step(8) { |x| base.rect(x, 18, 1, 2, "#d9b53f") }  # płotek po lewej
+
+LOADER_YELLOW = "#e8b422"
+BOOM_YELLOW   = "#c69a1a"
+machine = Grid.new
+# skrzynia na widłach, uniesiona wysoko z lewej strony maszyny
+machine.rect(110, 7, 12, 8, "#8a5a2b")      # skrzynia
+machine.rect(111, 8, 10, 6, "#a06c34")      # jaśniejsze deski
+[113, 116, 119].each { |x| machine.rect(x, 8, 1, 6, "#8a5a2b") }  # szczeble
+machine.rect(108, 15, 14, 1, "#555555")     # widły pod skrzynią
+# kura wystaje ze skrzyni
+machine.rect(113, 4, 6, 3, "#ffffff")
+machine.rect(114, 3, 2, 1, "#d53838")       # grzebień
+machine.set(117, 5, "#222222")              # oko
+# wysięgnik teleskopowy — schodkowa przekątna od skrzyni do tyłu maszyny
+7.times { |i| machine.rect(122 + i * 5, 9 + i, 6, 2, BOOM_YELLOW) }
+# kabina + korpus
+machine.rect(132, 10, 12, 8, LOADER_YELLOW)  # kabina
+machine.rect(133, 11, 8, 6, "#cdeefb")       # szyba
+machine.rect(134, 17, 28, 6, LOADER_YELLOW) # korpus
+machine.rect(154, 14, 8, 3, LOADER_YELLOW)  # przeciwwaga z tyłu
+# kura-operator w kabinie
+chicken(machine, 133, 9)
+# koła
+machine.rect(132, 21, 8, 7, "#2b2b2b")
+machine.rect(135, 23, 2, 2, "#9a9a9a")
+machine.rect(150, 21, 8, 7, "#2b2b2b")
+machine.rect(153, 23, 2, 2, "#9a9a9a")
+
+beacon = Grid.new                           # kogut ostrzegawczy na kabinie
+beacon.rect(136, 8, 2, 2, "#ff9d1a")
+
+cards["ladowarka"] = compose(base, [
+  [machine, bob(dur: "1.2s")],
+  [beacon,  blink(values: "1;0.2;1", dur: "1s")]
+])
+
+# ── 5. kosmos — kura w kosmosie ───────────────────────────────────────────────
+base = Grid.new
+base.rect(0, 0, W, H, "#10121f")
+base.rect(170, 10, 10, 10, "#c96f4a")       # planeta z pierścieniem
+base.rect(172, 8, 6, 2, "#c96f4a")
+base.rect(172, 20, 6, 2, "#c96f4a")
+base.rect(173, 12, 3, 2, "#e2946a")
+base.rect(164, 14, 22, 2, "#8f9bd4")
+
+stars_a = Grid.new
+stars(stars_a, [[6, 4], [30, 25], [56, 16], [82, 6], [104, 4], [132, 3], [38, 29], [188, 20]], color: "#cdd6f4")
+stars_b = Grid.new
+stars(stars_b, [[18, 12], [44, 3], [70, 27], [94, 20], [126, 26], [154, 27], [64, 2], [178, 4]], color: "#cdd6f4")
+
+ROCKET = [
+  "..S.",
+  ".SSS",
+  ".SRS",
+  ".SSS",
+  "F.F."
+].freeze
+rocket = Grid.new                           # rakieta przelatuje przez całą scenę
+rocket.stamp(ROCKET, { "S" => "#d8dee9", "R" => "#d53838", "F" => "#f5a623" }, 8, 6)
+
+astro = Grid.new                            # kura-astronautka dryfuje płynnie
+chicken(astro, 140, 10, scale: 2)
+astro.rect(140, 8, 14, 1, "#9fd4e8")        # bańka hełmu
+astro.rect(138, 9, 1, 12, "#9fd4e8")
+astro.rect(154, 9, 1, 12, "#9fd4e8")
+astro.rect(140, 21, 14, 1, "#9fd4e8")
+astro.rect(139, 8, 1, 1, "#9fd4e8")
+astro.rect(153, 8, 1, 1, "#9fd4e8")
+
+cards["kosmos"] = compose(base, [
+  [stars_a, blink(dur: "3s")],
+  [stars_b, blink(dur: "3s", begin_at: "-1.5s")],
+  [rocket,  slide(from: "-16 14", to: "196 -8", dur: "13s")],
+  [astro,   %(<animateTransform attributeName="transform" type="translate" values="0 0;0 -2;0 0" dur="3.5s" repeatCount="indefinite"/>)]
+])
+
+# ── 6. kurnik — kura robi kupę przed kurnikiem ──────────────────────────────────────────────────
+base = Grid.new
+base.rect(0, 0, W, 20, "#8ed0f0")           # niebo
+base.rect(0, 0, W, 5, "#a8ddf5")
+[[14, 3], [60, 2], [102, 4]].each do |(cx, cy)|
+  base.rect(cx, cy, 10, 2, "#ffffff")
+  base.rect(cx + 2, cy - 1, 6, 1, "#ffffff")
+end
+base.rect(0, 20, W, 4, "#69a544")           # trawa
+base.rect(0, 24, W, 8, "#4d8a2f")           # ziemia
+# kurnik po lewej
+base.rect(16, 4, 18, 2, "#8a5a2b")          # kalenica
+base.rect(12, 6, 26, 3, "#8a5a2b")          # dach
+base.rect(10, 9, 30, 1, "#6b4423")          # okap
+base.rect(10, 10, 30, 10, "#b04a3f")        # ściany
+base.rect(13, 12, 5, 4, "#f7e9b0")          # okienko
+base.rect(22, 13, 7, 7, "#4a2c1a")          # wejście
+base.rect(18, 20, 14, 1, "#8a5a2b")         # rampa przed wejściem
+chicken(base, 42, 14)                        # kura przed kurnikiem
+
+pooper = Grid.new                           # kura przykucnięta w skupieniu
+chicken(pooper, 140, 9, scale: 2)
+pooper.rect(156, 10, 1, 2, "#77c4e8")       # kropelka potu przy głowie
+
+pile = Grid.new                             # kupka za kurą
+pile.rect(133, 22, 5, 2, "#6b4423")
+pile.rect(134, 21, 3, 1, "#6b4423")
+pile.rect(135, 20, 1, 1, "#8a5a2b")
+
+drop = Grid.new                             # spadający bobek
+drop.rect(136, 16, 1, 1, "#6b4423")
+
+stink = Grid.new                            # smrodek nad kupką
+stink.set(133, 17, "#9db86a")
+stink.set(136, 15, "#9db86a")
+stink.set(134, 13, "#9db86a")
+
+flies = Grid.new                            # muchy
+flies.set(130, 17, "#333333")
+flies.set(139, 14, "#333333")
+
+cards["kurnik"] = compose(base, [
+  [pile,   blink(values: "1;1;1;0.85;1", dur: "3s")],
+  [drop,   %(<animateTransform attributeName="transform" type="translate" values="0 0;0 2;0 4;0 5" keyTimes="0;0.3;0.6;0.85" calcMode="discrete" dur="1s" repeatCount="indefinite"/>)],
+  [stink,  blink(values: "0;1;0", dur: "2s")],
+  [flies,  %(<animateTransform attributeName="transform" type="translate" values="0 0;1 -1;0 -2;-1 -1;0 0" calcMode="discrete" dur="1.2s" repeatCount="indefinite"/>)],
+  [pooper, bob(dur: "0.7s")]
+])
+
+cards.each do |name, svg|
+  path = File.join(OUT_DIR, "#{name}.svg")
+  File.write(path, svg)
+  puts "#{path} (#{File.size(path)} B)"
+end

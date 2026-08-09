@@ -1,0 +1,13 @@
+<% content_for(:title) { Copy::EventCampaigns::NEW_CAMPAIGN } %>
+<%= render "shared/breadcrumbs", crumbs: [
+  [ Copy::EventCampaigns::NEW_CAMPAIGN, nil ]
+] %>
+
+<h1 class="text-2xl font-semibold mb-4"><%= Copy::EventCampaigns::NEW_CAMPAIGN %></h1>
+
+<%= render "form",
+           campaign: @campaign,
+           hosts: @hosts,
+           url: event_campaigns_path,
+           submit_label: Copy::EventCampaigns::NEW_CAMPAIGN,
+           users_for_prereg: @users_for_prereg %>

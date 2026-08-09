@@ -1,0 +1,86 @@
+<% content_for(:title) { @campaign.name } %>
+<%= render "shared/breadcrumbs", crumbs: [
+  [ @campaign.name, nil ]
+] %>
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <div class="p-5">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0 flex-1">
+        <h1 class="text-2xl font-semibold text-stone-900"><%= @campaign.name %></h1>
+      </div>
+      <% history_count = @campaign.history_count %>
+      <% capped_count  = ->(n) { n > 99 ? "99+" : n.to_s } %>
+      <%= link_to history_event_campaign_path(@campaign),
+                  title: "Historia serii",
+                  aria: { label: "Historia serii" },
+                  class: "relative inline-flex items-center justify-center size-11 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" do %>
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .199.079.39.22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78V5Z" clip-rule="evenodd" />
+        </svg>
+        <% if history_count.positive? %>
+          <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-stone-700 text-white text-[10px] font-semibold tabular-nums flex items-center justify-center ring-2 ring-white"><%= capped_count.call(history_count) %></span>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if @campaign.notes.present? %>
+      <div class="mt-4 rounded-xl bg-stone-50 border border-stone-200 p-3">
+        <p class="text-[11px] font-medium text-stone-500 uppercase tracking-wide mb-1">Notatka</p>
+        <p class="text-sm text-stone-700 whitespace-pre-line"><%= @campaign.notes %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="border-t border-stone-200 p-5">
+    <div class="flex items-baseline justify-between mb-3">
+      <h2 class="text-sm font-semibold text-stone-700"><%= Copy::EventCampaigns::SUB_EVENTS_HEADING %></h2>
+      <%# „Dodaj zlecenie do serii" — dostępne tylko dla zarządzającego serią. %>
+    </div>
+    <% if @upcoming_sub_events.any? || @past_sub_events.any? %>
+      <ul class="space-y-3">
+        <% @past_sub_events.each do |event| %>
+          <%= render "events/event_card", event: event, my_status: @my_status_by_event_id[event.id] %>
+        <% end %>
+        <% @upcoming_sub_events.each do |event| %>
+          <%= render "events/event_card", event: event, my_status: @my_status_by_event_id[event.id] %>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="text-stone-400 text-sm">
+        Brak zleceń. Dodaj pierwsze żeby ekipa wiedziała kiedy łapiemy.
+      </div>
+    <% end %>
+  </div>
+
+  <div class="border-t border-stone-200 p-5">
+    <%= render "campaign_participation_button", campaign: @campaign %>
+  </div>
+
+  <% if Current.user&.admin? || Current.user&.mistrz_piora? || (Current.user&.kurnikowy_komendant? && Current.user.managed_hosts.exists?(id: @campaign.host_id)) %>
+    <div class="border-t border-stone-200 p-5">
+      <div class="text-stone-500 text-xs uppercase tracking-wide mb-2"><%= Copy::Admin::Events::TOOLS %></div>
+      <div class="grid grid-cols-2 gap-2">
+        <%= link_to Copy::Admin::Events::EDIT, edit_event_campaign_path(@campaign),
+                    class: "text-center py-2 rounded-lg border border-stone-300 text-sm font-medium text-stone-800 hover:bg-stone-50" %>
+        <%= button_to Copy::Admin::Events::DELETE, event_campaign_path(@campaign), method: :delete,
+                      data: { turbo_confirm: format(Copy::Admin::Events::DELETE_CONFIRM, name: @campaign.name) },
+                      form: { class: "contents" },
+                      class: "w-full py-2 rounded-lg bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100" %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="border-t border-stone-200 p-5">
+    <div class="mb-3">
+      <h2 class="text-sm font-semibold text-stone-700">Stały skład</h2>
+      <p class="text-xs text-stone-500 mt-1">Osoby z tej listy automatycznie trafiają na każde nowe zlecenie w serii. Aktualną listę uczestników konkretnego zlecenia znajdziesz na jego stronie.</p>
+    </div>
+    <%= turbo_stream_from @campaign, :counts %>
+    <%= render "counts", campaign: @campaign %>
+    <div class="mt-3">
+      <%= turbo_stream_from @campaign, :roster %>
+      <%= render "roster", campaign: @campaign %>
+    </div>
+  </div>
+</div>

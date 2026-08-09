@@ -1,0 +1,9 @@
+<% content_for(:title) { Copy::Admin::Users::NEW_TITLE } %>
+<%= render "shared/breadcrumbs", crumbs: [
+  ["Wszyscy kurołapacze", users_path],
+  [Copy::Admin::Users::NEW_TITLE, nil]
+] %>
+
+<h1 class="text-2xl font-semibold mb-4"><%= Copy::Admin::Users::NEW_TITLE %></h1>
+
+<%= render "form", user: @user %>

@@ -1,0 +1,79 @@
+<% content_for(:title) { "Wszyscy gospodarze" } %>
+<%= render "shared/breadcrumbs", crumbs: [["Wszyscy gospodarze", nil]] %>
+
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold">Wszyscy gospodarze</h1>
+  <% if admin_signed_in? %>
+    <%= link_to "Dodaj gospodarza", new_host_path,
+                class: "shrink-0 px-3 py-2 rounded-lg bg-stone-900 text-white text-sm font-medium" %>
+  <% end %>
+</div>
+
+<% show_managed_filter = Current.user&.kurnikowy_komendant? && Current.user.managed_hosts.exists? %>
+
+<div class="mb-4">
+  <%
+    toggle_options = [
+      { label: "Od A do Z", url: hosts_path(sort: "name_asc",  filter: "all"), active: @filter == "all" && @sort == "name_asc"  },
+      { label: "Od Z do A", url: hosts_path(sort: "name_desc", filter: "all"), active: @filter == "all" && @sort == "name_desc" }
+    ]
+    if show_managed_filter
+      toggle_options << { label: "Zarządzam", url: hosts_path(filter: "managed"), active: @filter == "managed" }
+    end
+  %>
+  <div class="flex w-full items-center bg-stone-100 rounded-lg p-1 text-sm ring-1 ring-stone-200">
+    <% toggle_options.each do |opt| %>
+      <%= link_to opt[:label], opt[:url],
+                  class: "px-3 py-1.5 rounded-md font-medium transition-colors flex-1 text-center #{opt[:active] ? "sort-toggle-active bg-white text-stone-900 shadow-sm" : "text-stone-600 hover:text-stone-900"}",
+                  aria: { current: opt[:active] ? "true" : nil },
+                  data: { turbo_action: "replace" } %>
+    <% end %>
+  </div>
+</div>
+
+<% if @hosts.any? %>
+  <ul class="sort-target space-y-3">
+    <% @hosts.each do |host| %>
+      <% upcoming_count = @upcoming_counts[host.id] || 0 %>
+      <li class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <%= link_to host_path(host), class: "p-4 flex items-center gap-4 hover:bg-stone-50 active:bg-stone-100 transition-colors" do %>
+          <% if host.photo.attached? %>
+            <%= image_tag host.photo.variant(:small),
+                          alt: host.display_name,
+                          class: "size-14 rounded-full object-cover shrink-0" %>
+          <% else %>
+            <div class="size-14 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold shrink-0">
+              <%= host.first_name[0] %><%= host.last_name[0] %>
+            </div>
+          <% end %>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="font-medium text-stone-900 truncate"><%= host.display_name %></span>
+              <%= render "hosts/supporter_badge", host: host %>
+            </div>
+            <div class="text-sm text-stone-500 truncate"><%= host.location %></div>
+          </div>
+          <div class="text-right text-xs shrink-0">
+            <div class="text-stone-900 font-semibold tabular-nums"><%= upcoming_count %></div>
+            <div class="text-stone-500">
+              <% mod10 = upcoming_count % 10; mod100 = upcoming_count % 100 %>
+              <%= if upcoming_count == 1 then "zlecenie"
+                  elsif (2..4).include?(mod10) && !(12..14).include?(mod100) then "zlecenia"
+                  else "zleceń" end %>
+            </div>
+          </div>
+        <% end %>
+        <% if host.location.present? %>
+          <div class="border-t border-stone-200">
+            <%= render "shared/map_embed", location: host.location, height_class: "h-40" %>
+          </div>
+          <%= link_to Copy::Events::OPEN_IN_MAPS, google_maps_open_url(host.location),
+                      target: "_blank", rel: "noopener",
+                      class: "block text-center py-2 text-xs text-stone-600 hover:text-stone-900 border-t border-stone-100" %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <div class="text-stone-500 py-8 text-center">Brak gospodarzy.</div>
+<% end %>

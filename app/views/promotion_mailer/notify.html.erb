@@ -1,0 +1,7 @@
+<%= mail_title "Świetna wiadomość, #{@user.first_name}!" %>
+
+<%= mail_paragraph do %>
+  Ktoś zwolnił miejsce na zleceniu <%= mail_strong @event.name %>
+  - awansowałeś z listy rezerwowej.
+  Widzimy się <%= mail_strong l(@event.scheduled_at, format: :long) %>.
+<% end %>

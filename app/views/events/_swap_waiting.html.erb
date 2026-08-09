@@ -1,0 +1,17 @@
+<%# Wychodzące propozycje wymiany (Current.user = proposer, waitlist). Locals: event: %>
+<% unless event.started? %>
+  <% my_pending_swaps = event.swap_proposals.pending.where(proposer_id: Current.user.id).where("expires_at > ?", Time.current).includes(:target) %>
+  <% if my_pending_swaps.any? %>
+    <div class="rounded-lg bg-indigo-50 text-indigo-900 px-3 py-2 text-sm mb-3 animate-pop-in">
+      <div class="flex items-center gap-2">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="size-4 text-indigo-500 animate-spin shrink-0">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 40"/>
+        </svg>
+        <span class="font-semibold"><%= "Propozycja wymiany wysłana" %></span>
+      </div>
+      <div class="text-xs mt-1 text-indigo-700">
+        <%= "Czekasz na odpowiedź od:" %> <%= my_pending_swaps.map { |sp| sp.target.display_name }.join(", ") %>
+      </div>
+    </div>
+  <% end %>
+<% end %>

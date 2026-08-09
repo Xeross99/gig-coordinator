@@ -1,0 +1,147 @@
+<% content_for(:title) { @host.display_name } %>
+<%= render "shared/breadcrumbs", crumbs: [
+  ["Wszyscy gospodarze", hosts_path],
+  [@host.display_name, nil]
+] %>
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <% if @host.photo.attached? %>
+    <div class="bg-stone-100">
+      <%= image_tag rails_blob_path(@host.photo, only_path: true),
+                    alt: @host.display_name,
+                    class: "w-full aspect-square object-cover" %>
+    </div>
+  <% else %>
+    <div class="w-full aspect-square bg-stone-200 flex items-center justify-center">
+      <span class="text-6xl font-semibold text-stone-500">
+        <%= @host.first_name[0] %><%= @host.last_name[0] %>
+      </span>
+    </div>
+  <% end %>
+
+  <div class="p-6">
+    <h1 class="text-2xl sm:text-3xl font-semibold text-stone-900 leading-tight break-words">
+      <%= @host.display_name %>
+    </h1>
+    <% if @host.supporter? %>
+      <div class="mt-2"><%= render "hosts/supporter_badge", host: @host %></div>
+    <% end %>
+
+    <dl class="mt-6 w-full divide-y divide-stone-100 border-t border-stone-100 text-sm">
+      <div class="flex items-center justify-between gap-4 py-3">
+        <dt class="text-stone-500 shrink-0">E-mail</dt>
+        <dd class="font-medium break-all text-right min-w-0 <%= "text-stone-400" if @host.email.blank? %>">
+          <% if @host.email.present? %>
+            <%= link_to @host.email, "mailto:#{@host.email}", class: "text-stone-900 hover:underline" %>
+          <% else %>
+            Nie podano
+          <% end %>
+        </dd>
+      </div>
+      <div class="flex items-center justify-between gap-4 py-3">
+        <dt class="text-stone-500 shrink-0">Telefon</dt>
+        <dd class="font-medium text-right <%= "text-stone-400" if @host.phone.blank? %>">
+          <% if @host.phone.present? %>
+            <%= link_to @host.phone, "tel:#{@host.phone}", class: "text-stone-900 hover:underline" %>
+          <% else %>
+            Nie podano
+          <% end %>
+        </dd>
+      </div>
+      <div class="flex items-center justify-between gap-4 py-3">
+        <dt class="text-stone-500 shrink-0">Lokalizacja</dt>
+        <dd class="font-medium text-right"><%= @host.location %></dd>
+      </div>
+    </dl>
+
+    <% if admin_signed_in? %>
+      <%= link_to "Edytuj", edit_host_path(@host),
+                  class: "block w-full mt-5 py-3 rounded-lg bg-stone-900 text-white font-medium text-center" %>
+    <% end %>
+  </div>
+
+  <% if @host.location.present? %>
+    <div class="border-t border-stone-200">
+      <%= render "shared/map_embed", location: @host.location, height_class: "h-56" %>
+    </div>
+    <%= link_to Copy::Events::OPEN_IN_MAPS, google_maps_open_url(@host.location),
+                target: "_blank", rel: "noopener",
+                class: "block text-center py-2 text-xs text-stone-600 hover:text-stone-900 border-t border-stone-100" %>
+  <% end %>
+
+  <% if @host.managers.any? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3"><%= "Komendanci" %></h2>
+      <ul class="space-y-2">
+        <% @host.managers.each do |user| %>
+          <li>
+            <%= link_to user_path(user), class: "flex items-center gap-3 text-sm" do %>
+              <% if user.photo.attached? %>
+                <%= image_tag rails_representation_path(user.photo.variant(:small), only_path: true),
+                              alt: user.display_name,
+                              class: "size-10 rounded-full object-cover shrink-0" %>
+              <% else %>
+                <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
+                  <%= user.first_name[0] %><%= user.last_name[0] %>
+                </div>
+              <% end %>
+              <div class="min-w-0 flex-1">
+                <div class="font-medium text-stone-900 truncate"><%= user.display_name %></div>
+              </div>
+              <span class="shrink-0"><%= render "users/title_badge", user: user %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @host.blocked_users.any? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3 flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" class="size-3.5 text-red-500">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+        <%= "Zablokowani kurołapacze" %>
+      </h2>
+      <ul class="space-y-2">
+        <% @host.blocked_users.each do |user| %>
+          <li>
+            <%= link_to user_path(user), class: "flex items-center gap-3 text-sm" do %>
+              <% if user.photo.attached? %>
+                <%= image_tag rails_representation_path(user.photo.variant(:small), only_path: true),
+                              alt: user.display_name,
+                              class: "size-10 rounded-full object-cover shrink-0" %>
+              <% else %>
+                <div class="size-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
+                  <%= user.first_name[0] %><%= user.last_name[0] %>
+                </div>
+              <% end %>
+              <div class="min-w-0 flex-1">
+                <div class="font-medium text-stone-900 truncate"><%= user.display_name %></div>
+              </div>
+              <span class="shrink-0"><%= render "users/title_badge", user: user %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @upcoming_events.any? %>
+    <div class="border-t border-stone-200 p-5">
+      <h2 class="text-stone-500 text-xs uppercase tracking-wide mb-3">Nadchodzące zlecenia</h2>
+      <ul class="space-y-2">
+        <% @upcoming_events.each do |event| %>
+          <li class="flex items-center justify-between gap-3 text-sm">
+            <%= link_to event.name, event_path(event),
+                        class: "font-medium text-stone-900 hover:underline truncate min-w-0 flex-1" %>
+            <span class="shrink-0 text-xs text-stone-500 tabular-nums">
+              <%= l(event.scheduled_at, format: :short) %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,59 @@
+<% content_for(:title) { Copy::Auth::CODE_PROMPT } %>
+<div class="pt-10 pb-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <%= image_tag "/icon.svg", alt: "Gig Coordinator", class: "mx-auto h-16 w-16 rounded-xl shadow-sm" %>
+    <h1 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-stone-900"><%= Copy::Auth::CODE_PROMPT %></h1>
+    <p class="mt-2 text-center text-sm text-stone-600">
+      Wysłaliśmy 5-cyfrowy kod na <strong><%= @email %></strong>.
+    </p>
+  </div>
+
+  <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+    <div class="bg-white px-6 py-12 shadow-sm sm:rounded-lg sm:px-12">
+      <%= form_with url: verify_login_path, method: :post, local: true, class: "space-y-6" do %>
+        <div data-controller="code-input">
+          <%= label_tag :login_code, "Kod z e-maila",
+                class: "block text-sm/6 font-medium text-stone-900 text-center mb-3" %>
+          <%# One real <input> on top (transparent, autocomplete="one-time-code"
+              for iOS) + 5 decorative cells underneath. Clicks pass through the
+              pointer-events-none cells to the input, so tapping any cell
+              focuses the single input and iOS offers the OTP suggestion above
+              the keyboard. No focus-juggling = autofill actually works. %>
+          <div class="relative">
+            <div class="flex justify-center gap-2 sm:gap-3 pointer-events-none">
+              <% 5.times do %>
+                <div data-code-input-target="cell"
+                     class="w-12 h-14 sm:w-14 sm:h-16 rounded-md bg-white ring-1 ring-stone-300 flex items-center justify-center text-2xl sm:text-3xl font-semibold text-stone-900">
+                  <span data-code-input-target="char"></span>
+                </div>
+              <% end %>
+            </div>
+            <input type="text"
+                   id="login_code"
+                   name="code"
+                   inputmode="numeric"
+                   pattern="[0-9]{5}"
+                   maxlength="5"
+                   autocomplete="one-time-code"
+                   data-code-input-target="input"
+                   data-action="input->code-input#update"
+                   class="absolute inset-0 w-full h-full opacity-0 text-transparent caret-transparent outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <%= submit_tag "Zaloguj się",
+                data: { turbo_submits_with: "Sprawdzam…" },
+                class: "flex w-full justify-center rounded-md bg-stone-900 px-3 py-2 text-sm/6 font-semibold text-white shadow-xs hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900 transition-transform active:scale-[0.98]" %>
+        </div>
+      <% end %>
+
+      <div class="mt-8 text-center text-xs text-stone-500 space-y-2">
+        <p><%= "Kod wygasa po 15 minutach. Nie przyszedł? Sprawdź folder spam." %></p>
+        <p>
+          <%= link_to "Zmień adres e-mail", login_path, class: "font-medium text-stone-900 underline" %>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

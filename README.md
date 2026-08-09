@@ -1,0 +1,568 @@
+# Gig Coordinator
+
+Deploy: Kamal 2 na VPS. Konkretny host, porty i nazwa obrazu żyją w `config/deploy.yml`.
+
+Rails 8.1 aplikacja do koordynacji pracy dorywczej w rolnictwie. **Gospodarze (Hosts)** tworzą zlecenia typu „Odłów kur"; **Pracownicy (Users)** akceptują je z mobilnej PWA. Polski UI, PL ścieżki URL, logowanie wyłącznie przez 5-cyfrowy kod dostarczany e-mailem (magic-linki wyrzucone — odnośnik tapnięty w mailu otwiera przeglądarkę systemową zamiast PWA i ciasteczko ląduje w złym kontekście), real-time przez Turbo Streams, web push przez VAPID.
+
+## Stack
+
+- **Rails 8.1**, **Ruby 4.0**
+- **SQLite** + Active Storage (zdjęcia hostów i userów)
+- **Hotwire** — Turbo + Stimulus
+- **Tailwind v4** (watcher w Procfile.dev, custom keyframes w `@theme`)
+- **`@tailwindplus/elements`** (dropdown web-components, pinned w importmap)
+- **Solid Queue / Solid Cache / Solid Cable** (in-DB, bez Redis)
+- **web-push** (VAPID)
+- **rails-i18n** (polska lokalizacja + transliteracja slugów)
+
+## Uruchomienie
+
+```bash
+bin/setup                            # bundle + db:prepare
+bin/dev                              # Puma + tailwindcss:watch (honoruje $PORT)
+PORT=3001 bin/dev                    # inny port (gdy :3000 zajęty)
+bin/rails db:seed                    # sample hostów, userów i eventów
+bin/rails test                       # unit + integration
+bin/rails test:system                # Capybara + headless Chrome
+bin/login-code <email>               # wygeneruj i wypisz 5-cyfrowy kod logowania
+bin/ci                               # pełny CI run: setup, rubocop, gem audit, brakeman, testy, seedy
+```
+
+Credentiale (patrz `CLAUDE.md`): Gmail SMTP + VAPID keys + deliverable `subject` mailto.
+
+---
+
+# Modele i relacje
+
+Aplikacja ma **7 modeli**. Dwa z nich (`Host` i `User`) są niezależnymi modelami uwierzytelnialnymi — **nie STI, nie jeden model z kolumną `role`**. Każdy ma własny cykl życia, własny panel i własne relacje.
+
+```
+Host ──< Event ──< Participation >── User
+                                    │
+                                    └──< PushSubscription
+Session (polimorficzna) ── Host | User
+```
+
+## `Host` — gospodarz
+
+Właściciel eventów. Zarządza nimi z panelu `/host/*`.
+
+**Tabela `hosts`:**
+| Kolumna     | Typ                      | Uwagi                         |
+|-------------|--------------------------|-------------------------------|
+| id          | integer PK               |                               |
+| first_name  | string, NOT NULL         |                               |
+| last_name   | string, NOT NULL         |                               |
+| email       | string, NOT NULL, UNIQUE | case-insensitive (normalized) |
+| location    | string, NOT NULL         | miejscowość/adres tekstowy    |
+| timestamps  |                          |                               |
+
+> Wcześniejsza migracja `CreateHosts` dodawała spekulacyjnie kolumny `lat` / `lng` (decimal, precision: 10, scale: 6) pod przyszłą geolokalizację — były nieużywane, więc zostały zdjęte w migracji `RemoveLatLngFromHosts`.
+
+**Relacje:**
+- `has_many :events, dependent: :destroy` — eventy, które stworzył
+- `has_many :sessions, as: :authenticatable, dependent: :destroy` — aktywne sesje (polimorficzne)
+- `has_one_attached :photo` — zdjęcie profilowe (Active Storage)
+
+**Walidacje:** `first_name`, `last_name`, `location`, `email` (format + unikalność).
+
+**Metody instancji:** `display_name` → `"#{first_name} #{last_name}"`.
+
+**Normalizacje:** `email` → strip + downcase (`normalizes :email`).
+
+**Uwierzytelnianie:** 5-cyfrowy kod z tabeli `login_codes` (polimorficzny, 15-minutowa ważność, 5 prób). Host loguje się na tym samym `/logowanie` co User — `LoginCodesController#create` sprawdza najpierw `Host`, potem `User`.
+
+---
+
+## `User` — pracownik
+
+Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje push.
+
+**Tabela `users`:**
+| Kolumna     | Typ                      | Uwagi                                                     |
+|-------------|--------------------------|-----------------------------------------------------------|
+| id          | integer PK               |                                                           |
+| first_name  | string, NOT NULL         |                                                           |
+| last_name   | string, NOT NULL         |                                                           |
+| email       | string, NOT NULL, UNIQUE | case-insensitive (normalized)                             |
+| title       | integer, DEFAULT 0, idx  | enum ranga: `zoltodziob` (0) → `mistrz_piora` (4)         |
+| timestamps  |                          |                                                           |
+
+**Relacje:**
+- `has_many :participations, dependent: :destroy` — uczestnictwa (confirmed/waitlist/cancelled)
+- `has_many :events, through: :participations` — eventy, w których bierze udział
+- `has_many :push_subscriptions, dependent: :destroy` — subskrypcje web push (1 user może mieć wiele urządzeń)
+- `has_many :sessions, as: :authenticatable, dependent: :destroy` — aktywne sesje
+- `has_many :host_memberships, class_name: "HostManager"` + `has_many :managed_hosts, through:` — M:N wskazanie, którymi gospodarzami ten user „zarządza" (patrz niżej)
+- `has_one_attached :photo` — zdjęcie profilowe (Active Storage) z nazwanym variantem `:roster` (`resize_to_fill: [40, 40]`) używanym we wszystkich listach roster na `/eventy/:id`
+
+**Walidacje:** `first_name`, `last_name`, `email` (format + unikalność).
+
+**Enum `:title`:** 5 rang (`zoltodziob` 0 → `kurzy_pacholek` 1 → `kurnikowy_gangster` 2 → `kurnikowy_komendant` 3 → `mistrz_piora` 4). Default w bazie = 0 (`zoltodziob`) — każdy nowy user zaczyna jako Żółtodziób, promocja ręcznie przez konsolę. Labelki w `config/locales/pl.yml` pod `user.titles.*`; `user.display_title` zwraca przetłumaczony tekst.
+
+**Uprawnienia do tworzenia eventów (siedzą na randze, nie na osobnej kolumnie):**
+- `mistrz_piora` — może tworzyć eventy dla **każdego** hosta; na profilu widać sekcję „Zarządza wszystkimi gospodarzami" z listą wszystkich hostów.
+- `kurnikowy_komendant` — może tworzyć eventy wyłącznie dla hostów w `user.managed_hosts` (M:N join `HostManager`). Dropdown gospodarzy na `/eventy/nowy` jest scope'owany do tej listy; `EventsController#create` dodatkowo sprawdza, czy przesłane `host_id` mieści się w `allowed_hosts`. Komendant bez żadnego `managed_hosts` nie widzi przycisku „Zaplanuj zlecenie" i dostaje forbidden na `#new`/`#create`.
+- niższe rangi — brak UI do tworzenia eventów.
+
+Jedno źródło prawdy: `User#can_create_events?` (`mistrz_piora? || (kurnikowy_komendant? && managed_hosts.exists?)`). Powiązania user↔host nadajemy wyłącznie z `rails console` (`u.managed_hosts << h; u.update!(title: :kurnikowy_komendant)`) — zgodnie z projektową konwencją „admin rzeczy przez konsolę" (brak signup-u i brak admin UI). Powiązanie jest widoczne na profilu usera (sekcja „Zarządza"), na `/gospodarze/:id` (sekcja „Komendanci") i w `/gospodarze` index (mała nota „N komendantów" pod lokalizacją hosta).
+
+**Badge rangi (UI):** `User::TITLE_BADGE_COLORS` + `#title_badge_classes` mapują rangę na parę `bg-*` / `text-*`: **szary** = Żółtodziób (najniższa) → **zielony** = Kurzy Pachołek → **niebieski** = Kurnikowy Gangster → **fioletowy** = Kurnikowy Komendant → **żółty/złoty** = Mistrz Pióra (najwyższa; złoto zarezerwowane dla pojedynczego top tieru). Partial `app/views/users/_title_badge.html.erb` (locals: `user:`) renderuje kapsułkę `inline-flex ... rounded-md ... text-xs`. Używany wszędzie, gdzie pokazujemy użytkownika z rangą: `/kurolapacze`, navbar usera, `/profil/edit`, każdy wiersz roster na `/eventy/:id`.
+
+**Metody instancji:** `display_name`, `display_title`, `title_badge_classes`.
+
+**Normalizacje:** `email` → strip + downcase.
+
+**Profil:** `/profil/edit` (`ProfilesController`) pozwala zmienić **tylko zdjęcie**. Imię, nazwisko, email i ranga są read-only w UI (edycja przez `rails console`) — decyzja projektowa: email jest adresem, na który trafia kod logowania, zmiana z poziomu UI otwierałaby wektor ataku.
+
+---
+
+## `Event` — wydarzenie
+
+Konkretna „robota" z datą startu/końca, stawką i liczbą miejsc.
+
+**Tabela `events`:**
+| Kolumna         | Typ                | Uwagi                                    |
+|-----------------|--------------------|------------------------------------------|
+| id              | integer PK         |                                          |
+| host_id         | integer FK, NOT NULL | `belongs_to :host`                     |
+| name            | string, NOT NULL   | np. „Odłów kur — Wilga"               |
+| scheduled_at    | datetime, NOT NULL | początek (index)                         |
+| ends_at         | datetime, NOT NULL | koniec (index)                           |
+| pay_per_person  | decimal(8,2), NOT NULL, ≥ 0 | stawka brutto za osobę          |
+| capacity        | integer, NOT NULL, > 0 | liczba miejsc confirmed              |
+| completed_at    | datetime           | NULL dopóki nie rozliczony               |
+| timestamps      |                    |                                          |
+
+**Relacje:**
+- `belongs_to :host`
+- `has_many :participations, dependent: :destroy`
+- `has_many :users, through: :participations`
+
+**Walidacje:** `name`, `scheduled_at`, `ends_at`, `pay_per_person` (≥ 0), `capacity` (integer > 0). Custom: `ends_at_after_scheduled_at` — `ends_at` musi być po `scheduled_at`.
+
+**Scope'y:**
+- `upcoming` — `scheduled_at > Time.current`, sorted asc
+- `awaiting_completion` — `ends_at < now AND completed_at IS NULL` (do job'a kończącego event)
+
+**Metody:**
+- `to_param` → `"#{id}-#{name.parameterize}"` (np. `/eventy/42-lapanie-kur`). Polskie znaki są transliterowane przez `rails-i18n` (Ł→l, ą→a…). `Event.find` dalej działa — Rails coerce'uje `"42-foo".to_i → 42`.
+- `completed?` — czy ma `completed_at`
+- `confirmed_count`, `waitlist_count` — liczniki
+- `full?` — `confirmed_count >= capacity`
+
+**Callbacki (broadcasty feedu — synchroniczne):**
+- `after_create_commit :broadcast_feed_append` — prepend kartki do `events_list` w streamie `:events` (tylko jeśli `upcoming_now?`)
+- `after_create_commit :broadcast_visit_to_feed` — wysyła custom `visit` Turbo::StreamAction do streamu `:events` — przenosi wszystkich zalogowanych userów na stronę nowego eventu (subskrypcja globalna w `application.html.erb`, więc działa z każdej strony, nie tylko feedu)
+- `after_create_commit :notify_new_event_subscribers` — `WebPushNotifier.perform_later(:new_event, ...)` do wszystkich userów z push sub
+- `after_create_commit :seed_reservations` — `ReservationService.seed_on_create` dla userów z najwyższą rangą
+- `after_update_commit :broadcast_feed_replace` — replace kartki
+- `after_destroy_commit :broadcast_feed_remove` — remove z feedu
+
+**Broadcasty są `broadcast_prepend_to` (sync), nie `_later`** — UI nie zależy od kolejki.
+
+---
+
+## `Participation` — relacja User ↔ Event
+
+Wynik kliknięcia „Akceptuję" lub „Dołącz na listę rezerwową". Przechowuje stan + pozycję w kolejce.
+
+**Tabela `participations`:**
+| Kolumna         | Typ                 | Uwagi                                                        |
+|-----------------|---------------------|--------------------------------------------------------------|
+| id              | integer PK          |                                                              |
+| event_id        | integer FK, NOT NULL |                                                             |
+| user_id         | integer FK, NOT NULL |                                                             |
+| status          | integer, NOT NULL, default 0 | enum: `confirmed=0, waitlist=1, cancelled=2, reserved=3` |
+| position        | integer, NOT NULL, default 0 | pozycja w obrębie statusu                           |
+| reserved_until  | datetime, nullable  | deadline rezerwacji (tylko dla `reserved`); nil poza tym     |
+| timestamps      |                     |                                                              |
+
+**Indexy:**
+- `unique(event_id, user_id)` — jeden user = jeden rekord per event (jakikolwiek status)
+- `(event_id, status, position)` — szybki lookup najstarszego na waitlist przy promocji
+- `reserved_until` — do szybkiego sweepa wygasłych rezerwacji
+
+**Relacje:**
+- `belongs_to :event`
+- `belongs_to :user`
+
+**Walidacje:** `user_id` unique scope `event_id`.
+
+**Scope'y:**
+- `active` — wszystko poza `cancelled`
+- `holding_slot` — confirmed + reserved (blokują capacity)
+
+**Metody:** `reservation_expired?` — `reserved? && reserved_until <= now`.
+
+**Logika biznesowa — NIE W MODELU:** create/destroy wywołuje `ParticipationsController` pod **pessimistic lockiem** na Event:
+
+```ruby
+Event.transaction do
+  event.lock!
+  confirmed_count = event.participations.confirmed.count
+  if confirmed_count < event.capacity
+    # confirmed, pozycja = confirmed_count
+  else
+    # waitlist, pozycja = waitlist_count
+  end
+end
+```
+
+Anulowanie `confirmed` odpala `promote_from_waitlist` — najstarszy `waitlist` (po `position`) staje się `confirmed`. Promocja wysyła `PromotionMailer` + `WebPushNotifier(:promotion)`. Wszystko w tej samej transakcji.
+
+**Priority reservations (ranked auto-invites):** przy tworzeniu nowego eventu `Event#after_create_commit :seed_reservations` woła `ReservationService.seed_on_create(event)` → rezerwuje sloty wyłącznie dla userów z rangą **`mistrz_piora`** (hard-coded filtr `User.mistrz_piora`, bez kaskady w dół rang). Jeśli żaden mistrz nie istnieje albo wszyscy są już na evencie / zablokowani przez `HostBlock`, slot zostaje pusty i czeka na regularne zapisy z feedu. Np. capacity 4 + tylko 1 user `mistrz_piora` → 1 rezerwacja, pozostałe 3 sloty otwarte. Ordering: `id ASC`. Każdy zaproszony dostaje `InvitationMailer#notify` + `WebPushNotifier(:invitation, ...)` + `reserved_until = now + 1h`.
+
+Na `/eventy/:id` widzi dedykowany banner + przyciski **Akceptuję** / **Odrzuć** — obsługiwane przez `ParticipationsController#accept` i `#decline` (przyciski mają `data-turbo-frame="_top"` żeby submisja wyszła z ramki i toast pokazał się bez F5). Akceptacja flipuje `reserved → confirmed`. Odrzucenie → `cancelled` + `ReservationService.refill_one(event)` z semantyką **waitlist-first, potem tylko `mistrz_piora`**:
+
+1. Jeśli na waitliście ktoś czeka — promujemy go (spełnia regułę „jesli nie to wskakuje osoba w kolejce").
+2. Jeśli waitlista pusta — szukamy innego `mistrz_piora`, który nie ma jeszcze participation na tym evencie ani blokady u gospodarza. Jeśli nie istnieje, slot zostaje pusty. **Żaden user niższej rangi nigdy nie dostanie auto-rezerwacji**, nawet jeśli wszyscy mistrzowie już odrzucili lub baza nie ma ani jednego mistrza.
+
+`ReservationExpirationJob` (cron co minutę w dev i prod, `config/recurring.yml`) przegląda `Participation.reserved.where("reserved_until <= ?", Time.current)` i funneluje przez tę samą logikę co decline. Klasy: `app/services/reservation_service.rb`, `app/jobs/reservation_expiration_job.rb`, `app/mailers/invitation_mailer.rb`.
+
+**Model-level broadcasts:** `Participation#after_commit :broadcast_event_updates, on: %i[create update destroy]` wysyła `broadcast_replace_to [event, :roster]` + `[event, :counts]` przy każdej zmianie. Każda ścieżka (kontroler, service, job, `rails runner`, `rails console`) automatycznie odświeża otwarte przeglądarki — nie trzeba broadcastować ręcznie. Guard `Event.find_by(id: event_id)` chroni przed błędem przy kaskadowym destroy.
+
+---
+
+## `ParticipationEvent` — append-only audit log uczestnictwa
+
+Każda zmiana `Participation` (utworzenie + każdy update statusu) zostawia ślad w `participation_events`. To źródło prawdy dla `/eventy/:id/historia` — pokazuje pełen flow „zaproszony → przyjął → anulował" zamiast tylko stanu końcowego.
+
+**Tabela `participation_events`:**
+| Kolumna           | Typ                  | Uwagi                                                                                          |
+|-------------------|----------------------|------------------------------------------------------------------------------------------------|
+| id                | integer PK           |                                                                                                |
+| participation_id  | integer FK, NOT NULL | `dependent: :delete_all` z Participation                                                       |
+| event_type        | integer, NOT NULL    | enum: `joined=0, cancelled=1, reserved=2, accepted=3, declined=4, promoted=5, expired=6`        |
+| timestamps        |                      | `created_at` używane w timeline'ie historii                                                     |
+
+**Wpisy generowane w `Participation#log_participation_event`** (`after_commit :create :update`):
+
+| event_type  | Kiedy                                                                                  |
+|-------------|----------------------------------------------------------------------------------------|
+| `joined`    | create z `confirmed`/`waitlist`, lub re-aktywacja `cancelled → confirmed`/`waitlist`   |
+| `reserved`  | create z `reserved` (auto-zaproszenie z `ReservationService`)                          |
+| `accepted`  | `reserved → confirmed` (Mistrz Pióra klika „Akceptuję")                                 |
+| `declined`  | `reserved → cancelled` **bez** flagi `cancellation_reason: :expired`                    |
+| `expired`   | `reserved → cancelled` z flagą `:expired` (`ReservationService.expire_stale!` ustawia transient `cancellation_reason` przed cancellation) |
+| `promoted`  | `waitlist → confirmed` (`ReservationService.promote_from_waitlist`)                     |
+| `cancelled` | jakikolwiek inny status → `cancelled` (zwykła rezygnacja z confirmed/waitlist)         |
+
+**Czemu nie wnioskujemy z `Participation.created_at`/`updated_at` + finalnego statusu:** stan końcowy nie odróżnia np. `declined` (odrzucił zaproszenie) od `cancelled` (anulował udział) — oba kończą jako `cancelled`. Bez audit logu user który odrzucił zaproszenie wyglądał w historii tak samo jak ten, który przyjął i potem zrezygnował. Flaga `:expired` jest jedynym sposobem rozróżnienia automatycznego wygaśnięcia rezerwacji od manualnego decline.
+
+**Renderowanie:** `EventsController#build_history_entries` joinuje `ParticipationEvent` per `event.participations` i miksuje z `EventChange` (audit log edycji pól) + jednym wpisem `:created`. Verby z `events_helper#participation_event_verb` — wyłącznie forma męska (kurołapacze są mężczyznami, traktujemy to jako product invariant).
+
+**Uwaga przy testach:** `Participation.create!`/`update!` w testach też triggeruje audit log (callbacki ON-by-default), więc test który tworzy participation manualnie nadal dostanie wpis `joined` w historii.
+
+---
+
+## `Session` — polimorficzna sesja
+
+Jedna tabela dla Hostów i Userów.
+
+**Tabela `sessions`:**
+| Kolumna              | Typ                  | Uwagi                              |
+|----------------------|----------------------|------------------------------------|
+| id                   | integer PK           |                                    |
+| token                | string, NOT NULL, UNIQUE | `SecureRandom.urlsafe_base64(32)` |
+| authenticatable_type | string, NOT NULL     | `"Host"` albo `"User"`             |
+| authenticatable_id   | integer, NOT NULL    |                                    |
+| user_agent           | string               | dla debugowania                    |
+| ip_address           | string               | dla debugowania                    |
+| timestamps           |                      |                                    |
+
+**Relacje:** `belongs_to :authenticatable, polymorphic: true`.
+
+**Callbacki:** `before_validation :ensure_token` — generuje `token` jeśli brak.
+
+**Jak działa:** `ApplicationController#load_current_session` czyta signed, permanent cookie `:session_token`, znajduje sesję, ustawia `Current.session`. Helpers `Current.host` / `Current.user` zwracają konkretny typ albo `nil`.
+
+---
+
+## `PushSubscription` — urządzenie subskrybujące web push
+
+Każde urządzenie mobilne (instalacja PWA na Home Screen na iOS / Android) rejestruje swój endpoint.
+
+**Tabela `push_subscriptions`:**
+| Kolumna     | Typ                  | Uwagi                                       |
+|-------------|----------------------|---------------------------------------------|
+| id          | integer PK           |                                             |
+| user_id     | integer FK, NOT NULL |                                             |
+| endpoint    | string, NOT NULL, UNIQUE | URL dostarczany przez push service      |
+| p256dh_key  | string, NOT NULL     | klucz public ECDH z Push API                |
+| auth_key    | string, NOT NULL     | klucz auth z Push API                       |
+| timestamps  |                      |                                             |
+
+**Relacje:** `belongs_to :user`.
+
+**Walidacje:** wszystkie 3 pola obecne, `endpoint` unikalny globalnie.
+
+**Kto wysyła:** `WebPushNotifier` (ActiveJob, Solid Queue). Dispatch po `kind`:
+- `:completion` / `:promotion` — do konkretnego usera (przez `participation_id:`)
+- `:new_event` — do **wszystkich** userów z subskrypcją (feed jest publiczny)
+
+Przy błędzie `InvalidSubscription` / `Expired` subskrypcja jest usuwana. Wszystkie inne `WebPush::ResponseError` są rescuowane i logowane — jeden zły endpoint nie wywala całej paczki.
+
+**VAPID gotcha:** Apple Push zwraca `BadJwtToken` gdy `sub` w kluczach VAPID jest nieroutowalnym mailto (np. `mailto:admin@example.local`). Musi być prawdziwy adres.
+
+---
+
+## `Current` — Thread-local
+
+`ActiveSupport::CurrentAttributes` z jednym atrybutem `session`, plus helpery `host` / `user` seriijące `session.authenticatable` na konkretny typ (albo `nil`).
+
+---
+
+# Kluczowe flow'y
+
+## Logowanie (5-cyfrowy kod)
+
+Magic-linki wyrzucone — tapnięcie linku w aplikacji pocztowej otwierało domyślną przeglądarkę systemową (Safari/Chrome), nie zainstalowane PWA, więc ciasteczko sesyjne (`session_token`, `SameSite=Lax`) siadało w złym kontekście przeglądarki i user po powrocie do PWA dalej był niezalogowany. Zamiana: mail niesie tylko **5-cyfrowy kod**, user przepisuje go do formularza w PWA, sesja powstaje w tym samym kontekście co cookie.
+
+1. `/logowanie` (`SessionsController#new`) — formularz z polem e-mail (layout `auth`, pełen viewport).
+2. `POST /kody-logowania` (`LoginCodesController#create`) — szuka emaila najpierw w `Host`, potem w `User`. Jeśli trafi, woła `LoginCode.generate_for(record, request:)` (unieważnia wcześniejsze aktywne kody tego rekordu, tworzy nowy z `format("%05d", SecureRandom.random_number(100_000))`, `expires_at = 15.minutes.from_now`) i enqueuje `LoginCodeMailer.notify`. Zawsze zapisuje `session[:pending_login_email]` i redirectuje na `verify_login_path, notice: t("auth.code_sent")` — **neutralny komunikat także dla nieznanych emaili** (no-enumeration). W dev dodatkowo `puts`-uje kod do stdout.
+3. `GET /logowanie/weryfikacja` (`#new`) — gate na `session[:pending_login_email]` (brak → redirect na `/logowanie`). Renderuje 5 osobnych pól cyfrowych, obsługiwanych przez Stimulus `code_input_controller.js` (auto-focus w prawo po cyfrze, backspace wraca w lewo, wklejenie 5-cyfrowego ciągu rozrzuca cyfry, auto-submit po ostatniej). Link „Zmień adres e-mail" wraca do `/logowanie`.
+4. `POST /logowanie/weryfikacja` (`#verify`) — wywołuje `LoginCode.consume(record, submitted_code)`:
+   - trafienie: `used_at = now`, `sign_in!(record)`, `session.delete(:pending_login_email)`, redirect:
+     - Host → `/panel`
+     - User → `/`
+   - pudło: inkrementuje `attempts` na aktywnym kodzie; po `LoginCode::MAX_ATTEMPTS` (5) kod jest wypalany (`used_at` set). Błędny kod / brak aktywnego kodu / nieznany e-mail → ten sam neutralny `auth.invalid_code`.
+
+**Dwa komunikaty — nie mylić ich:**
+- `auth.invalid_code` („Nieprawidłowy lub wygasły kod.") — gdy `LoginCodesController#verify` nie trafia w aktywny `LoginCode`.
+- `auth.login_required` („Zaloguj się, aby kontynuować.") — gdy `require_user!` / `require_host!` z `ApplicationController` przekierowuje niezalogowanego.
+
+**Brak rejestracji.** Host/User powstają tylko przez `rails console` lub `db/seeds.rb`. Dodanie signup controllera zmieniłoby security model (email staje się niezautentykowanym write vector).
+
+## Mailery
+
+Wszystkie transakcyjne maile dzielą ten sam wygląd: rounded biała karta z szarym nagłówkiem (ikonka kury + „Gig Coordinator"), centralny content i stopka. Chrome siedzi w `app/views/layouts/mailer.html.erb` (+ `.text.erb`) — każdy mailer dziedziczy przez `ApplicationMailer.layout "mailer"`.
+
+Cztery partials w `app/views/mailers/` do budowy treści: `_title`, `_paragraph` (przyjmuje `html:` → w razie potrzeby `safe_join([tag.strong(...), ...])`), `_cta_button` (label + url), `_raw_url` (fallback „jeśli przycisk nie działa"). Dodanie nowego maila sprowadza się do renderowania tych klocków.
+
+Aktualne mailery: `LoginCodeMailer` (5-cyfrowy kod — bez CTA przycisku/linku, tylko duży monospace'owy blok z kodem), `PromotionMailer` (awans z waitlisty), `InvitationMailer` (rezerwacja z 1h deadline). Nie ma `CompletedEventMailer` — po zakończeniu eventu wystarczy push (`WebPushNotifier(:completion)`). Wspólne powitanie: `t("mailers.hello", name:)`.
+
+Mailer previews: `test/mailers/previews/`. Lista przykładów pod `/rails/mailers`. Dodanie nowego preview wymaga restartu `bin/dev`.
+
+## Tworzenie eventu — podgląd składu z poprzedniego razu
+
+Na `/eventy/nowy` (worker, gated `can_create_events?`), pod dropdownem hosta renderuje się **podgląd składu z ostatniego eventu wybranego gospodarza** (`EventsController#last_roster_preview`, `GET /eventy/podglad-rostera?host_id=N`). Reaktywne — `last_roster_preview_controller.js` (Stimulus) na `change` selecta debounce'uje 150 ms i `fetch`-uje partial; `AbortController` zabija pending fetch przy szybkich kolejnych zmianach hosta. Podczas oczekiwania stara lista zostaje na ekranie (stale-while-fetching, brak pustego mignięcia).
+
+Endpoint korzysta z **`host.events.past.first`** (= zakładka „Wykonane" = `scheduled_at <= now`), nie z `where.not(completed_at: nil)`. `EventCompletionJob` odpala się z opóźnieniem (a w dev wcale), więc filtrowanie po fladze zostawiałoby świeże eventy past niewidoczne. Empty state: „Brak poprzednich eventów u {host}".
+
+Autoryzacja: `before_action :require_event_creator! :last_roster_preview` + `allowed_hosts.find_by(id: params[:host_id])` jako jedyny choke-point. Komendant podpinający `?host_id=<spoza-managed_hosts>` dostaje stan pusty (jak gdyby nie wybrał hosta) — bez wycieku rosteru.
+
+**Przycisk „Zaznacz z poprzedniego eventu"** obok labela „Zapisz od razu" — schowany dopóki podgląd nie ma confirmed userów, kliknięcie ustawia checkboxy `event[pre_registered_user_ids][]` na **dokładnie** confirmed userów z poprzedniego eventu (waitlist pomijany). Wired przez ten sam Stimulus controller (akcja `copyToPrereg` + target `prefillButton`); `data-controller` siedzi na całym `<form>` żeby button — który jest poza divem podglądu — był w jego scope. Outer div podglądu wystawia `data-confirmed-user-ids="[id, id, ...]"` (JSON); controller czyta to po każdym fetchu.
+
+## Akceptacja eventu
+
+User klika „Akceptuję" → `ParticipationsController#create`:
+1. `Event.transaction do; event.lock!` (pessimistic row lock — serializuje równoległych klikaczy)
+2. Szuka istniejącego `participation` dla `(event, user)`:
+   - `nil` → insert nowy
+   - `cancelled` → reaktywacja (`update!(status:, position:)`)
+   - `confirmed`/`waitlist` → no-op (idempotent — ochrona przed spam-clickiem)
+3. `next_slot_for` — jeśli `confirmed.count < capacity` → nowy rekord `confirmed`, inaczej `waitlist`. Pozycja z `max(position) + 1`.
+4. Broadcast Turbo Stream do `[event, :counts]` i `[event, :roster]` (user + host oglądają ten sam partial rosteru).
+
+Anulowanie:
+1. Lock jak wyżej.
+2. Jeśli cancelujemy `confirmed` → `promote_from_waitlist`: najstarszy waitlist → confirmed. Mail + push do promowanego.
+3. Broadcast obu streamów.
+
+**UI bez skoku scrolla:** przycisk akceptacji jest owinięty w `turbo_frame_tag`. `button_to` submituje, kontroler robi redirect, Turbo wyciąga pasującą ramkę z odpowiedzi i podmienia ją w miejscu — żadnej pełnej nawigacji.
+
+## Zakończenie eventu
+
+`EventCompletionJob` (recurring) skanuje `Event.awaiting_completion`, oznacza `completed_at` i wysyła `WebPushNotifier(:completion)` do confirmed userów. (Maila podziękowania nie ma — push wystarczy.)
+
+---
+
+# Turbo Streams
+
+| Stream name        | Kto subskrybuje                   | Co się dzieje                                           |
+|--------------------|-----------------------------------|---------------------------------------------------------|
+| `[event, :counts]` | user event show                   | Participation `after_commit` (model callback)           |
+| `[event, :roster]` | user + host event show            | Participation `after_commit` (model callback)           |
+| `:events`          | każda strona workera (layout)     | Event create/update/destroy + broadcast `visit`         |
+| `[user, :events]`  | każda strona workera (layout)     | user-scoped card replace przy rezerwacji (`invite!`)    |
+
+**Broadcasty z modelu:** `Participation#after_commit` odpala `broadcast_replace_to` na `[event, :roster]` + `[event, :counts]` przy każdym create/update/destroy — single source of truth. Każda ścieżka (kontroler, service, job, runner) odświeża UI automatycznie. Feed broadcasty z `Event` model callbacks — synchronicznie. Roster partial (`app/views/events/_roster.html.erb`) współdzielony między hostem a userem; avatar przez `_roster_avatar.html.erb` (zdjęcie lub inicjały). Brak numerków pozycji — licznik jest w nagłówku sekcji.
+
+**Adapter cable:** `solid_cable` w dev i prod (wcześniej dev miał `async`, który nie działa między procesami — broadcast z `bin/rails runner` nie docierał do przeglądarki). W dev jest osobna baza `storage/development_cable.sqlite3` pod cable (multi-DB w `config/database.yml`, migracje w `db/cable_migrate`). Po klonie repo: `bin/rails db:prepare` tworzy obie bazy.
+
+**Active Storage w broadcastach:** `_roster_avatar.html.erb` używa `rails_representation_path(user.photo.variant(:roster), only_path: true)` — helper **path**, nie URL. Partial leci przez cable z dowolnego wątku (controller, service, job, runner), a tam `ActiveStorage::Current.url_options` jest nilem → przekazanie varianta wprost do `image_tag` wywalało się z "Cannot generate URL … please set ActiveStorage::Current.url_options" i podstawiało pusty `src`. Path helper nie próbuje budować absolutnego URL-a — przeglądarka dokleja host z bieżącej strony i trafia do `ActiveStorage::Representations::RedirectController`, gdzie `before_action` ustawia `Current.url_options` normalnie. Variant `:roster` (40×40 `resize_to_fill`) zdefiniowany bezpośrednio w modelu `User` przez `has_one_attached :photo do |attachable| attachable.variant :roster, ... end`.
+
+**Custom Turbo Stream action `visit`:** zdefiniowane w `app/javascript/application.js` jako `Turbo.StreamActions.visit` — odpala `Turbo.visit(url)` po odebraniu `<turbo-stream action="visit" target="/path">`. Używane przez `Event#broadcast_visit_to_feed` żeby przenieść wszystkich zalogowanych userów (niezależnie od strony) na stronę nowo utworzonego eventu. Subskrypcja strumienia `:events` + `[current_user, :events]` siedzi w layoucie `application.html.erb`, więc teleport działa z każdego widoku; akcje `append`/`replace`/`remove` targetujące `#events_list` na stronach innych niż feed po prostu no-opują (Turbo ignoruje brakujący target).
+
+---
+
+# Routes — polskie ścieżki, angielskie helpery
+
+URL-e są polskie, helpery Rails zostają po angielsku (żeby widoki/testy nie musiały się zmieniać):
+
+```ruby
+get    "logowanie",             to: "sessions#new",       as: :login
+namespace :host, path: "panel", module: "host_admin" do
+  resources :events,  path: "eventy"
+  resource  :profile, path: "profil"
+end
+resources :events, only: %i[index show], path: "eventy" do
+  resource :participation, path: "uczestnictwo"
+end
+resource  :profile, only: %i[edit update], path: "profil"
+```
+
+Mapowania: `/login` → `/logowanie`, `/session` → `/sesja`, `/host` → `/panel`, `/events` → `/eventy`, `/profile` → `/profil`, `/push_subscriptions` → `/subskrypcje-push`, `/events/:id/participation` → `/eventy/:id/uczestnictwo`, `/hosts` → `/gospodarze`, `/users` → `/kurolapacze`.
+
+# Namespace Host panel
+
+Routes mapują `/panel/*` na kontrolery `HostAdmin::` — bo `Host` to już klasa AR, więc `Host::EventsController` zderzyłoby się z Zeitwerkiem. Wpięte przez:
+
+```ruby
+namespace :host, path: "panel", module: "host_admin" do
+  # ...
+end
+```
+
+Dodając nowe kontrolery host-scoped, zachowaj ten wzorzec (`path:` PL, `as:`/module EN).
+
+---
+
+# Layouty i partials
+
+- **`layouts/application.html.erb`** — aplikacja usera. Sticky navbar z avatarem (zdjęcie lub inicjały) + imię + **kolorowy badge rangi** (partial `users/_title_badge`), plus **dropdown menu** (`<el-dropdown>` + `<el-menu popover>` z `@tailwindplus/elements`) z trzema oddzielonymi sekcjami: (1) Mój profil, (2) Wszyscy kurołapacze + Wszyscy gospodarze, (3) Wyloguj. `<main class="max-w-lg mx-auto">` (poszerzone z `max-w-md` pod większe telefony).
+- **`layouts/host_admin.html.erb`** — panel hosta. Prosty header, `max-w-3xl`.
+- **`layouts/auth.html.erb`** — strony publiczne (login). Bez navbaru, bez kontenera — pełen viewport. Używane przez `SessionsController#new` via `layout "auth", only: :new`.
+- **`shared/_toast.html.erb`** — flash jako dismissable toast (zielony check / czerwony x), auto-dismiss 5s przez Stimulus `toast_controller.js`.
+- **`shared/_breadcrumbs.html.erb`** — breadcrumbs wg Tailwind UI. Locals: `crumbs:` (tablica `[label, path]`, `path: nil` = current page), `home_path:` (domyślnie `root_path`, `host_root_path` na panel hosta).
+- **`shared/_turbo_confirm.html.erb`** — `<el-dialog>` modal zastępujący natywny `confirm()` dla `data-turbo-confirm`. Stimulus `turbo_confirm_controller.js` w `connect()` podmienia `Turbo.config.forms.confirm` na ten dialog. Locals: `title:`, `message:`, `confirm_label:`, `cancel_label:`. Etykiety przycisków ASCII-only (PL znaki w defaults miewały problem z encodingiem).
+
+**Tytuły stron** przez `content_for(:title)`:
+
+```erb
+<title><%= content_for?(:title) ? "#{content_for(:title)} — Gig Coordinator" : "Gig Coordinator" %></title>
+```
+
+Każdy widok ustawia własny: `<% content_for(:title) { @event.name } %>`.
+
+---
+
+# Widoki społecznościowe (user-facing)
+
+Dwie listy dostępne z dropdown menu w navbarze, obie tylko dla zalogowanych **userów** (hosts → redirect na login):
+
+- **`/kurolapacze`** (`UsersController#index`, `users_path`) — lista wszystkich kurołapaczy, sortowana po randze **desc** (Mistrz Pióra na górze → Żółtodziób na dole), w obrębie rangi alfabetycznie. Pokazuje avatar + imię + **kolorowy badge rangi** + licznik 🐔 zaliczonych zleceń (confirmed participations na eventach z `completed_at`). Liczniki z jednego dodatkowego `GROUP BY` query — zero N+1.
+
+**Roster eventu (`_roster.html.erb`)** ma **cztery** sekcje: (1) Rezerwacje (indigo), (2) Potwierdzeni (emerald), (3) Rezerwa (amber), (4) **Wszyscy kurołapacze** — neutralne szare wiersze ze WSZYSTKIMI userami w systemie, każdy z avatarem, badge'em rangi i statusem po prawej (`oczekuje` / `zapisany` / `rezerwa` / `anulował`) jeśli mają participation na tym evencie. W trzech górnych sekcjach rangę renderujemy pod imieniem. Jeden `User.with_attached_photo.order(title: :desc, last_name: :asc)` query + `index_by(&:user_id)` lookup uniemożliwia N+1.
+- **`/gospodarze`** (`HostsController#index`, `hosts_path`) — lista wszystkich gospodarzy z avatarem, lokalizacją i licznikiem nadchodzących eventów.
+
+---
+
+# Animacje (Tailwind v4)
+
+`app/assets/tailwind/application.css` rejestruje dwa keyframe'y w `@theme`:
+
+- `animate-pop-in` — fade + translate-y + scale (350ms, cubic-bezier) — używane na badge'ach, roster `<li>` (staggered `animation-delay: i*40ms`).
+- `animate-bump` — pulse scale 1→1.15→1 (450ms) — liczniki (`_counts.html.erb`) przy każdym broadcaście.
+
+Button press: `transition-transform active:scale-[0.97]` na przyciskach akceptacji/anulowania.
+
+---
+
+# PWA
+
+Manifest + service worker serwowane natywnie przez **`Rails::PwaController`** (wbudowany w railties). Routes:
+
+```ruby
+get "manifest"       => "rails/pwa#manifest",       as: :pwa_manifest,       defaults: { format: :json }
+get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker, defaults: { format: :js }
+```
+
+`Rails::PwaController` dziedziczy z `ActionController::Base` (nie z naszego `ApplicationController`), więc `allow_browser :modern` go nie dotyczy — klienci bez User-Agent dostają prawdziwy JSON/JS, nie HTML-a z „upgrade browser". Widoki w `app/views/pwa/manifest.json.erb` + `app/views/pwa/service-worker.js`. Layout linkuje `pwa_manifest_path`; Stimulus push rejestruje `/service-worker`.
+
+**Ikony** generowane z `public/icon.svg` (pixel-art kura, 20×20 viewBox, `shape-rendering: crispEdges`) przez `rsvg-convert`:
+
+```bash
+rsvg-convert -w 192 -h 192 public/icon.svg -o public/icon-192.png
+rsvg-convert -w 512 -h 512 public/icon.svg -o public/icon-512.png
+rsvg-convert -w 180 -h 180 public/icon.svg -o public/apple-touch-icon.png
+rsvg-convert -w 32  -h 32  public/icon.svg -o public/favicon-32.png
+rsvg-convert -w 512 -h 512 public/icon.svg -o public/icon.png   # backward-compat
+```
+
+Regeneruj po edycji `icon.svg`.
+
+---
+
+# Dev port
+
+`config/environments/development.rb` czyta `ENV["PORT"]` (fallback 3000) gdy `PUBLIC_HOST` nie jest ustawiony — URL-e generowane przez helpery idą na właściwy port. `bin/login-code` tak samo. Jeśli trzymasz kilka Rails apek lokalnie, eksportuj `PORT=3001 bin/dev` (i `PORT=3001 bin/login-code ...`) żeby wygenerować dane z portem 3001.
+
+---
+
+# Dev tunnel (mobile testing)
+
+iOS web push wymaga HTTPS + PWA z Home Screen.
+
+```bash
+cloudflared tunnel --url http://localhost:3000                # Terminal 1
+PUBLIC_HOST=<tunnel>.trycloudflare.com bin/dev                # Terminal 2
+PUBLIC_HOST=<tunnel>.trycloudflare.com bin/login-code <email> # wygeneruj kod
+```
+
+`config/environments/development.rb` whitelistuje `*.trycloudflare.com`, `*.ngrok-free.app`, `*.ngrok.io`, `*.lhr.life`, `*.localhost.run`, `*.serveo.net` (przez `config.hosts`), wyłącza `action_cable.request_forgery_protection`, i nadpisuje `default_url_options` na `https://<PUBLIC_HOST>` gdy env var jest ustawiony.
+
+---
+
+# Testy
+
+- `test/support/auth_helpers.rb` → `sign_in_as(record)` w dwóch wariantach: **integration** (POSTuje e-mail + kod z DB przez dwa requesty do `LoginCodesController`) i **system** (`SystemAuthHelpers` — przechodzi przez UI: visit `/logowanie`, fill e-mail, odczyt `LoginCode.last.code`, wpisanie cyfr w 5 boksów, submit).
+- `bin/ci` odpala rubocop + brakeman + `bin/rails test` (unit + integration) + seed replant. **System testy są poza CI gate** — flaky na lokalnym headless Chrome, odpalaj ręcznie: `bin/rails test:system`. Nie dorzucaj ich z powrotem do `config/ci.rb`.
+- System testy w `test/system/`, `driven_by :selenium, using: :headless_chrome, screen_size: [390, 844]` (mobilny viewport).
+- Turbo Stream broadcasty są synchroniczne → testy nie potrzebują `perform_enqueued_jobs`.
+- Mailer + `WebPushNotifier` są async → `assert_enqueued_emails` / `assert_enqueued_with(job: WebPushNotifier)`.
+- Dla logiki modelu: `Participation.create!(..., status:, position:)` bezpośrednio, bez kontrolera.
+- Audit log uczestnictwa (`ParticipationEvent`) jest writeowany przez `Participation#after_commit` — testy które tworzą Participation manualnie też dostaną wpis w historii. Pełen zestaw testów flowów historii: `test/integration/event_history_test.rb` (36 testów: zaproszenia mistrza pióra, akceptacja, decline, expire, promocja z waitlisty, edycje pól, męska forma verbów, chronologia, spójność `history_count`).
+
+---
+
+# Deploy (Kamal 2)
+
+Produkcja stoi na małym VPS-ie (LXC, Ubuntu 24.04). Hosting wypuszcza tylko dwa
+porty TCP, a SSH chodzi na niestandardowym — stąd większość dziwności poniżej. **Konkretne
+wartości (host, porty, domena, obraz) są w `config/deploy.yml`**; tutaj celowo tylko
+placeholdery, żeby README nie było listą namiarów na serwer.
+
+**Publiczne URL-e:**
+- `https://<domena>` — hosting front-enduje TLS i forwarduje HTTP na `[IPv6]:<PORT_HTTP>`.
+- `http://<vps-host>:<PORT_HTTP>` — bezpośrednie IPv4 do Kamal Proxy (fallback, HTTP).
+
+**Kluczowe rzeczy w `config/deploy.yml`:**
+- `proxy.run.http_port` — hosting wypuszcza tylko dwa porty, więc Kamal Proxy musi słuchać na jednym z nich zamiast na 80.
+- `proxy.hosts:` zawiera oba hosty (VPS i domenę), żeby Proxy trafiał dla obu.
+- `WEB_CONCURRENCY=0` + `RAILS_MAX_THREADS=5`. Niższe `RAILS_MAX_THREADS` powoduje, że Solid Queue in-Puma wali „connection pool too small" i demon idzie w boot/crash-loop.
+- `PUBLIC_HOST` + `PUBLIC_PROTOCOL=https` — Rails `default_url_options` używa tych env-ów, więc linki w mailach i absolutne URL-e generują się z HTTPS.
+- `assume_ssl = true` w `production.rb` — ufamy `X-Forwarded-Proto` od reverse proxy hostingu. `force_ssl` off, żeby bezpośrednie IPv4 nadal działało.
+- `Dockerfile` ma dołożony `libssl-dev` (gem `openssl` → `web-push`).
+
+**Secrets:**
+- `RAILS_MASTER_KEY` czyta z `config/master.key` (gitignored).
+- `KAMAL_REGISTRY_PASSWORD` czyta z `.kamal/registry-password` (gitignored) — GitHub PAT z `write:packages`. Env-var nie przechodził przez subprocesy Kamala, plik rozwiązuje problem.
+
+**Codzienne komendy:**
+
+```bash
+kamal deploy                                   # build + push + rolling update
+kamal app logs -f                              # tail aplikacji
+kamal console                                  # rails console w kontenerze
+kamal shell                                    # bash w kontenerze
+kamal redeploy                                 # bez builda, sama rotacja
+```
+
+**Seed prod:** `db/seeds.rb` ma gate `Rails.env.development?`, więc na prodzie nie chodzi. Seedowanie przez `kamal console` + wklejenie bloku z `db/seeds.rb`, albo `kamal app exec --reuse 'bin/rails runner "..."'`.
+
+**Porty pamiętaj:**
+- Dokerowy kontener aplikacji słucha na `:80` (Thruster).
+- Kamal Proxy na VPS słucha na porcie z `proxy.run.http_port`, nie na 80.
+- SSH chodzi na niestandardowym porcie — patrz `ssh.port` w `config/deploy.yml`.

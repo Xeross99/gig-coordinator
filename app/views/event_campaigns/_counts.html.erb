@@ -1,0 +1,16 @@
+<%# Locals: campaign:. %>
+<div id="<%= dom_id(campaign, :counts) %>" class="flex items-center justify-between text-sm">
+  <div>
+    <span class="text-stone-500"><%= "W składzie" %>:</span>
+    <span class="ml-1 font-semibold tabular-nums animate-bump"><%= campaign.slots_taken %>/<%= campaign.capacity %></span>
+    <% if campaign.reserved_count > 0 %>
+      <span class="ml-1 text-indigo-600 text-xs">(<%= campaign.reserved_count %> <%= "oczekuje" %>)</span>
+    <% end %>
+  </div>
+  <% if campaign.waitlist_count > 0 %>
+    <div>
+      <span class="text-stone-500"><%= Copy::Events::WAITLIST_COUNT %>:</span>
+      <span class="ml-1 font-semibold tabular-nums animate-bump"><%= campaign.waitlist_count %></span>
+    </div>
+  <% end %>
+</div>

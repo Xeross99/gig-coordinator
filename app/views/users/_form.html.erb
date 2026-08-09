@@ -1,0 +1,148 @@
+<%= form_with model: user, local: true, class: "space-y-4 bg-white rounded-xl shadow-sm p-5",
+  data: { controller: "photo-upload", photo_upload_url_value: rails_direct_uploads_path } do |f| %>
+  <% if user.errors.any? %>
+    <div class="bg-red-50 text-red-800 rounded-lg p-3 text-sm">
+      <ul class="list-disc list-inside">
+        <% user.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if user.photo.attached? %>
+    <div class="flex items-center gap-3">
+      <%= image_tag user.photo.variant(:small), class: "size-16 rounded-full object-cover", alt: "#{user.display_name} image" %>
+      <div class="text-sm text-stone-500">Obecne zdjęcie</div>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :first_name, "Imię", class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.text_field :first_name, class: "w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" %>
+    </div>
+    <div>
+      <%= f.label :last_name, "Nazwisko", class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.text_field :last_name, class: "w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :email, "E-mail", class: "block text-sm text-stone-700 mb-1" %>
+    <%= f.email_field :email, class: "w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" %>
+  </div>
+
+  <div>
+    <%= f.label :phone, "Telefon (opcjonalnie)", class: "block text-sm text-stone-700 mb-1" %>
+    <%= f.telephone_field :phone, class: "w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" %>
+  </div>
+
+  <div>
+    <%= f.label :title, "Ranga", class: "block text-sm text-stone-700 mb-1" %>
+    <%= f.select :title, User.titles.keys.map { |k| [User::TITLE_LABELS.fetch(k), k] }, {},
+      class: "form-select w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" %>
+  </div>
+
+  <% hosts_for_form = Host.order(:last_name, :first_name) %>
+
+  <div>
+    <div class="block text-sm text-stone-700 mb-1"><%= Copy::Users::MANAGES %> (kurniki)</div>
+    <% if hosts_for_form.any? %>
+      <div class="space-y-1 rounded-lg border border-stone-300 bg-white p-3">
+        <%= f.collection_check_boxes :managed_host_ids, hosts_for_form, :id, :display_name do |b| %>
+          <label class="flex items-center gap-2 text-sm py-1">
+            <%= b.check_box class: "size-4 rounded border-stone-300" %>
+            <span class="text-stone-900"><%= b.object.display_name %></span>
+            <span class="text-stone-400 text-xs">— <%= b.object.location %></span>
+          </label>
+        <% end %>
+      </div>
+      <p class="text-xs text-stone-500 mt-1">Działa tylko dla Kurnikowego Komendanta — u innych rang lista jest tylko zapisywana i wchodzi w życie po awansie.</p>
+    <% else %>
+      <p class="text-sm text-stone-400">Brak gospodarzy w systemie.</p>
+    <% end %>
+  </div>
+
+  <div>
+    <div class="block text-sm text-stone-700 mb-1 flex items-center gap-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true" class="size-3.5 text-red-500">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+      </svg>
+      Blokady u gospodarzy
+    </div>
+    <% if user.mistrz_piora? %>
+      <div class="rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm text-stone-500">
+        Mistrz Pióra nie podlega blokadom. Zmień najpierw rangę, jeśli chcesz założyć blokadę.
+      </div>
+      <%# Sentinel — bez tego odznaczenie wszystkich kratek nie wysłałoby parametru. %>
+      <%= hidden_field_tag "user[blocked_host_ids][]", "" %>
+    <% elsif hosts_for_form.any? %>
+      <div class="space-y-1 rounded-lg border border-stone-300 bg-white p-3">
+        <%= f.collection_check_boxes :blocked_host_ids, hosts_for_form, :id, :display_name do |b| %>
+          <label class="flex items-center gap-2 text-sm py-1">
+            <%= b.check_box class: "size-4 rounded border-stone-300" %>
+            <span class="text-stone-900"><%= b.object.display_name %></span>
+            <span class="text-stone-400 text-xs">— <%= b.object.location %></span>
+          </label>
+        <% end %>
+      </div>
+      <p class="text-xs text-stone-500 mt-1">Zaznaczony = user nie może się zapisać na zlecenia tego gospodarza.</p>
+    <% else %>
+      <p class="text-sm text-stone-400">Brak gospodarzy w systemie.</p>
+    <% end %>
+  </div>
+
+  <div>
+    <label class="block text-sm text-stone-700 mb-1">Zdjęcie</label>
+
+    <input type="file" accept="image/*" class="sr-only"
+           data-photo-upload-target="input"
+           data-action="change->photo-upload#upload">
+
+    <input type="hidden" name="user[photo]" data-photo-upload-target="hiddenInput" disabled>
+
+    <button type="button"
+            class="w-full py-2.5 rounded-lg border border-stone-300 bg-white text-stone-900 font-medium hover:bg-stone-50"
+            data-action="click->photo-upload#selectFile">
+      Wybierz zdjęcie
+    </button>
+
+    <p class="mt-2 text-sm text-stone-600 truncate" data-photo-upload-target="filename"></p>
+
+    <div class="mt-2 hidden" data-photo-upload-target="progress">
+      <div class="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
+        <div class="h-full bg-stone-900 transition-[width] duration-150" style="width: 0%" data-photo-upload-target="progressBar"></div>
+      </div>
+      <p class="mt-1 text-xs text-stone-500" data-photo-upload-target="status"></p>
+    </div>
+  </div>
+
+  <div>
+    <label class="flex items-center gap-2 text-sm text-stone-700">
+      <%= f.check_box :can_drive, class: "size-4 rounded border-stone-300" %>
+      <span>Uprawnienia kierowcy</span>
+    </label>
+    <p class="text-xs text-stone-500 mt-1">Tylko użytkownik z tą flagą może zgłosić się jako kierowca na zleceniu.</p>
+  </div>
+
+  <div>
+    <label class="flex items-center gap-2 text-sm text-stone-700">
+      <%= f.check_box :premium, class: "size-4 rounded border-stone-300" %>
+      <span>Konto premium (na rok)</span>
+    </label>
+    <p class="text-xs text-stone-500 mt-1">
+      Zaznaczenie nadaje premium na rok od teraz, odznaczenie odbiera od razu. Premium odblokowuje karty kurołapacza (tła profilu); po wygaśnięciu lub odebraniu wybrana karta znika.
+      <% if user.premium_until&.future? %>
+        <span class="block mt-1 font-medium text-amber-700">Premium aktywne do <%= l(user.premium_until.to_date, format: :long) %>.</span>
+      <% elsif user.premium_until.present? %>
+        <span class="block mt-1 text-stone-400">Premium wygasło <%= l(user.premium_until.to_date, format: :long) %>.</span>
+      <% end %>
+    </p>
+  </div>
+
+  <p class="text-xs text-stone-500">
+    Administrator: <%= user.admin? ? "Tak" : "Nie" %> - zmieniane z konsoli.
+  </p>
+
+  <%= f.submit "Zapisz", class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium",
+               data: { photo_upload_target: "submit" } %>
+<% end %>

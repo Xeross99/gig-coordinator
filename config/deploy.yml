@@ -1,0 +1,81 @@
+# Kamal 2 — konfiguracja bazowa. Repozytorium jest publiczne, więc NIE MA tutaj
+# realnych namiarów: host serwera, port SSH, domena, konto w registry i nazwa
+# wolumenu żyją w `config/deploy.production.yml`, który jest gitignorowany.
+#
+# Deploy robi się przez destination:
+#
+#   kamal deploy -d production
+#
+# Sam `kamal deploy` (bez `-d`) celowo się wywali na placeholderach poniżej —
+# lepiej głośny błąd niż przypadkowy strzał w nieswój serwer.
+#
+# Szablon pliku produkcyjnego: `config/deploy.production.yml.example`.
+
+service: gig-coordinator
+image: REPLACE_ME/gig-coordinator
+
+# Cold boot + db:prepare + rozgrzewka bootsnapa potrafią zająć 35–50 s na małym
+# VPS-ie. Domyślne 30 s jest za ciasne i kamal-proxy ubija zdrowy, ale wolny
+# start. Klucze są TOP-LEVEL w Kamalu 2 (pod `proxy:` po cichu nic nie robią).
+deploy_timeout: 120
+drain_timeout: 30
+
+servers:
+  web:
+    - REPLACE_ME.example.com
+
+ssh:
+  user: root
+
+proxy:
+  hosts:
+    - REPLACE_ME.example.com
+  app_port: 80
+  # SSL na Kamal Proxy zostaje wyłączone, gdy TLS terminuje reverse proxy
+  # hostingu — wtedy `production.rb` z `assume_ssl` ufa `X-Forwarded-Proto`.
+  ssl: false
+  healthcheck:
+    path: /up
+    interval: 3
+    timeout: 5
+
+registry:
+  server: ghcr.io
+  username: REPLACE_ME
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - RAILS_MASTER_KEY
+  clear:
+    # Jeden proces Pumy, 5 wątków. Pula połączeń musi pokryć workery Solid Queue
+    # działające in-Puma — przy mniejszej liczbie wątków Solid Queue wychodzi
+    # z „connection pool too small" i pociąga Pumę za sobą w boot/crash-loop.
+    WEB_CONCURRENCY: 0
+    RAILS_MAX_THREADS: 5
+
+    # Solid Queue w procesie Pumy (jeden VPS, bez osobnego hosta `job:`).
+    SOLID_QUEUE_IN_PUMA: true
+
+    PUBLIC_PROTOCOL: https
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell:   app exec --interactive --reuse "bash"
+  logs:    app logs -f
+  dbc:     app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+# Bazy SQLite + pliki Active Storage przeżywają deploye i rotacje kontenera.
+volumes:
+  - "gig_coordinator_storage:/rails/storage"
+
+# Bez tego rotacja digestu assetów daje 404 na css/js w locie.
+asset_path: /rails/public/assets
+
+# Build leci NA serwerze (natywne amd64), nie lokalnie — Docker Desktop na Macu
+# nie musi chodzić, wystarczy CLI dockera + buildx do rozmowy ze zdalnym
+# demonem po SSH. Uwaga: build dzieli RAM i CPU z działającą aplikacją, więc
+# deploy chwilowo ją przymuli. Gdyby dysk się zapychał: `docker buildx prune`.
+builder:
+  arch: amd64

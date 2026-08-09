@@ -1,0 +1,80 @@
+<%# locals: (event:, hosts:, url:, submit_label:, users_for_prereg: nil) -%>
+<%= form_with model: event, url: url, local: true, class: "space-y-4" do |f| %>
+  <% if event.errors.any? %>
+    <div class="bg-red-50 text-red-800 rounded-lg p-3 text-sm">
+      <ul class="list-disc list-inside">
+        <% event.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= f.label :host_id, Copy::Events::HOST_LABEL, class: "block text-sm text-stone-700 mb-1" %>
+    <%= f.collection_select :host_id, hosts, :id, :display_name,
+                            { include_blank: "— wybierz gospodarza —" },
+                            { required: true,
+                              class: "form-select w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" } %>
+  </div>
+
+  <div>
+    <%= f.label :name, "Nazwa zlecenia", class: "block text-sm text-stone-700 mb-1" %>
+    <%= f.text_field :name, required: true, class: "w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" %>
+  </div>
+
+  <div>
+    <%= f.label :notes, "Notatka", class: "block text-sm text-stone-700 mb-1" %>
+    <%= f.text_area :notes, rows: 3, placeholder: "Opcjonalna notatka dla kurołapaczy...",
+                    class: "w-full px-3 py-3 rounded-lg border border-stone-300 bg-white resize-none" %>
+  </div>
+
+  <%= render "events/schedule_fields", event: event %>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :pay_per_person, Copy::Events::PAY_PER_PERSON, class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.select :pay_per_person,
+                   (0..500).step(10).to_a,
+                   { selected: event.pay_per_person&.to_i },
+                   required: true, class: "form-select w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" %>
+    </div>
+    <div>
+      <%= f.label :capacity, "Liczba miejsc", class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.select :capacity,
+                   (1..20).to_a,
+                   {},
+                   required: true, class: "form-select w-full px-3 py-3 rounded-lg border border-stone-300 bg-white" %>
+    </div>
+  </div>
+
+  <% if users_for_prereg.present? && users_for_prereg.any? %>
+    <div>
+      <label class="block text-sm text-stone-700 mb-1">Zapisz od razu</label>
+      <p class="text-xs text-stone-500 mb-2">Zaznaczone osoby zostaną od razu zapisane jako potwierdzone. Mistrze Pióra nie pojawiają się na tej liście ponieważ dostają automatyczną rezerwacje.</p>
+      <div class="border border-stone-300 rounded-lg bg-white max-h-64 overflow-y-auto">
+        <%= f.collection_check_boxes :pre_registered_user_ids, users_for_prereg, :id, :display_name do |b| %>
+          <label class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-stone-50 border-b border-stone-100 last:border-b-0">
+            <%= b.check_box class: "size-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900" %>
+            <%= render "events/roster_avatar", user: b.object %>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-stone-900 truncate"><%= b.object.display_name %></div>
+              <div class="mt-0.5"><%= render "users/title_badge", user: b.object %></div>
+            </div>
+          </label>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if Current.user.can_create_events? %>
+    <%= f.submit submit_label, data: { turbo_submits_with: "Zapisuję…" },
+                class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
+  <% else %>
+    <div>
+      <button type="button" disabled aria-disabled="true"
+              class="w-full py-3 rounded-lg bg-stone-300 text-stone-500 font-medium cursor-not-allowed">
+        <%= submit_label %>
+      </button>
+      <p class="mt-2 text-xs text-stone-500 text-center"><%= "Tworzenie zleceń chwilowo wyłączone." %></p>
+    </div>
+  <% end %>
+<% end %>

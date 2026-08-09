@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pl" class="h-full bg-stone-50">
+  <head>
+    <title><%= content_for?(:title) ? "#{content_for(:title)} - Gig Coordinator" : "Gig Coordinator" %></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#d53838">
+    <meta name="color-scheme" content="only light">
+    <meta name="view-transition" content="same-origin">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <%= tag.link rel: "manifest", href: pwa_manifest_path %>
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="h-full text-stone-900 antialiased">
+    <%= render "shared/toast" %>
+    <%= render "shared/turbo_confirm" %>
+    <% if request.path != install_guide_path %>
+      <%= link_to install_guide_path,
+                  class: "fixed top-4 right-4 z-20 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-stone-900 shadow-sm ring-1 ring-stone-200 hover:bg-stone-50" do %>
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4 text-stone-500">
+          <path d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clip-rule="evenodd" fill-rule="evenodd"/>
+        </svg>
+        Jak zacząć
+      <% end %>
+    <% end %>
+    <%= yield %>
+  </body>
+</html>

@@ -1,0 +1,163 @@
+<% data = event.roster_data %>
+<div id="<%= dom_id(event, :roster) %>" class="space-y-4">
+  <% reserved = data[:reserved] %>
+  <% if reserved.any? %>
+    <% deadline = reserved.map(&:reserved_until).min %>
+    <% remaining_sec = [ (deadline - Time.current).to_i, 0 ].max %>
+    <div>
+      <div class="flex items-baseline justify-between mb-2">
+        <h3 class="text-stone-600 text-sm font-semibold uppercase tracking-wide">
+          Rezerwacje (<%= reserved.size %>)
+        </h3>
+        <span class="text-xs font-mono tabular-nums text-indigo-600"
+              data-controller="countdown"
+              data-countdown-deadline-value="<%= deadline.iso8601 %>"
+              aria-label="Pozostały czas rezerwacji">
+          <%= "%d:%02d" % [ remaining_sec / 60, remaining_sec % 60 ] %>
+        </span>
+      </div>
+      <ul class="space-y-2">
+        <% reserved.each_with_index do |p, i| %>
+          <% has_card = p.user.player_card? %>
+          <li class="relative overflow-hidden flex items-center gap-3 bg-indigo-50 rounded-lg ring-2 ring-indigo-400 shadow-md text-sm animate-pop-in aspect-[5/1] sm:aspect-[6/1] min-h-fit"
+              style="animation-delay: <%= i * 40 %>ms">
+            <%= render "events/roster_card_bg", user: p.user %>
+            <%= render "events/roster_online_chip", user: p.user, has_card: has_card %>
+            <%= render "events/roster_row_avatar", user: p.user %>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="relative size-4 <%= has_card ? "text-indigo-200" : "text-indigo-500" %> animate-spin shrink-0">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 40"/>
+            </svg>
+            <div class="relative min-w-0 flex-1 py-2">
+              <div class="text-sm font-semibold truncate <%= has_card ? "text-white drop-shadow-sm" : "text-stone-900" %>"><%= p.user.display_name %></div>
+              <div class="mt-0.5"><%= render "users/title_badge", user: p.user %></div>
+            </div>
+            <span class="relative text-xs shrink-0 mr-3 <%= has_card ? "text-indigo-200" : "text-indigo-600" %>">oczekuje</span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% confirmed = data[:confirmed] %>
+  <% confirmed_offers_by_user = data[:carpool_offers_by_user] %>
+  <% my_participation = data[:participations_by_user][Current.user&.id] %>
+  <% swap_proposals_by_proposer = data[:swap_proposals_by_proposer] %>
+  <div>
+    <h3 class="text-stone-600 text-sm font-semibold uppercase tracking-wide mb-2">
+      <%= Copy::Events::CONFIRMED_COUNT %>
+      (<%= confirmed.size %>/<%= event.capacity %>)
+    </h3>
+    <% if confirmed.any? %>
+      <ul class="space-y-2">
+        <% confirmed.each_with_index do |p, i| %>
+          <% driver_offer = confirmed_offers_by_user[p.user_id] %>
+          <% has_card = p.user.player_card? %>
+          <li class="relative overflow-hidden flex items-center gap-3 bg-emerald-50 rounded-lg shadow-md text-sm animate-pop-in aspect-[5/1] sm:aspect-[6/1] min-h-fit"
+              style="animation-delay: <%= i * 40 %>ms">
+            <%= render "events/roster_card_bg", user: p.user %>
+            <%= render "events/roster_online_chip", user: p.user, has_card: has_card %>
+            <%= render "events/roster_row_avatar", user: p.user %>
+            <div class="relative min-w-0 flex-1 py-2 pr-24">
+              <div class="text-sm font-semibold truncate <%= has_card ? "text-white drop-shadow-sm" : "text-stone-900" %>">
+                <%= p.user.display_name %>
+              </div>
+              <div class="mt-0.5 flex items-center gap-1.5">
+                <%= render "users/title_badge", user: p.user %>
+                <% if driver_offer %>
+                  <a href="#carpool" data-turbo="false"
+                     class="inline-flex items-center gap-1 text-xs text-sky-700 bg-sky-100 hover:bg-sky-200 transition-colors rounded-full px-2 py-0.5 shrink-0"
+                     title="Pokaż podwózkę">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="size-3.5">
+                      <path d="M3.375 8.25A3.375 3.375 0 0 1 6.72 5.25h10.56a3.375 3.375 0 0 1 3.345 3l.226 2.05a.75.75 0 0 0 .176.392l.777.856A2.25 2.25 0 0 1 22.5 13.058V16.5A1.5 1.5 0 0 1 21 18h-.75v.75a1.5 1.5 0 0 1-3 0V18h-10.5v.75a1.5 1.5 0 0 1-3 0V18H3a1.5 1.5 0 0 1-1.5-1.5v-3.442a2.25 2.25 0 0 1 .696-1.51l.777-.856a.75.75 0 0 0 .176-.392l.226-2.05Zm3.345-1.5a1.875 1.875 0 0 0-1.861 1.667l-.184 1.666h14.65l-.184-1.666A1.875 1.875 0 0 0 17.28 6.75H6.72ZM6 14.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm12 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+                    </svg>
+                    <%= driver_offer.seats_left.positive? ? "#{driver_offer.seats_left}/#{CarpoolOffer::SEATS} wolne" : "Auto pełne" %>
+                  </a>
+                <% end %>
+              </div>
+            </div>
+            <div class="absolute bottom-2 right-2 z-10">
+              <% if Current.user && !event.started? && p.user_id != Current.user.id %>
+                <% if my_participation&.waitlist? %>
+                  <% already_proposed = swap_proposals_by_proposer[Current.user.id]&.any? { |sp| sp.target_id == p.user_id } %>
+                  <% if already_proposed %>
+                    <span class="inline-flex items-center gap-1 text-xs text-indigo-500 shrink-0" title="Czekasz na odpowiedź">
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="size-3.5 animate-spin">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 40"/>
+                      </svg>
+                      Oczekuje
+                    </span>
+                  <% else %>
+                    <%= button_to event_swap_proposals_path(event),
+                                  params: { target_user_id: p.user_id },
+                                  method: :post,
+                                  form: { class: "inline", data: { turbo_frame: "_top" } },
+                                  data: { turbo_confirm: "Zaproponujesz #{p.user.display_name} zamianę miejscami. Jeśli zaakceptuje - wskakujesz na listę główną, a ta osoba z niej schodzi. Kontynuować?",
+                                          turbo_submits_with: "…" },
+                                  title: "Zaproponuj zamianę miejscami",
+                                  class: "inline-flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-full px-2.5 py-1 transition-colors shrink-0" do %>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="size-3.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                      </svg>
+                      <%= Copy::SwapProposals::PROPOSE_SHORT %>
+                    <% end %>
+                  <% end %>
+                <% else %>
+                  <span class="inline-flex items-center gap-1 text-xs <%= has_card ? "text-stone-300" : "text-stone-400" %> shrink-0" title="<%= "Zapisz się na rezerwę, aby zaproponować wymianę" %>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="size-3.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                    </svg>
+                    <%= Copy::SwapProposals::PROPOSE_SHORT %>
+                  </span>
+                <% end %>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="text-stone-400 text-sm">Brak zapisanych.</div>
+    <% end %>
+  </div>
+
+  <% waitlist = data[:waitlist] %>
+  <div>
+    <h3 class="text-stone-600 text-sm font-semibold uppercase tracking-wide mb-2">
+      <%= Copy::Events::WAITLIST_COUNT %>
+      (<%= waitlist.size %>)
+    </h3>
+    <% if waitlist.any? %>
+      <ul class="space-y-2">
+        <% waitlist.each_with_index do |p, i| %>
+          <% has_card = p.user.player_card? %>
+          <li class="relative overflow-hidden flex items-center gap-3 bg-amber-50 rounded-lg shadow-md text-sm animate-pop-in aspect-[5/1] sm:aspect-[6/1] min-h-fit"
+              style="animation-delay: <%= i * 40 %>ms">
+            <%= render "events/roster_card_bg", user: p.user %>
+            <%= render "events/roster_online_chip", user: p.user, has_card: has_card %>
+            <%= render "events/roster_row_avatar", user: p.user %>
+            <div class="relative min-w-0 flex-1 py-2 pr-16">
+              <div class="text-sm font-semibold truncate <%= has_card ? "text-white drop-shadow-sm" : "text-stone-900" %>"><%= p.user.display_name %></div>
+              <div class="mt-0.5"><%= render "users/title_badge", user: p.user %></div>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="text-stone-400 text-sm">Lista rezerwowa pusta.</div>
+    <% end %>
+  </div>
+
+  <% offers = data[:carpool_offers] %>
+  <% if offers.any? %>
+    <div id="carpool" class="pt-4 border-t border-stone-200 scroll-mt-20">
+      <h3 class="text-stone-600 text-sm font-semibold uppercase tracking-wide mb-2">
+        Podwózki (<%= offers.size %>)
+      </h3>
+      <ul class="space-y-2">
+        <% offers.each do |offer| %>
+          <%= render "events/carpool_card", event: event, offer: offer %>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+</div>

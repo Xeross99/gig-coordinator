@@ -1,0 +1,10 @@
+<%= mail_icon_badge @icon %>
+
+<%= mail_title "Awans w kurniku!" %>
+
+<%= mail_paragraph do %>
+  Cześć <%= @user.first_name %>! awansowałeś na rangę
+  <%= mail_strong "#{@icon} #{@title_label}", style: "white-space:nowrap" %>.
+<% end %>
+
+<%= mail_paragraph @description %>

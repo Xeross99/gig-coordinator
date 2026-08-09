@@ -1,0 +1,74 @@
+<%# locals: (event:, name_prefix: "event", default_start_hour: 18, compact: false) -%>
+<%# Wspólny blok pól terminu: data + start (dwa selecty 24h) + czas trwania.
+    Współdzielony przez events/_form, host_admin/events/_form (domyślne rozmiary)
+    i event_campaigns/_sub_event_fields (compact: true — mniejsze pola, bez
+    podpisów „godz."/„min.", nested name_prefix z f.object_name). %>
+<%
+  label_class  = compact ? "block text-xs text-stone-700 mb-1" : "block text-sm text-stone-700 mb-1"
+  input_class  = compact ? "w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-sm" : "w-full px-3 py-3 rounded-lg border border-stone-300 bg-white"
+  select_class = compact ? "form-select w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-sm tabular-nums" : "form-select w-full px-3 py-3 rounded-lg border border-stone-300 bg-white tabular-nums"
+  gap_class    = compact ? "gap-2" : "gap-3"
+
+  preset_start_hour   = event.scheduled_at&.hour || default_start_hour
+  preset_start_minute = event.scheduled_at&.min || 0
+  total_minutes  = event.scheduled_at && event.ends_at ? ((event.ends_at - event.scheduled_at) / 60).to_i : 120
+  preset_hours   = total_minutes / 60
+  preset_minutes = total_minutes % 60
+
+  start_hour_select = select_tag "#{name_prefix}[start_hour]",
+                                 options_for_select((0..23).map { |h| [ format("%02d", h), h ] }, preset_start_hour),
+                                 required: true, class: select_class
+  start_minute_select = select_tag "#{name_prefix}[start_minute]",
+                                   options_for_select((0..59).step(5).map { |m| [ format("%02d", m), m ] }, preset_start_minute),
+                                   required: true, class: select_class
+  duration_hours_select = select_tag "#{name_prefix}[duration_hours]",
+                                     options_for_select((0..24).to_a, preset_hours),
+                                     required: true, class: select_class
+  duration_minutes_select = select_tag "#{name_prefix}[duration_minutes]",
+                                       options_for_select((0..55).step(5).to_a, preset_minutes),
+                                       required: true, class: select_class
+%>
+<div>
+  <%= label_tag "#{name_prefix}_event_date", "Data", class: label_class %>
+  <%= date_field_tag "#{name_prefix}[event_date]", event.scheduled_at&.to_date, required: true,
+                     id: "#{name_prefix}_event_date",
+                     class: input_class %>
+</div>
+
+<div>
+  <label class="<%= label_class %>"><%= "Początek" %></label>
+  <div class="grid grid-cols-2 <%= gap_class %>">
+    <% if compact %>
+      <%= start_hour_select %>
+      <%= start_minute_select %>
+    <% else %>
+      <div class="flex items-center gap-2">
+        <%= start_hour_select %>
+        <span class="text-sm text-stone-500 shrink-0">godz.</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= start_minute_select %>
+        <span class="text-sm text-stone-500 shrink-0">min.</span>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<div>
+  <label class="<%= label_class %>"><%= "Przewidywana długość" %></label>
+  <div class="grid grid-cols-2 <%= gap_class %>">
+    <% if compact %>
+      <%= duration_hours_select %>
+      <%= duration_minutes_select %>
+    <% else %>
+      <div class="flex items-center gap-2">
+        <%= duration_hours_select %>
+        <span class="text-sm text-stone-500 shrink-0">godz.</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= duration_minutes_select %>
+        <span class="text-sm text-stone-500 shrink-0">min.</span>
+      </div>
+    <% end %>
+  </div>
+</div>

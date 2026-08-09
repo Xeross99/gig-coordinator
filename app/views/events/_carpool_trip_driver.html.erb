@@ -1,0 +1,87 @@
+<%# locals: (event:, offer:, accepted:) -%>
+<%# Panel kierowcy — widoczny gdy zalogowany user jest właścicielem oferty
+    i ma co najmniej jednego zaakceptowanego pasażera. Stan trasy:
+    not_started → przycisk „Wyjeżdżam" otwiera modal, w którym kierowca
+    przeciąganiem ustala kolejność odbierania (pickup_order[] w kolejności
+    <li> w DOM); en_route/picking_up → siatka guzików „Jestem u: X"
+    + „Zakończ trasę". Pasażerowie w kolejności odbierania (pickup_position,
+    fallback: kolejność potwierdzenia). %>
+<% passengers = offer.passengers_in_pickup_order %>
+<% pickup_id = offer.current_pickup_user_id %>
+<div class="mt-3 rounded-lg border border-sky-200 bg-white px-3 py-2.5">
+  <div class="flex items-center justify-between mb-2">
+    <div class="text-xs font-semibold uppercase tracking-wide text-sky-700">Trasa</div>
+    <div class="text-xs text-stone-500">
+      <% if offer.not_started? %>nie wystartowała
+      <% elsif offer.en_route? %>w drodze
+      <% elsif offer.picking_up? %>odbiera pasażera
+      <% end %>
+    </div>
+  </div>
+
+  <% if offer.not_started? %>
+    <div data-controller="carpool-departure">
+      <button type="button" data-action="carpool-departure#open"
+              class="w-full py-2 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-700 transition-transform active:scale-[0.98] cursor-pointer">
+        🚗 Wyjeżdżam
+      </button>
+
+      <dialog data-carpool-departure-target="dialog"
+              class="fixed inset-0 m-auto h-fit w-[calc(100%-2rem)] max-w-sm rounded-xl p-0 bg-white shadow-xl backdrop:bg-stone-900/40">
+        <%= form_with url: depart_event_carpool_trip_path(event), method: :post do %>
+          <div class="px-4 pt-4">
+            <h3 class="text-base font-semibold text-stone-900">Kolejność odbierania</h3>
+            <p class="mt-1 text-xs text-stone-500">Przeciągnij pasażerów, żeby ustawić kolejność — każdy dostanie powiadomienie, kiedy po niego jedziesz.</p>
+          </div>
+
+          <ul data-carpool-departure-target="list" class="px-4 py-3 space-y-2">
+            <% passengers.each_with_index do |passenger, i| %>
+              <li data-carpool-departure-target="item"
+                  data-action="pointerdown->carpool-departure#startDrag pointermove->carpool-departure#drag pointerup->carpool-departure#endDrag pointercancel->carpool-departure#endDrag"
+                  class="flex items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 touch-none select-none cursor-grab">
+                <input type="hidden" name="pickup_order[]" value="<%= passenger.id %>">
+                <span data-ordinal class="w-5 shrink-0 text-center font-semibold text-sky-700"><%= i + 1 %>.</span>
+                <span class="flex-1 min-w-0 font-medium truncate"><%= passenger.display_name %></span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true" class="size-4 shrink-0 text-stone-400">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6h16.5" />
+                </svg>
+              </li>
+            <% end %>
+          </ul>
+
+          <div class="px-4 pb-4 grid grid-cols-2 gap-2">
+            <button type="button" data-action="carpool-departure#close"
+                    class="py-2 rounded-lg border border-stone-300 bg-white text-sm font-medium text-stone-700 hover:bg-stone-50 cursor-pointer">
+              Anuluj
+            </button>
+            <button type="submit"
+                    class="py-2 rounded-lg bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-transform active:scale-[0.98] cursor-pointer">
+              🚗 Wyjeżdżam
+            </button>
+          </div>
+        <% end %>
+      </dialog>
+    </div>
+  <% else %>
+    <div class="grid grid-cols-1 gap-2">
+      <% passengers.each_with_index do |passenger, i| %>
+        <% is_current = pickup_id == passenger.id %>
+        <%= button_to pickup_event_carpool_trip_path(event, user_id: passenger.id), method: :post,
+                      class: "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm transition-transform active:scale-[0.98] #{is_current ? 'border-emerald-400 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-300' : 'border-stone-300 bg-white text-stone-800 hover:bg-stone-50'}" do %>
+          <span class="flex items-center gap-2 min-w-0">
+            <span class="font-semibold <%= is_current ? 'text-emerald-700' : 'text-sky-700' %>"><%= i + 1 %>.</span>
+            <span class="text-stone-500">Jestem u:</span>
+            <span class="font-medium truncate"><%= passenger.display_name %></span>
+          </span>
+          <% if is_current %>
+            <span class="text-xs font-medium text-emerald-700 shrink-0">aktualnie</span>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%= button_to "Zakończ trasę", cancel_event_carpool_trip_path(event), method: :post,
+                  data: { turbo_confirm: "Zakończyć trasę?" },
+                  class: "w-full mt-2 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-medium hover:bg-emerald-100 transition-transform active:scale-[0.98]" %>
+  <% end %>
+</div>

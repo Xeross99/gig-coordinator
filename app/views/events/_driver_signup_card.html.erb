@@ -1,0 +1,48 @@
+<%# locals: (event:) -%>
+<%# Prominentny przycisk „zgłoś się jako kierowca" / „zrezygnuj" na poziomie
+    karty zlecenia, żeby user nie musiał szukać. Logika gating-u: confirmed
+    + can_drive + nie-kierowca + nie-pasażer; po starcie eventu w ogóle
+    nie pokazujemy. -%>
+<% return if event.started? %>
+<% return unless Current.user %>
+
+<% participation = event.participations.find_by(user_id: Current.user.id) %>
+<% own_offer     = event.carpool_offers.find_by(user_id: Current.user.id) %>
+<% own_request   = CarpoolRequest.joins(:carpool_offer)
+                                 .where(user_id: Current.user.id, carpool_offers: { event_id: event.id })
+                                 .find { |r| r.accepted? || r.pending? } %>
+<% am_passenger  = own_request&.accepted? %>
+
+<%# Już jestem kierowcą — pokaż „zrezygnuj" %>
+<% if own_offer.present? %>
+  <div class="rounded-lg bg-sky-50 text-sky-900 px-3 py-3 text-sm">
+    <div class="flex items-center gap-2 mb-2">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="size-5 text-sky-600 shrink-0">
+        <path d="M3.375 8.25A3.375 3.375 0 0 1 6.72 5.25h10.56a3.375 3.375 0 0 1 3.345 3l.226 2.05a.75.75 0 0 0 .176.392l.777.856A2.25 2.25 0 0 1 22.5 13.058V16.5A1.5 1.5 0 0 1 21 18h-.75v.75a1.5 1.5 0 0 1-3 0V18h-10.5v.75a1.5 1.5 0 0 1-3 0V18H3a1.5 1.5 0 0 1-1.5-1.5v-3.442a2.25 2.25 0 0 1 .696-1.51l.777-.856a.75.75 0 0 0 .176-.392l.226-2.05Zm3.345-1.5a1.875 1.875 0 0 0-1.861 1.667l-.184 1.666h14.65l-.184-1.666A1.875 1.875 0 0 0 17.28 6.75H6.72ZM6 14.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm12 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+      </svg>
+      <span class="font-semibold">Jesteś kierowcą</span>
+    </div>
+    <p class="text-xs text-sky-800 mb-2">Wolne miejsca: <%= own_offer.seats_left %>/<%= CarpoolOffer::SEATS %>. Pasażerowie zapytają — potwierdzasz/odrzucasz w sekcji „Podwózki" niżej.</p>
+    <%= button_to event_carpool_offer_path(event), method: :delete,
+                  data: { turbo_confirm: "Na pewno zrezygnujesz z funkcji kierowcy? Wszystkie zapytania pasażerów zostaną usunięte." },
+                  class: "w-full text-sm font-medium py-2 rounded-lg border border-stone-300 text-stone-700 bg-white hover:bg-stone-100" do %>
+      Zrezygnuj z funkcji kierowcy
+    <% end %>
+  </div>
+<%# Confirmed + can_drive + nie pasażer — pokaż „zgłoś się" %>
+<% elsif Current.user.can_drive? && participation&.confirmed? && !am_passenger %>
+  <div class="rounded-lg bg-sky-50 text-sky-900 px-3 py-3 text-sm">
+    <div class="flex items-center gap-2 mb-2">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="size-5 text-sky-600 shrink-0">
+        <path d="M3.375 8.25A3.375 3.375 0 0 1 6.72 5.25h10.56a3.375 3.375 0 0 1 3.345 3l.226 2.05a.75.75 0 0 0 .176.392l.777.856A2.25 2.25 0 0 1 22.5 13.058V16.5A1.5 1.5 0 0 1 21 18h-.75v.75a1.5 1.5 0 0 1-3 0V18h-10.5v.75a1.5 1.5 0 0 1-3 0V18H3a1.5 1.5 0 0 1-1.5-1.5v-3.442a2.25 2.25 0 0 1 .696-1.51l.777-.856a.75.75 0 0 0 .176-.392l.226-2.05Zm3.345-1.5a1.875 1.875 0 0 0-1.861 1.667l-.184 1.666h14.65l-.184-1.666A1.875 1.875 0 0 0 17.28 6.75H6.72ZM6 14.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm12 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+      </svg>
+      <span class="font-semibold">Zabierzesz kogoś autem?</span>
+    </div>
+    <p class="text-xs text-sky-800 mb-2">Pasażerowie zobaczą Twoje auto w sekcji „Podwózki" i będą mogli się zapisać.</p>
+    <%= button_to event_carpool_offer_path(event), method: :post,
+                  data: { turbo_submits_with: "Zgłaszam…" },
+                  class: "w-full text-sm font-medium py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700" do %>
+      Zgłoś się jako kierowca
+    <% end %>
+  </div>
+<% end %>

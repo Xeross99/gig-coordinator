@@ -1,0 +1,4 @@
+<% content_for(:title) { "Edycja: #{@event.name}" } %>
+<%= render "shared/breadcrumbs", crumbs: [[Copy::HostPanel::MY_EVENTS, host_events_path], [@event.name, host_event_path(@event)], ["Edycja", nil]], home_path: host_root_path %>
+<h1 class="text-2xl font-semibold mb-4">Edycja: <%= @event.name %></h1>
+<%= render "form", event: @event %>

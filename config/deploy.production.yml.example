@@ -1,0 +1,38 @@
+# Szablon pliku produkcyjnego. Skopiuj jako config/deploy.production.yml
+# Użycie: kamal deploy -d production
+service: gig-coordinator
+image: <konto-registry>/gig-coordinator
+
+servers:
+  web:
+    - <twoj-vps>
+
+ssh:
+  port: <port-ssh>
+  user: root
+
+# Jeśli hosting wypuszcza tylko wybrane porty TCP, Kamal Proxy musi słuchać na
+# jednym z nich zamiast na 80 (`run.http_port`). Gdy TLS terminuje reverse proxy
+# hostingu, `ssl: false` w deploy.yml + `assume_ssl` w production.rb.
+proxy:
+  hosts:
+    - <twoj-vps>
+    - <twoja-domena>
+  run:
+    http_port: <port-http>
+
+registry:
+  username: <konto-registry>
+
+env:
+  clear:
+    PUBLIC_HOST: <twoja-domena>
+    EXTRA_HOSTS: <twoj-vps>   # dodatkowe hosty dla host authorization, po przecinku
+    ADMIN_NAME: <imię i nazwisko administratora>
+    CONTACT_EMAIL: <adres kontaktowy>
+
+volumes:
+  - "gig_coordinator_storage:/rails/storage"
+
+builder:
+  remote: ssh://root@<twoj-vps>:<port-ssh>

@@ -1,0 +1,18 @@
+<%= mail_title "Witaj w Gig Coordinator, #{@user.first_name}!" %>
+
+<%= mail_paragraph do %>
+  Twoje konto <%= mail_strong "kurołapacza" %> jest gotowe.
+<% end %>
+
+<%= mail_paragraph "Zaloguj się tym samym adresem e-mail — wyślemy Ci 5-cyfrowy kod." %>
+
+<%= mail_paragraph do %>
+  Nie wiesz jak zacząć?
+  <%= link_to "Zobacz poradnik krok po kroku", @guide_url, style: "color:#0c0a09;text-decoration:underline" %>
+  - jak dodać aplikację do ekranu głównego i włączyć powiadomienia.
+<% end %>
+
+<%= mail_button "Otwórz aplikację", @url %>
+<%= mail_raw_url @url %>
+
+<%= mail_paragraph "Powodzenia! 🐔" %>

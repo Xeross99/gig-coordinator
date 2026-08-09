@@ -1,0 +1,4 @@
+<% content_for(:title) { Copy::HostPanel::NEW_EVENT } %>
+<%= render "shared/breadcrumbs", crumbs: [[Copy::HostPanel::MY_EVENTS, host_events_path], [Copy::HostPanel::NEW_EVENT, nil]], home_path: host_root_path %>
+<h1 class="text-2xl font-semibold mb-4"><%= Copy::HostPanel::NEW_EVENT %></h1>
+<%= render "form", event: @event %>

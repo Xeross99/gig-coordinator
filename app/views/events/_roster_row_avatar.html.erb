@@ -1,0 +1,18 @@
+<%# locals: (user:) -%>
+<%# Pełnowysokościowy avatar paska rosteru (à la lobby CoD) — pasek ma
+    proporcję 5:1 na mobile / 6:1 od sm, więc kwadrat = w-1/5 / w-1/6 szerokości (;
+    aspect-square na rozciągniętym flex-itemie kolapsuje do 0 szerokości,
+    bo pusty item nie ma intrinsic width). Zaokrąglenie dziedziczy z rodzica
+    (li ma rounded-lg + overflow-hidden). Path helper zamiast URL — broadcasty
+    rostra renderują się poza HTTP (patrz _roster_avatar.html.erb). %>
+<div class="relative w-1/5 sm:w-1/6 self-stretch shrink-0 bg-stone-200 shadow-[3px_0_6px_-1px_rgba(0,0,0,0.12)]">
+  <% if user.photo.attached? %>
+    <%= image_tag rails_representation_path(user.photo.variant(:card), only_path: true),
+                  alt: user.display_name,
+                  class: "absolute inset-0 h-full w-full object-cover" %>
+  <% else %>
+    <div class="h-full w-full flex items-center justify-center text-stone-600 text-lg font-semibold" aria-hidden="true">
+      <%= user.first_name[0] %><%= user.last_name[0] %>
+    </div>
+  <% end %>
+</div>

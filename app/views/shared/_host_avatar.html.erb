@@ -1,0 +1,12 @@
+<%# Locals: host:. Mini-avatar gospodarza (16px) z fallbackiem na inicjały.
+    Używa rails_representation_path (nie URL helpera) — bezpieczne w partialach
+    renderowanych przez broadcast poza kontekstem HTTP. %>
+<% if host.photo.attached? %>
+  <%= image_tag rails_representation_path(host.photo.variant(:tiny), only_path: true),
+                alt: host.display_name, class: "size-4 rounded-full object-cover shrink-0" %>
+<% else %>
+  <span aria-hidden="true"
+        class="size-4 rounded-full bg-stone-200 flex items-center justify-center text-[9px] font-semibold text-stone-600 shrink-0">
+    <%= host.first_name[0] %><%= host.last_name[0] %>
+  </span>
+<% end %>

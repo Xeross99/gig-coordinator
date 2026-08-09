@@ -1,0 +1,96 @@
+<%# Locals: campaign:. %>
+<% campaign = local_assigns[:campaign] || event_campaign %>
+<% data = campaign.roster_data %>
+<div id="<%= dom_id(campaign, :roster) %>" class="space-y-4">
+  <% reserved = data[:reserved] %>
+  <% if reserved.any? %>
+    <% deadline = reserved.map(&:reserved_until).compact.min %>
+    <% remaining_sec = deadline ? [ (deadline - Time.current).to_i, 0 ].max : 0 %>
+    <div>
+      <div class="flex items-baseline justify-between mb-2">
+        <h3 class="text-stone-600 text-sm font-semibold uppercase tracking-wide">
+          Rezerwacje (<%= reserved.size %>)
+        </h3>
+        <% if deadline %>
+          <span class="text-xs font-mono tabular-nums text-indigo-600"
+                data-controller="countdown"
+                data-countdown-deadline-value="<%= deadline.iso8601 %>"
+                aria-label="Pozostały czas rezerwacji">
+            <%= "%d:%02d" % [ remaining_sec / 60, remaining_sec % 60 ] %>
+          </span>
+        <% end %>
+      </div>
+      <ul class="space-y-2">
+        <% reserved.each_with_index do |p, i| %>
+          <% has_card = p.user.player_card? %>
+          <li class="relative overflow-hidden flex items-center gap-3 bg-indigo-50 rounded-lg ring-2 ring-indigo-400 shadow-md text-sm animate-pop-in aspect-[5/1] sm:aspect-[6/1] min-h-fit"
+              style="animation-delay: <%= i * 40 %>ms">
+            <%= render "events/roster_card_bg", user: p.user %>
+            <%= render "events/roster_online_chip", user: p.user, has_card: has_card %>
+            <%= render "events/roster_row_avatar", user: p.user %>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="relative size-4 <%= has_card ? "text-indigo-200" : "text-indigo-500" %> animate-spin shrink-0">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 40"/>
+            </svg>
+            <div class="relative min-w-0 flex-1 py-2">
+              <div class="text-sm font-semibold truncate <%= has_card ? "text-white drop-shadow-sm" : "text-stone-900" %>"><%= p.user.display_name %></div>
+              <div class="mt-0.5"><%= render "users/title_badge", user: p.user %></div>
+            </div>
+            <span class="relative text-xs shrink-0 mr-3 <%= has_card ? "text-indigo-200" : "text-indigo-600" %>">oczekuje</span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% confirmed = data[:confirmed] %>
+  <div>
+    <h3 class="text-stone-600 text-sm font-semibold uppercase tracking-wide mb-2">
+      <%= Copy::Events::CONFIRMED_COUNT %>
+      (<%= confirmed.size %>/<%= campaign.capacity %>)
+    </h3>
+    <% if confirmed.any? %>
+      <ul class="space-y-2">
+        <% confirmed.each_with_index do |p, i| %>
+          <% has_card = p.user.player_card? %>
+          <li class="relative overflow-hidden flex items-center gap-3 bg-emerald-50 rounded-lg shadow-md text-sm animate-pop-in aspect-[5/1] sm:aspect-[6/1] min-h-fit"
+              style="animation-delay: <%= i * 40 %>ms">
+            <%= render "events/roster_card_bg", user: p.user %>
+            <%= render "events/roster_online_chip", user: p.user, has_card: has_card %>
+            <%= render "events/roster_row_avatar", user: p.user %>
+            <div class="relative min-w-0 flex-1 py-2 pr-16">
+              <div class="text-sm font-semibold truncate <%= has_card ? "text-white drop-shadow-sm" : "text-stone-900" %>"><%= p.user.display_name %></div>
+              <div class="mt-0.5"><%= render "users/title_badge", user: p.user %></div>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="text-stone-400 text-sm">Brak zapisanych do serii.</div>
+    <% end %>
+  </div>
+
+  <% waitlist = data[:waitlist] %>
+  <% if waitlist.any? %>
+    <div>
+      <h3 class="text-stone-600 text-sm font-semibold uppercase tracking-wide mb-2">
+        <%= Copy::Events::WAITLIST_COUNT %> (<%= waitlist.size %>)
+      </h3>
+      <ul class="space-y-2">
+        <% waitlist.each_with_index do |p, i| %>
+          <% has_card = p.user.player_card? %>
+          <li class="relative overflow-hidden flex items-center gap-3 bg-amber-50 rounded-lg shadow-md text-sm animate-pop-in aspect-[5/1] sm:aspect-[6/1] min-h-fit"
+              style="animation-delay: <%= i * 40 %>ms">
+            <%= render "events/roster_card_bg", user: p.user %>
+            <%= render "events/roster_online_chip", user: p.user, has_card: has_card %>
+            <%= render "events/roster_row_avatar", user: p.user %>
+            <div class="relative min-w-0 flex-1 py-2 pr-16">
+              <div class="text-sm font-semibold truncate <%= has_card ? "text-white drop-shadow-sm" : "text-stone-900" %>"><%= p.user.display_name %></div>
+              <div class="mt-0.5"><%= render "users/title_badge", user: p.user %></div>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+</div>

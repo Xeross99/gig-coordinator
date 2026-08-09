@@ -1,0 +1,275 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  color-scheme: only light !important;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: only light !important;
+  }
+  html, body {
+    background-color: #fafaf9 !important;
+    color: #1c1917 !important;
+  }
+}
+
+@theme {
+  --animate-pop-in: pop-in 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-bump: bump 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Turbo-style progress bar replicated jako tło przycisku w trakcie submitu —
+   semi-transparent fill rośnie z 0% do ~92% szerokości przycisku z
+   asymptotyczną krzywą (szybko na początku, wolniej pod koniec) — ten sam
+   vibe co domyślny `.turbo-progress-bar` na górze strony, tylko nakładany
+   na tle przycisku. Apply przez utility-class `animate-turbo-loading`
+   (w połączeniu z `disabled:` modifier-em żeby odpalić się tylko gdy Turbo
+   disable-uje przycisk podczas submit). */
+@keyframes turbo-loading-progress {
+  0%   { background-size:   0% 100%; }
+  100% { background-size:  92% 100%; }
+}
+
+@utility animate-turbo-loading {
+  /* `currentColor` adoptuje kolor tekstu przycisku, więc fill jest widoczny
+     i na ciemnych przyciskach (biały tekst → biały fill na czarnym tle),
+     i na białych z borderem (stone-800 tekst → szary fill na białym tle),
+     i na amber. */
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, currentColor 28%, transparent) 0%,
+    color-mix(in srgb, currentColor 28%, transparent) 100%
+  );
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  animation: turbo-loading-progress 6s cubic-bezier(0, 0.7, 0.3, 1) forwards;
+}
+
+/* Global fallback — KAŻDY disabled-by-turbo submit button (bez explicite
+   dodawania `disabled:animate-turbo-loading`) dostaje progress-bar fill
+   jako tło. Filtrujemy `[type="submit"]` żeby celowo nie ruszać statycznie
+   disabled-owanych `<button type="button" disabled>` (zoltodziob lock,
+   blocked-banner-fallback itp.) — tam disabled to product state, nie
+   loading state. */
+form button[type="submit"][disabled],
+form input[type="submit"][disabled] {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, currentColor 28%, transparent) 0%,
+    color-mix(in srgb, currentColor 28%, transparent) 100%
+  );
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  animation: turbo-loading-progress 6s cubic-bezier(0, 0.7, 0.3, 1) forwards;
+  cursor: progress;
+  opacity: 0.85;
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.pull-to-refresh-indicator.ready,
+.pull-to-refresh-indicator.refreshing {
+  background: var(--color-stone-900);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.25), 0 4px 6px -4px rgba(0, 0, 0, 0.15);
+}
+.pull-to-refresh-indicator.ready svg,
+.pull-to-refresh-indicator.refreshing svg {
+  color: white;
+}
+.pull-to-refresh-indicator.refreshing svg {
+  animation: pull-spin 600ms linear infinite;
+}
+
+@keyframes pull-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Cross-page View Transitions (Turbo ships the meta opt-in; this styles the
+   default ::view-transition-* pseudos Chromium generates for the root element).
+   Direction is driven by `html[data-transition-direction="..."]`, set in
+   application.js on turbo:visit based on from/to path classification:
+   - "forward" (feed → event): new slides in from right, old exits to left
+   - "back"    (event → feed): new slides in from left,  old exits to right
+   - default  (everything else): subtle fade + vertical shift
+   Safari/Firefox without the API just skip the animation — no fallback needed. */
+@keyframes view-transition-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes view-transition-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+
+@keyframes view-transition-slide-in-right {
+  from { opacity: 0; transform: translateX(6%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes view-transition-slide-out-left {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-6%); }
+}
+
+@keyframes view-transition-slide-in-left {
+  from { opacity: 0; transform: translateX(-6%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes view-transition-slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(6%); }
+}
+
+::view-transition-old(root) {
+  animation: view-transition-fade-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: view-transition-fade-in 220ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+html[data-transition-direction="forward"]::view-transition-old(root) {
+  animation: view-transition-slide-out-left 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+html[data-transition-direction="forward"]::view-transition-new(root) {
+  animation: view-transition-slide-in-right 260ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+html[data-transition-direction="back"]::view-transition-old(root) {
+  animation: view-transition-slide-out-right 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+html[data-transition-direction="back"]::view-transition-new(root) {
+  animation: view-transition-slide-in-left 260ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+/* Opt the navbar out of the transition: give it its own view-transition-name
+   and disable the old/new animations so it stays visually static across pages.
+   Without this the whole root fades, which makes the sticky header flicker. */
+.app-navbar {
+  view-transition-name: app-navbar;
+}
+
+::view-transition-old(app-navbar),
+::view-transition-new(app-navbar) {
+  animation: none;
+}
+
+/* Breadcrumb gets its own view-transition so it never slides left/right with
+   the root. Still animated — just a plain cross-fade in place. */
+nav[aria-label="Breadcrumb"] {
+  view-transition-name: app-breadcrumb;
+}
+
+@keyframes view-transition-simple-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes view-transition-simple-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+::view-transition-old(app-breadcrumb) {
+  animation: view-transition-simple-fade-out 160ms ease-out both;
+}
+
+::view-transition-new(app-breadcrumb) {
+  animation: view-transition-simple-fade-in 220ms ease-in both;
+}
+
+/* Give the pull-to-refresh indicator its own view-transition layer so the
+   spinner floats ABOVE the root snapshot during navigation instead of being
+   captured into it (where it ends up behind the breadcrumb + navbar named
+   layers). No animation — it manages its own fade-out via Stimulus on
+   turbo:load. */
+.pull-to-refresh-indicator {
+  view-transition-name: pull-to-refresh;
+}
+
+::view-transition-old(pull-to-refresh),
+::view-transition-new(pull-to-refresh) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* Pull-to-refresh opts out of the view-transition entirely — the spinner
+   freeze during the snapshot looked like a stutter on finger release. */
+html[data-transition-direction="none"]::view-transition-old(root),
+html[data-transition-direction="none"]::view-transition-new(root),
+html[data-transition-direction="none"]::view-transition-old(app-breadcrumb),
+html[data-transition-direction="none"]::view-transition-new(app-breadcrumb) {
+  animation: none;
+}
+
+/* Sort-toggle navigations (same path, different ?sort=…): freeze the root and
+   the breadcrumb, animate only the element tagged `.sort-target` (which gets
+   its own view-transition-name below). The header/navbar/buttons stay put;
+   just the list fades. */
+.sort-target {
+  view-transition-name: sort-target;
+}
+
+/* Active sort pill: unique view-transition-name so the browser morphs the pill
+   between positions when the active option changes. Only one element has this
+   class at a time, which is required for view-transition-name uniqueness. */
+.sort-toggle-active {
+  view-transition-name: sort-toggle-pill;
+}
+
+html[data-transition-direction="sort"]::view-transition-old(root),
+html[data-transition-direction="sort"]::view-transition-new(root),
+html[data-transition-direction="sort"]::view-transition-old(app-breadcrumb),
+html[data-transition-direction="sort"]::view-transition-new(app-breadcrumb) {
+  animation: none;
+}
+
+html[data-transition-direction="sort"]::view-transition-old(sort-target) {
+  animation: view-transition-simple-fade-out 140ms ease-out both;
+}
+html[data-transition-direction="sort"]::view-transition-new(sort-target) {
+  animation: view-transition-simple-fade-in 200ms ease-in both;
+}
+
+/* Slow the pill morph a touch so the position/size interpolation reads as a
+   smooth slide instead of a blink. */
+html[data-transition-direction="sort"]::view-transition-group(sort-toggle-pill) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Unified <select> appearance: strip native chevron, draw a stone-500 SVG chevron so selects match text/number inputs. */
+.form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2378716c'><path fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 011.08 1.04l-4.25 4.4a.75.75 0 01-1.08 0l-4.25-4.4a.75.75 0 01.02-1.06z' clip-rule='evenodd' /></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2.25rem;
+}

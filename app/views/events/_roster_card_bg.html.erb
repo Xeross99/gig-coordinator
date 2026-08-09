@@ -1,0 +1,9 @@
+<%# locals: (user:) -%>
+<%# Karta gracza (premium) jako tło wiersza rosteru — rodzic musi mieć
+    `relative overflow-hidden`, a treść wiersza `relative`, żeby wyszła nad
+    scrim. Scrim od lewej daje kontrast pod białym tekstem na każdej karcie. %>
+<% if user.player_card? %>
+  <%= image_tag "player_cards/#{user.player_card}.svg", alt: "",
+                class: "absolute inset-0 h-full w-full object-cover object-right" %>
+  <div class="absolute inset-0 bg-gradient-to-r from-black/60 via-black/25 to-transparent"></div>
+<% end %>

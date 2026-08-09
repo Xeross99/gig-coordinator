@@ -1,0 +1,9 @@
+<% content_for(:title) { Copy::EventCampaigns::NEW_CAMPAIGN } %>
+<%= render "shared/breadcrumbs", crumbs: [
+  [ Copy::EventCampaigns::INDEX_TITLE, host_event_campaigns_path ],
+  [ Copy::EventCampaigns::NEW_CAMPAIGN, nil ]
+], home_path: host_root_path %>
+
+<h1 class="text-2xl font-semibold mb-4"><%= Copy::EventCampaigns::NEW_CAMPAIGN %></h1>
+
+<%= render "form", campaign: @campaign %>

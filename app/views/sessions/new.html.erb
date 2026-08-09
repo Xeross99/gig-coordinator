@@ -1,0 +1,32 @@
+<% content_for(:title) { Copy::Auth::LOGIN_TITLE } %>
+<div class="pt-10 pb-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <%= image_tag "/icon.svg", alt: "Gig Coordinator", class: "mx-auto h-16 w-16 rounded-xl shadow-sm" %>
+    <h1 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-stone-900">Gig Coordinator</h1>
+    <p class="mt-1 text-center text-sm text-stone-500"><%= Copy::Auth::LOGIN_TITLE %></p>
+  </div>
+
+  <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+    <div class="bg-white px-6 py-12 shadow-sm sm:rounded-lg sm:px-12">
+      <%= form_with url: login_codes_path, scope: :login_code, method: :post, local: true, class: "space-y-6" do |f| %>
+        <div>
+          <%= f.label :email, "Adres e-mail", class: "block text-sm/6 font-medium text-stone-900" %>
+          <div class="mt-2">
+            <%= f.email_field :email, id: "login_code_email", required: true, autocomplete: "email",
+                  class: "block w-full rounded-md bg-white px-3 py-1.5 text-base text-stone-900 outline-1 -outline-offset-1 outline-stone-300 placeholder:text-stone-400 focus:outline-2 focus:-outline-offset-2 focus:outline-stone-900 sm:text-sm/6" %>
+          </div>
+        </div>
+
+        <div>
+          <%= f.submit "Wyślij kod logowania",
+                data: { turbo_submits_with: "Wysyłam kod…" },
+                class: "flex w-full justify-center rounded-md bg-stone-900 px-3 py-2 text-sm/6 font-semibold text-white shadow-xs hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900 transition-transform active:scale-[0.98]" %>
+        </div>
+      <% end %>
+
+      <p class="mt-8 text-center text-xs text-stone-500">
+        Wyślemy 5-cyfrowy kod logowania na Twój adres e-mail. Kod wygasa po 15 minutach.
+      </p>
+    </div>
+  </div>
+</div>

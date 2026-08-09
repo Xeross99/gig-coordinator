@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <title><%= content_for?(:title) ? "#{content_for(:title)} - Gig Coordinator" : "Gig Coordinator" %></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Gig Coordinator">
+    <meta name="apple-mobile-web-app-title" content="Gig Coordinator">
+    <meta name="theme-color" content="#d53838">
+    <%# Hard-lock do jasnego UI — `color-scheme: light` blokuje auto-inwersję
+        formularzy przez przeglądarkę (iOS Safari, Chrome) niezależnie od
+        ustawienia systemu. %>
+    <meta name="color-scheme" content="only light">
+    <meta name="view-transition" content="same-origin">
+    <meta name="turbo-refresh-scroll" content="preserve">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+
+    <%= tag.link rel: "manifest", href: pwa_manifest_path %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen bg-stone-50 text-stone-900 antialiased" data-controller="pull-to-refresh">
+    <%# data-turbo-permanent — the indicator stays in the DOM across the
+        Turbo.visit triggered by pull-to-refresh, so the spinner keeps
+        rotating instead of vanishing mid-animation when body swaps. The
+        Stimulus controller's connect() catches the leftover .refreshing
+        class and fades it out smoothly once the new page is live. %>
+    <div id="pull-to-refresh-indicator"
+         data-turbo-permanent
+         data-pull-to-refresh-target="indicator"
+         style="opacity:0;transform:translate(-50%,-40px) scale(0.5)"
+         class="pull-to-refresh-indicator fixed top-0 left-1/2 pointer-events-none z-100 size-14 rounded-full bg-white shadow-xl ring-1 ring-stone-200/60 flex items-center justify-center">
+      <svg data-pull-to-refresh-target="spinner" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-7 text-stone-700">
+        <path d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clip-rule="evenodd" fill-rule="evenodd"/>
+      </svg>
+    </div>
+    <% if Current.user %>
+      <div data-controller="push-subscription"
+           data-push-subscription-vapid-public-key-value="<%= Rails.application.credentials.dig(:vapid, :public_key) %>"
+           data-push-subscription-endpoint-url-value="<%= push_subscriptions_path %>"
+           data-push-subscription-csrf-token-value="<%= form_authenticity_token %>"></div>
+      <%# Global events stream — every signed-in worker (on any page) gets the
+          `visit` Turbo::StreamAction when a new event is broadcast, which
+          teleports them to the new event page. Append/replace/remove actions
+          targeting #events_list silently no-op on pages without that element. %>
+      <%= turbo_stream_from :events %>
+      <%= turbo_stream_from Current.user, :events %>
+      <%= turbo_stream_from :event_campaigns %>
+    <% end %>
+    <%= render "shared/navbar" %>
+
+    <%= render "shared/toast" %>
+    <%= render "shared/turbo_confirm" %>
+    <% if flash[:confetti] %>
+      <div data-controller="confetti"></div>
+    <% end %>
+
+    <main class="w-full max-w-lg mx-auto px-4 py-4">
+      <%= yield %>
+    </main>
+  </body>
+</html>

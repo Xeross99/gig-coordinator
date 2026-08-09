@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 30" shape-rendering="crispEdges">
+  <defs>
+    <clipPath id="tlo"><rect width="72" height="30" rx="4"/></clipPath>
+  </defs>
+  <g clip-path="url(#tlo)">
+    <rect width="72" height="30" fill="#fef3c7"/>
+    <rect y="26" width="72" height="1" fill="#fcd34d"/>
+    <rect y="27" width="72" height="3" fill="#fde68a"/>
+    <g fill="#a3c76d">
+      <rect x="8" y="24" width="1" height="2"/>
+      <rect x="10" y="25" width="1" height="1"/>
+      <rect x="33" y="24" width="1" height="2"/>
+      <rect x="62" y="24" width="1" height="2"/>
+      <rect x="64" y="25" width="1" height="1"/>
+    </g>
+    <!-- jajko: pojawia się podczas postoju po prawej, kura odchodzi i je zostawia -->
+    <g opacity="0">
+      <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.44;0.46;1" dur="9s" repeatCount="indefinite"/>
+      <g fill="#ffffff">
+        <rect x="47" y="23" width="2" height="1"/>
+        <rect x="46" y="24" width="4" height="1"/>
+        <rect x="47" y="25" width="2" height="1"/>
+      </g>
+    </g>
+    <!-- kura: spacer z pauzami na obu końcach -->
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="2 8;38 8;38 8;2 8;2 8" keyTimes="0;0.42;0.5;0.92;1" dur="9s" repeatCount="indefinite"/>
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0 0;0 -1;0 0" keyTimes="0;0.5;1" dur="0.35s" repeatCount="indefinite"/>
+        <g fill="#d53838">
+          <rect x="8" y="3" width="2" height="1"/>
+          <rect x="11" y="3" width="2" height="1"/>
+          <rect x="7" y="4" width="7" height="1"/>
+        </g>
+        <g fill="#ffffff">
+          <rect x="6" y="5" width="9" height="1"/>
+          <rect x="5" y="6" width="11" height="1"/>
+          <rect x="5" y="7" width="2" height="1"/>
+          <rect x="8" y="7" width="5" height="1"/>
+          <rect x="14" y="7" width="2" height="1"/>
+          <rect x="5" y="8" width="11" height="1"/>
+          <rect x="5" y="9" width="5" height="1"/>
+          <rect x="12" y="9" width="4" height="1"/>
+          <rect x="5" y="10" width="4" height="1"/>
+          <rect x="13" y="10" width="3" height="1"/>
+          <rect x="5" y="11" width="5" height="1"/>
+          <rect x="12" y="11" width="4" height="1"/>
+          <rect x="4" y="12" width="13" height="1"/>
+          <rect x="3" y="13" width="14" height="1"/>
+          <rect x="3" y="14" width="14" height="1"/>
+          <rect x="3" y="15" width="14" height="1"/>
+          <rect x="4" y="16" width="12" height="1"/>
+        </g>
+        <g fill="#222222">
+          <rect x="7" y="7" width="1" height="1"/>
+          <rect x="13" y="7" width="1" height="1"/>
+        </g>
+        <g fill="#f5a623">
+          <rect x="10" y="9" width="2" height="1"/>
+          <rect x="9" y="10" width="4" height="1"/>
+          <rect x="10" y="11" width="2" height="1"/>
+          <rect x="7" y="17" width="2" height="1"/>
+          <rect x="11" y="17" width="2" height="1"/>
+        </g>
+        <!-- pytajnik: wyskakuje podczas postoju po lewej -->
+        <g fill="#d53838" opacity="0">
+          <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.93;0.95;1" dur="9s" repeatCount="indefinite"/>
+          <rect x="14" y="-4" width="3" height="1"/>
+          <rect x="16" y="-3" width="1" height="1"/>
+          <rect x="15" y="-2" width="2" height="1"/>
+          <rect x="15" y="-1" width="1" height="1"/>
+          <rect x="15" y="1" width="1" height="1"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
