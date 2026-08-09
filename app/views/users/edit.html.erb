@@ -1,6 +1,6 @@
 <% content_for(:title) { Copy::Admin::Users::EDIT_TITLE } %>
 <%= render "shared/breadcrumbs", crumbs: [
-  ["Wszyscy kurołapacze", users_path],
+  ["Wszyscy pracownicy", users_path],
   [@user.display_name, user_path(@user)],
   [Copy::Admin::Users::EDIT_TITLE, nil]
 ] %>
@@ -13,7 +13,7 @@
   <div class="mt-6 pt-6 border-t border-stone-200">
     <h2 class="text-sm font-semibold text-red-700 mb-1"><%= "Strefa niebezpieczna" %></h2>
     <p class="text-xs text-stone-500 mb-3"><%= "Usunięcie skasuje wszystkie zapisy, wiadomości i podwózki tego użytkownika." %></p>
-    <%= button_to "Usuń kurołapacza", user_path(@user), method: :delete,
+    <%= button_to "Usuń pracownika", user_path(@user), method: :delete,
                   data: { turbo_confirm: "Na pewno usunąć #{@user.display_name}? Tej akcji nie można cofnąć." },
                   class: "w-full py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-transform active:scale-[0.98]" %>
   </div>

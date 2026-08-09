@@ -1,4 +1,4 @@
-# Usunięcie kurołapacza wywalało FOREIGN KEY constraint (500), gdy user
+# Usunięcie pracownika wywalało FOREIGN KEY constraint (500), gdy user
 # stworzył jakiś event albo był aktualnie odbieranym pasażerem podwózki.
 # Te kolumny są opcjonalne (belongs_to optional / sentinel) — przy kasowaniu
 # usera mają się wyzerować, jak już zrobione dla event_campaigns.creator_id

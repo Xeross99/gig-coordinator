@@ -127,7 +127,7 @@ class EventsHelperTest < ActionView::TestCase
   end
 
   test "participation_event_verb nigdy nie generuje formy żeńskiej" do
-    # Inwariant: kurołapacze są wyłącznie mężczyznami — verby muszą być w
+    # Inwariant: pracownicy są wyłącznie mężczyznami — verby muszą być w
     # czystej męskiej formie, bez slasha „/a", „/ęła" itd.
     %w[joined joined_waitlist cancelled reserved accepted declined promoted expired].each do |type|
       verb = participation_event_verb(type)

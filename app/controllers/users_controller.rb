@@ -49,10 +49,10 @@ class UsersController < ApplicationController
     @top_hosts = top_ids_with_counts.map { |id, count| [ hosts_by_id[id], count ] }
   end
 
-  # POST /kurolapacze/:id/testowy-push — admin wysyła userowi testowe
+  # POST /pracownicy/:id/testowy-push — admin wysyła userowi testowe
   # powiadomienie (ten sam kind :test co self-test z profilu). Przydatne do
   # diagnozy „nie dostaję powiadomień" bez dostępu do telefonu usera.
-  # POST /kurolapacze/:id/przelacz-konto — admin wyłącza/włącza konto.
+  # POST /pracownicy/:id/przelacz-konto — admin wyłącza/włącza konto.
   # Wyłączony user: zero powiadomień (push + mail), zero auto-rezerwacji,
   # brak możliwości zalogowania (sesje ubite, kod logowania nie wychodzi).
   # Dane i historia zostają — to bezpieczniejsza alternatywa dla usunięcia.
@@ -74,13 +74,13 @@ class UsersController < ApplicationController
   def test_push
     user = User.find(params[:id])
     if user.disabled?
-      redirect_to user_path(user), alert: "Konto jest wyłączone - powiadomienia do tego kurołapacza nie są wysyłane." and return
+      redirect_to user_path(user), alert: "Konto jest wyłączone - powiadomienia do tego pracownika nie są wysyłane." and return
     end
     if user.push_subscriptions.exists?
       WebPushNotifier.perform_later(:test, user_id: user.id)
       redirect_to user_path(user), notice: "Wysłano testowe powiadomienie do #{user.display_name}. Powinno przyjść za chwilę."
     else
-      redirect_to user_path(user), alert: "Ten kurołapacz nie ma żadnej subskrypcji push - powiadomienie nie miałoby gdzie dotrzeć."
+      redirect_to user_path(user), alert: "Ten pracownik nie ma żadnej subskrypcji push - powiadomienie nie miałoby gdzie dotrzeć."
     end
   end
 
@@ -91,7 +91,7 @@ class UsersController < ApplicationController
   def create
     @user = User.new(user_params)
     if @user.save
-      redirect_to user_path(@user), notice: "Dodano kurołapacza."
+      redirect_to user_path(@user), notice: "Dodano pracownika."
     else
       render :new, status: :unprocessable_content
     end
@@ -116,7 +116,7 @@ class UsersController < ApplicationController
       redirect_to user_path(@user), alert: "Nie możesz usunąć własnego konta." and return
     end
     @user.destroy
-    redirect_to users_path, notice: "Usunięto kurołapacza."
+    redirect_to users_path, notice: "Usunięto pracownika."
   end
 
   private

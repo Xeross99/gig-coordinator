@@ -20,11 +20,11 @@ Turbo.StreamActions.visit = function() {
 // for "forward" (going deeper, new slides in from right) and "back" (going
 // shallower, new slides in from left). Everything else falls back to fade.
 //
-//   depth 0: list/feed pages       (/, /eventy, /kurolapacze, /gospodarze)
-//   depth 1: detail pages          (/eventy/:slug, /kurolapacze/:id)
+//   depth 0: list/feed pages       (/, /eventy, /pracownicy, /gospodarze)
+//   depth 1: detail pages          (/eventy/:slug, /pracownicy/:id)
 //   depth 2: sub-detail            (/eventy/:slug/historia)
 function navDepth(path) {
-  if (path === "/" || path === "/eventy" || path === "/kurolapacze" || path === "/gospodarze") return 0
+  if (path === "/" || path === "/eventy" || path === "/pracownicy" || path === "/gospodarze") return 0
   if (path === "/eventy/nowy" || path === "/kampanie/nowa")     return 1
   if (/^\/eventy\/[^/]+\/historia$/.test(path))                 return 2
   if (/^\/kampanie\/[^/]+\/historia$/.test(path))               return 2
@@ -32,7 +32,7 @@ function navDepth(path) {
   if (/^\/kampanie\/[^/]+\/edytuj$/.test(path))                 return 2
   if (/^\/eventy\/[^/]+$/.test(path))                           return 1
   if (/^\/kampanie\/[^/]+$/.test(path))                         return 1
-  if (/^\/kurolapacze\/[^/]+$/.test(path))                      return 1
+  if (/^\/pracownicy\/[^/]+$/.test(path))                      return 1
   return null
 }
 

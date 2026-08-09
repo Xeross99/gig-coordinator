@@ -33,8 +33,8 @@ module User::Titleable
 
   # Opisy rang w 3 os. — strona /informacje, czytelnik ogląda cudzą hierarchię.
   TITLE_DESCRIPTIONS = {
-    "zoltodziob"          => "Startowa ranga każdego nowego kurołapacza. Może przeglądać zlecenia, ale nie zapisuje się na nie i nie dostaje powiadomień o nowych zleceniach. Po awansie zyskuje pełne prawa.",
-    "kurzy_pacholek"      => "Pełnoprawny kurołapacz, ale powiadomienie o nowym zleceniu dostaje 5 min po wyższych rangach, żeby tamte miały pierwszeństwo zapisu.",
+    "zoltodziob"          => "Startowa ranga każdego nowego pracownika. Może przeglądać zlecenia, ale nie zapisuje się na nie i nie dostaje powiadomień o nowych zleceniach. Po awansie zyskuje pełne prawa.",
+    "kurzy_pacholek"      => "Pełnoprawny pracownik, ale powiadomienie o nowym zleceniu dostaje 5 min po wyższych rangach, żeby tamte miały pierwszeństwo zapisu.",
     "kurnikowy_gangster"  => "Zapisuje się na zlecenia bez ograniczeń i dostaje powiadomienie o nowym zleceniu od razu razem z wyższymi rangami.",
     "kurnikowy_komendant" => "Może planować zlecenia, ale tylko u przypisanych mu gospodarzy.",
     "mistrz_piora"        => "Może planować zlecenia u dowolnego gospodarza oraz otrzymuje automatyczne rezerwacje na nowe zlecenia."

@@ -100,7 +100,7 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     get edit_profile_path
     assert_select "input[type=radio][name=?]", "user[player_card]", count: 0
     # cennik i zajawka kart żyją na /wesprzyj, nie w profilu
-    refute_match "Karta kurołapacza", response.body
+    refute_match "Karta pracownika", response.body
     assert_select "img[src*=?]", "player_cards/traktor", count: 0
   end
 

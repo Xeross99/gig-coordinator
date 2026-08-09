@@ -69,7 +69,7 @@ class InfoControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:bartek))
     get support_path
     assert_response :success
-    assert_match "Karta kurołapacza", response.body
+    assert_match "Karta pracownika", response.body
     assert_match "29,99 zł",          response.body
     # zajawka: karty widoczne, ale bez pickera (wybór tylko w /profil/edit)
     assert_select "img[src*=?]", "player_cards/traktor"

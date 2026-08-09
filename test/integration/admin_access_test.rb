@@ -42,7 +42,7 @@ class AdminAccessTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:bartek))
     get users_path
     assert_response :success
-    assert_no_match "Dodaj kurołapacza", response.body
+    assert_no_match "Dodaj pracownika", response.body
   end
 
   test "non-admin sees the host show page without the Edytuj link" do

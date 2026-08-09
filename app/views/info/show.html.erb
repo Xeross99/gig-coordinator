@@ -4,13 +4,13 @@
 <article class="prose prose-stone max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h1:mb-4 prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-2 prose-p:text-stone-700 prose-li:text-stone-700 prose-strong:text-stone-900 prose-a:text-stone-900">
   <h1>O aplikacji</h1>
 
-  <p>Gig Coordinator łączy gospodarzy z kurołapaczami. Gospodarz wrzuca zlecenie (np. odłów kur na fermie), Ty decydujesz, czy się piszesz.</p>
+  <p>Gig Coordinator łączy gospodarzy z pracownikami. Gospodarz wrzuca zlecenie (np. odłów kur na fermie), Ty decydujesz, czy się piszesz.</p>
 
   <h2>Logowanie</h2>
   <p>Żadnych haseł. Wpisujesz maila, dostajesz <strong>5-cyfrowy kod</strong> w mailu i przepisujesz go w aplikacji. Kod jest ważny <strong>15 minut</strong> - potem trzeba poprosić o nowy. Masz 5 prób na poprawne wpisanie; po piątej kod przestaje działać i trzeba zamówić kolejny.</p>
 
   <h2>Rangi</h2>
-  <p>Każdy kurołapacz ma rangę. Rangi nadaje admin. W kolejności od startowej do najwyższej:</p>
+  <p>Każdy pracownik ma rangę. Rangi nadaje admin. W kolejności od startowej do najwyższej:</p>
   <ul class="not-prose space-y-3 my-4">
     <% User.titles.keys.each do |title_key| %>
       <% sample = User.new(title: title_key) %>
@@ -68,7 +68,7 @@
   <p>W dowolnej chwili możesz kliknąć <em>Anuluj</em>. Jeśli byłeś potwierdzony, Twoje miejsce przejmuje pierwsza osoba z listy rezerwowej. Jeśli byłeś w kolejce - po prostu znikasz z listy.</p>
 
   <h2>Blokada u gospodarza</h2>
-  <p>Admin może założyć <strong>blokadę</strong> między konkretnym kurołapaczem a konkretnym gospodarzem. To nie wyrzuca Cię z systemu - dalej masz konto, rangę, możesz łapać u innych gospodarzy. Blokada działa punktowo:</p>
+  <p>Admin może założyć <strong>blokadę</strong> między konkretnym pracownikiem a konkretnym gospodarzem. To nie wyrzuca Cię z systemu - dalej masz konto, rangę, możesz łapać u innych gospodarzy. Blokada działa punktowo:</p>
   <ul>
     <li><strong>Widzisz zlecenia</strong> tego gospodarza w feedzie i na stronie zlecenia - normalnie, bez różnicy.</li>
     <li><strong>Dostajesz powiadomienia push</strong> o nowych zleceniach (bo push leci do wszystkich - to nie filtr).</li>
@@ -94,7 +94,7 @@
     </button>
   </div>
 
-  <p>Status blokady widać na profilu kurołapacza (sekcja <em>Zablokowany u</em>) oraz na stronie gospodarza (sekcja <em>Zablokowani kurołapacze</em>).</p>
+  <p>Status blokady widać na profilu pracownika (sekcja <em>Zablokowany u</em>) oraz na stronie gospodarza (sekcja <em>Zablokowani pracownicy</em>).</p>
 
   <h2 class="flex flex-wrap items-center gap-x-2 gap-y-1">
     <span>Planowanie zleceń</span>
@@ -113,7 +113,7 @@
   </ul>
   <p>Po zatwierdzeniu:</p>
   <ul>
-    <li>Zlecenie od razu ląduje na feedzie wszystkich kurołapaczy.</li>
+    <li>Zlecenie od razu ląduje na feedzie wszystkich pracowników.</li>
     <li>Wszyscy zalogowani zostają automatycznie przeniesieni na stronę nowego zlecenia - pierwsi klikają <em>Akceptuję</em>.</li>
     <li>System rezerwuje tyle miejsc ile wynosi liczba miejsc na zleceniu - ale tylko dla osób z aktualnie najwyższą rangą w systemie. Pozostałe sloty są otwarte dla wszystkich.</li>
     <li>Pachołkowie i wyżej dostają powiadomienie push o nowym zleceniu - <strong>kurzy pachołek 5 min później</strong> niż reszta, żeby wyższe rangi miały chwilę fory na zapis. <strong>Żółtodzioby w ogóle nie dostają tego pusha</strong> (i tak nie mogą się zapisać).</li>
@@ -134,7 +134,7 @@
   </p>
 
   <h2>Podwózki - kierowca i pasażerowie</h2>
-  <p>Każdy event ma sekcję <em>Podwózki</em>, w której kurołapacze mogą się umówić na wspólny dojazd autem. Reguły są proste:</p>
+  <p>Każdy event ma sekcję <em>Podwózki</em>, w której pracownicy mogą się umówić na wspólny dojazd autem. Reguły są proste:</p>
   <ul>
     <li><strong>Kierowcą</strong> może zostać tylko osoba <strong>potwierdzona na zleceniu</strong>, której admin nadał wcześniej uprawnienia kierowcy.</li>
     <li>Każdy kierowca ma <strong>4 miejsca pasażerskie</strong> w aucie - sztywno, niezależnie od auta.</li>

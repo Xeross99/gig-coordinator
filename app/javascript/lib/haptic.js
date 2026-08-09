@@ -59,10 +59,10 @@ export function error() {
 // `error`. Używamy capture fazy, żeby haptic zdążył się odpalić zanim
 // przeglądarka zacznie navigation/submit.
 //
-// Dodatkowo: linki nawigacyjne do profili (`/gospodarze`, `/kurolapacze`,
+// Dodatkowo: linki nawigacyjne do profili (`/gospodarze`, `/pracownicy`,
 // `/eventy`) oraz linki w breadcrumbach dostają tap() automatycznie — bez
 // potrzeby dodawania `data-haptic` na każdym template.
-const NAV_HREF_RE = /^\/(gospodarze|kurolapacze|eventy)(\/|$|\?)/
+const NAV_HREF_RE = /^\/(gospodarze|pracownicy|eventy)(\/|$|\?)/
 
 export function install() {
   document.addEventListener(

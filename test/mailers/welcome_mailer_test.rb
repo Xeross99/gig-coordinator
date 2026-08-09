@@ -9,11 +9,11 @@ class WelcomeMailerTest < ActionMailer::TestCase
     assert_equal "Witaj w Gig Coordinator", mail.subject
 
     # Polish chars are quoted-printable in mail.body.encoded, so match against
-    # the decoded text part where `kurołapacza` lands as a literal string.
+    # the decoded text part where `pracownika` lands as a literal string.
     text = mail.text_part.decoded
     html = mail.html_part.decoded
     assert_match user.first_name, text
-    assert_match "kurołapacza",   text
+    assert_match "pracownika",   text
     assert_match "/logowanie",    text
     assert_match "/poradnik",     text
 

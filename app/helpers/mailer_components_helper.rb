@@ -4,7 +4,7 @@
 #   <%= mail_title "Witaj, #{@user.first_name}!" %>
 #
 #   <%= mail_paragraph do %>
-#     Twoje konto <%= mail_strong "kurołapacza" %> jest gotowe.
+#     Twoje konto <%= mail_strong "pracownika" %> jest gotowe.
 #   <% end %>
 #
 #   <%= mail_button "Otwórz aplikację", @url %>

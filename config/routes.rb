@@ -58,7 +58,7 @@ Rails.application.routes.draw do
     end
   end
   resources :hosts, except: :destroy, path: "gospodarze", path_names: { new: "nowy", edit: "edytuj" }
-  resources :users, path: "kurolapacze", path_names: { new: "nowy", edit: "edytuj" } do
+  resources :users, path: "pracownicy", path_names: { new: "nowy", edit: "edytuj" } do
     member do
       post :test_push, path: "testowy-push"
       post :toggle_disabled, path: "przelacz-konto"

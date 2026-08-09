@@ -144,7 +144,7 @@ module EventsHelper
     end
   end
 
-  # Polski opis pojedynczego ParticipationEvent (audit log). Wszyscy kurołapacze
+  # Polski opis pojedynczego ParticipationEvent (audit log). Wszyscy pracownicy
   # to mężczyźni — verby tylko w formie męskiej (świadomie, nie generyczne).
   def participation_event_verb(event_type)
     case event_type

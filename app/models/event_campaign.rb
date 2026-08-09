@@ -88,7 +88,7 @@ class EventCampaign < ApplicationRecord
 
   # Mirror Event#roster_data — wszystko w kilku zapytaniach, memoizowane na
   # instancji. Bez `all_users` — roster kampanii nie ma sekcji „Wszyscy
-  # kurołapacze", więc ładowanie całej tabeli users było martwym kosztem
+  # pracownicy", więc ładowanie całej tabeli users było martwym kosztem
   # przy każdym broadcaście.
   def roster_data
     @roster_data ||= begin

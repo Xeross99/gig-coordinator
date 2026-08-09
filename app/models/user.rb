@@ -23,7 +23,7 @@ class User < ApplicationRecord
 
   # Karty gracza (tła profilu à la Call of Duty) — dostępne tylko dla kont
   # premium. Klucz = nazwa pliku w app/assets/images/player_cards/<klucz>.svg.
-  # Flaga `premium` jest nadawana przez admina (checkbox w /kurolapacze/:id/edit)
+  # Flaga `premium` jest nadawana przez admina (checkbox w /pracownicy/:id/edit)
   # albo z konsoli. Etykiety leżą w tym samym hashu co klucze — jako dwie osobne
   # struktury (lista tutaj + tłumaczenia w pl.yml) potrafiły się rozjechać przy
   # dodaniu karty.
@@ -206,7 +206,7 @@ class User < ApplicationRecord
   end
 
   # Nadanie (lub przedłużenie) premium dziękuje pushem — z każdej ścieżki zapisu
-  # (checkbox admina w /kurolapacze/:id/edit, `rails console`). Odebranie premium
+  # (checkbox admina w /pracownicy/:id/edit, `rails console`). Odebranie premium
   # (`premium_until` → nil/przeszłość) jest ciche, stąd guard na `premium_active?`.
   def notify_premium_granted
     return unless saved_change_to_premium_until? && premium_active?

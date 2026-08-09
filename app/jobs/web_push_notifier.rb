@@ -201,7 +201,7 @@ class WebPushNotifier < ApplicationJob
     when :premium_granted
       {
         title: "Dziękujemy za wsparcie aplikacji! 💛",
-        body:  "Masz już konto premium — wejdź w Mój profil i wybierz swoją kartę kurołapacza.",
+        body:  "Masz już konto premium — wejdź w Mój profil i wybierz swoją kartę pracownika.",
         url:   helpers.edit_profile_path
       }
     when :completion

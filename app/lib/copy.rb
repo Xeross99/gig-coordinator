@@ -25,8 +25,8 @@ module Copy
     end
 
     module Users
-      EDIT_TITLE = "Edytuj kurołapacza".freeze
-      NEW_TITLE = "Dodaj kurołapacza".freeze
+      EDIT_TITLE = "Edytuj pracownika".freeze
+      NEW_TITLE = "Dodaj pracownika".freeze
     end
   end
 

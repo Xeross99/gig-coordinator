@@ -11,7 +11,7 @@ require "test_helper"
 #
 # Testy poniżej idą po każdym typie wpisu, scenariuszach krzyżowych
 # (zaproszenie → akceptacja, zaproszenie → odrzucenie, expiry, promocja),
-# poprawności kopii (męska forma — wszyscy kurołapacze to mężczyźni)
+# poprawności kopii (męska forma — wszyscy pracownicy to mężczyźni)
 # i spójności licznika `Event#history_count` z liczbą renderowanych wpisów.
 class EventHistoryTest < ActionDispatch::IntegrationTest
   setup do
@@ -445,7 +445,7 @@ class EventHistoryTest < ActionDispatch::IntegrationTest
   end
 
   # ============================================================================
-  # 10. Forma męska (wszyscy kurołapacze są mężczyznami)
+  # 10. Forma męska (wszyscy pracownicy są mężczyznami)
   # ============================================================================
 
   test "verby ParticipationEvent w historii NIGDY nie zawierają slasha (forma męska)" do
@@ -459,7 +459,7 @@ class EventHistoryTest < ActionDispatch::IntegrationTest
     get history_event_path(event)
     body_history_section = response.body[%r{<ul role="list".*?</ul>}m] || response.body
     refute_match %r{(zapisał|anulował|otrzymał|przyjął|odrzucił|wskoczył|wygasła)/[ai]}, body_history_section,
-                 "wpisy historii zawierają formę żeńską (slash) — kurołapacze są tylko mężczyznami"
+                 "wpisy historii zawierają formę żeńską (slash) — pracownicy są tylko mężczyznami"
   end
 
   test "edycja eventu używa 'zmienił' bez '/a'" do

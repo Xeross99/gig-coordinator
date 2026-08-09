@@ -140,7 +140,7 @@ class StatsService
       key:         :rookie,
       emoji:       "🆕",
       title:       "Świeżynka",
-      description: "Najświeższy nabytek wśród łapaczy. Witamy w klubie.",
+      description: "Najświeższy nabytek wśród pracowników. Witamy w klubie.",
       unit:        "rejestracja"
     },
     {

@@ -1,6 +1,6 @@
 <% content_for(:title) { @user.display_name } %>
 <%= render "shared/breadcrumbs", crumbs: [
-  ["Wszyscy kurołapacze", users_path],
+  ["Wszyscy pracownicy", users_path],
   [@user.display_name, nil]
 ] %>
 
@@ -45,9 +45,9 @@
     </div>
   </div>
 
-  <%# Karta kurołapacza celowo NIE renderuje się na stronie profilu —
+  <%# Karta pracownika celowo NIE renderuje się na stronie profilu —
       tam króluje duże zdjęcie hero; tła kart żyją w paskach rosteru,
-      podwózek i na liście /kurolapacze. %>
+      podwózek i na liście /pracownicy. %>
   <div class="p-6 min-w-0">
     <h1 class="text-2xl sm:text-3xl font-semibold leading-tight break-words text-stone-900">
       <%= @user.display_name %>

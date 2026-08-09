@@ -130,7 +130,7 @@
       <span>Konto premium (na rok)</span>
     </label>
     <p class="text-xs text-stone-500 mt-1">
-      Zaznaczenie nadaje premium na rok od teraz, odznaczenie odbiera od razu. Premium odblokowuje karty kurołapacza (tła profilu); po wygaśnięciu lub odebraniu wybrana karta znika.
+      Zaznaczenie nadaje premium na rok od teraz, odznaczenie odbiera od razu. Premium odblokowuje karty pracownika (tła profilu); po wygaśnięciu lub odebraniu wybrana karta znika.
       <% if user.premium_until&.future? %>
         <span class="block mt-1 font-medium text-amber-700">Premium aktywne do <%= l(user.premium_until.to_date, format: :long) %>.</span>
       <% elsif user.premium_until.present? %>
