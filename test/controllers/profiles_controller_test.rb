@@ -142,6 +142,62 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "ladowarka", users(:ala).reload.player_card
   end
 
+  # Fragment listy urządzeń (bez akapitu wstępnego, który też zawiera frazę
+  # „to urządzenie"), żeby asercje kolejności mierzyły realną pozycję wierszy.
+  def sessions_list_html
+    body = response.body
+    from = body.index('<ul class="divide-y divide-stone-100">')
+    refute_nil from, "nie znaleziono listy urządzeń w wyrenderowanej stronie"
+    body[from, body.index("</ul>", from) - from]
+  end
+
+  # Regresja: `@sessions` ładowała tylko akcja `edit`, a `update` renderuje ten
+  # sam widok przy nieudanej walidacji — render trafiał wtedy na nil i wywalał
+  # się na `.each` zamiast pokazać błąd. Teraz sesje ładuje before_action.
+  #
+  # Test sprawdza nie tylko „nie wybucha", ale że render jest UŻYTECZNY:
+  # jest komunikat walidacji i pełna, poprawnie posortowana lista urządzeń.
+  test "PATCH update z nieprawidłową kartą pokazuje błąd i pełną listę urządzeń" do
+    user = users(:bartek)
+    user.update!(premium: true, player_card: "traktor")
+    sign_in_as(user)
+    # Świeższa niż bieżąca — samo sortowanie postawiłoby ją pierwszą, więc
+    # test faktycznie sprawdza wynoszenie bieżącej sesji na górę.
+    other = user.sessions.create!(user_agent: "Mozilla/5.0 (iPhone)", ip_address: "10.0.0.9",
+                                  last_seen_at: 1.hour.from_now)
+
+    patch profile_path, params: { user: { player_card: "nieistniejaca-karta" } }
+
+    assert_response :unprocessable_content
+    # 1. Komunikat walidacji dotarł do użytkownika.
+    assert_select "li", text: /Player card/
+    # 2. Sekcja urządzeń wyrenderowała się w komplecie — to ona wcześniej padała.
+    list = sessions_list_html
+    assert_equal user.sessions.count, list.scan("<li").size
+    # 3. Bieżąca sesja nadal pierwsza (kolejność z load_sessions zachowana).
+    assert_operator list.index("to urządzenie"), :<, list.index("/sesje/#{other.id}"),
+                    "bieżąca sesja powinna być na górze listy"
+    # 4. Odrzucona wartość nie została zapisana, poprzednia karta nietknięta.
+    assert_equal "traktor", user.reload.player_card
+  end
+
+  # Kontrola pozytywna: po wyniesieniu logiki do before_action `edit` działa
+  # tak samo jak wcześniej.
+  test "GET edit wypisuje wszystkie sesje z bieżącą na pierwszym miejscu" do
+    user = users(:bartek)
+    sign_in_as(user)
+    other = user.sessions.create!(user_agent: "Mozilla/5.0 (iPhone)", ip_address: "10.0.0.9",
+                                  last_seen_at: 1.hour.from_now)
+
+    get edit_profile_path
+
+    assert_response :success
+    list = sessions_list_html
+    assert_equal user.sessions.count, list.scan("<li").size
+    assert_operator list.index("to urządzenie"), :<, list.index("/sesje/#{other.id}"),
+                    "bieżąca sesja powinna być na górze listy"
+  end
+
   test "PATCH update ignores phone param (admin-managed field)" do
     users(:ala).update!(phone: "111 222 333")
     blob = ActiveStorage::Blob.create_and_upload!(
