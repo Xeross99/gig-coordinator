@@ -51,7 +51,6 @@ gem "rails-i18n", "~> 8.0"
 # Cloud Storage upload for nightly DB backups (Maintenance::DatabaseBackupJob)
 gem "google-cloud-storage", "~> 1.62", require: false
 
-
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
@@ -82,3 +81,5 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+
+gem "ruby-vips", "~> 2.0"
