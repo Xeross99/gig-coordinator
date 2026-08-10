@@ -82,4 +82,4 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "ruby-vips", "~> 2.0"
+gem "ruby-vips", "~> 2.0", require: false
