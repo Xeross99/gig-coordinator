@@ -4,6 +4,20 @@ Deploy: Kamal 2 na VPS. Konkretny host, porty i nazwa obrazu żyją w `config/de
 
 Rails 8.1 aplikacja do koordynacji pracy dorywczej w rolnictwie. **Gospodarze (Hosts)** tworzą zlecenia typu „Odłów kur"; **Pracownicy (Users)** akceptują je z mobilnej PWA. Polski UI, PL ścieżki URL, logowanie wyłącznie przez 5-cyfrowy kod dostarczany e-mailem (magic-linki wyrzucone — odnośnik tapnięty w mailu otwiera przeglądarkę systemową zamiast PWA i ciasteczko ląduje w złym kontekście), real-time przez Turbo Streams, web push przez VAPID.
 
+## Podgląd
+
+Aplikacja jest mobile-first (PWA instalowana z Safari/Chrome). Zrzuty z danymi przykładowymi (`db/seeds.rb`):
+
+| Logowanie kodem | Feed zleceń | Strona zlecenia | Roster |
+|---|---|---|---|
+| ![Logowanie 5-cyfrowym kodem](docs/screenshots/logowanie-kod.png) | ![Feed nadchodzących zleceń](docs/screenshots/feed.png) | ![Strona zlecenia](docs/screenshots/zlecenie.png) | ![Roster z kartami graczy](docs/screenshots/roster.png) |
+
+| Seria zleceń | Pracownicy | Statystyki | Panel gospodarza |
+|---|---|---|---|
+| ![Seria zleceń z rezerwacją](docs/screenshots/kampania.png) | ![Lista pracowników z rangami](docs/screenshots/pracownicy.png) | ![Trofea społeczności](docs/screenshots/statystyki.png) | ![Panel gospodarza](docs/screenshots/panel-gospodarza.png) |
+
+Na screenach widać m.in.: rangi pracowników (kolorowe plakietki), rezerwacje priorytetowe z deadline'em (indigo), listę rezerwową (amber), podwózki z kierowcą, pixel-artowe karty graczy dla kont premium i licznik zaliczonych zleceń .
+
 ## Stack
 
 - **Rails 8.1**, **Ruby 4.0**
@@ -48,6 +62,7 @@ Session (polimorficzna) ── Host | User
 Właściciel eventów. Zarządza nimi z panelu `/host/*`.
 
 **Tabela `hosts`:**
+
 | Kolumna     | Typ                      | Uwagi                         |
 |-------------|--------------------------|-------------------------------|
 | id          | integer PK               |                               |
@@ -60,6 +75,7 @@ Właściciel eventów. Zarządza nimi z panelu `/host/*`.
 > Wcześniejsza migracja `CreateHosts` dodawała spekulacyjnie kolumny `lat` / `lng` (decimal, precision: 10, scale: 6) pod przyszłą geolokalizację — były nieużywane, więc zostały zdjęte w migracji `RemoveLatLngFromHosts`.
 
 **Relacje:**
+
 - `has_many :events, dependent: :destroy` — eventy, które stworzył
 - `has_many :sessions, as: :authenticatable, dependent: :destroy` — aktywne sesje (polimorficzne)
 - `has_one_attached :photo` — zdjęcie profilowe (Active Storage)
@@ -79,6 +95,7 @@ Właściciel eventów. Zarządza nimi z panelu `/host/*`.
 Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje push.
 
 **Tabela `users`:**
+
 | Kolumna     | Typ                      | Uwagi                                                     |
 |-------------|--------------------------|-----------------------------------------------------------|
 | id          | integer PK               |                                                           |
@@ -89,6 +106,7 @@ Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje
 | timestamps  |                          |                                                           |
 
 **Relacje:**
+
 - `has_many :participations, dependent: :destroy` — uczestnictwa (confirmed/waitlist/cancelled)
 - `has_many :events, through: :participations` — eventy, w których bierze udział
 - `has_many :push_subscriptions, dependent: :destroy` — subskrypcje web push (1 user może mieć wiele urządzeń)
@@ -101,6 +119,7 @@ Konsument eventów. Przegląda feed, akceptuje / anuluje, instaluje PWA, dostaje
 **Enum `:title`:** 5 rang (`zoltodziob` 0 → `kurzy_pacholek` 1 → `kurnikowy_gangster` 2 → `kurnikowy_komendant` 3 → `mistrz_piora` 4). Default w bazie = 0 (`zoltodziob`) — każdy nowy user zaczyna jako Żółtodziób, promocja ręcznie przez konsolę. Labelki w `config/locales/pl.yml` pod `user.titles.*`; `user.display_title` zwraca przetłumaczony tekst.
 
 **Uprawnienia do tworzenia eventów (siedzą na randze, nie na osobnej kolumnie):**
+
 - `mistrz_piora` — może tworzyć eventy dla **każdego** hosta; na profilu widać sekcję „Zarządza wszystkimi gospodarzami" z listą wszystkich hostów.
 - `kurnikowy_komendant` — może tworzyć eventy wyłącznie dla hostów w `user.managed_hosts` (M:N join `HostManager`). Dropdown gospodarzy na `/eventy/nowy` jest scope'owany do tej listy; `EventsController#create` dodatkowo sprawdza, czy przesłane `host_id` mieści się w `allowed_hosts`. Komendant bez żadnego `managed_hosts` nie widzi przycisku „Zaplanuj zlecenie" i dostaje forbidden na `#new`/`#create`.
 - niższe rangi — brak UI do tworzenia eventów.
@@ -122,6 +141,7 @@ Jedno źródło prawdy: `User#can_create_events?` (`mistrz_piora? || (kurnikowy_
 Konkretna „robota" z datą startu/końca, stawką i liczbą miejsc.
 
 **Tabela `events`:**
+
 | Kolumna         | Typ                | Uwagi                                    |
 |-----------------|--------------------|------------------------------------------|
 | id              | integer PK         |                                          |
@@ -135,6 +155,7 @@ Konkretna „robota" z datą startu/końca, stawką i liczbą miejsc.
 | timestamps      |                    |                                          |
 
 **Relacje:**
+
 - `belongs_to :host`
 - `has_many :participations, dependent: :destroy`
 - `has_many :users, through: :participations`
@@ -142,16 +163,19 @@ Konkretna „robota" z datą startu/końca, stawką i liczbą miejsc.
 **Walidacje:** `name`, `scheduled_at`, `ends_at`, `pay_per_person` (≥ 0), `capacity` (integer > 0). Custom: `ends_at_after_scheduled_at` — `ends_at` musi być po `scheduled_at`.
 
 **Scope'y:**
+
 - `upcoming` — `scheduled_at > Time.current`, sorted asc
 - `awaiting_completion` — `ends_at < now AND completed_at IS NULL` (do job'a kończącego event)
 
 **Metody:**
+
 - `to_param` → `"#{id}-#{name.parameterize}"` (np. `/eventy/42-lapanie-kur`). Polskie znaki są transliterowane przez `rails-i18n` (Ł→l, ą→a…). `Event.find` dalej działa — Rails coerce'uje `"42-foo".to_i → 42`.
 - `completed?` — czy ma `completed_at`
 - `confirmed_count`, `waitlist_count` — liczniki
 - `full?` — `confirmed_count >= capacity`
 
 **Callbacki (broadcasty feedu — synchroniczne):**
+
 - `after_create_commit :broadcast_feed_append` — prepend kartki do `events_list` w streamie `:events` (tylko jeśli `upcoming_now?`)
 - `after_create_commit :broadcast_visit_to_feed` — wysyła custom `visit` Turbo::StreamAction do streamu `:events` — przenosi wszystkich zalogowanych userów na stronę nowego eventu (subskrypcja globalna w `application.html.erb`, więc działa z każdej strony, nie tylko feedu)
 - `after_create_commit :notify_new_event_subscribers` — `WebPushNotifier.perform_later(:new_event, ...)` do wszystkich userów z push sub
@@ -168,6 +192,7 @@ Konkretna „robota" z datą startu/końca, stawką i liczbą miejsc.
 Wynik kliknięcia „Akceptuję" lub „Dołącz na listę rezerwową". Przechowuje stan + pozycję w kolejce.
 
 **Tabela `participations`:**
+
 | Kolumna         | Typ                 | Uwagi                                                        |
 |-----------------|---------------------|--------------------------------------------------------------|
 | id              | integer PK          |                                                              |
@@ -179,17 +204,20 @@ Wynik kliknięcia „Akceptuję" lub „Dołącz na listę rezerwową". Przechow
 | timestamps      |                     |                                                              |
 
 **Indexy:**
+
 - `unique(event_id, user_id)` — jeden user = jeden rekord per event (jakikolwiek status)
 - `(event_id, status, position)` — szybki lookup najstarszego na waitlist przy promocji
 - `reserved_until` — do szybkiego sweepa wygasłych rezerwacji
 
 **Relacje:**
+
 - `belongs_to :event`
 - `belongs_to :user`
 
 **Walidacje:** `user_id` unique scope `event_id`.
 
 **Scope'y:**
+
 - `active` — wszystko poza `cancelled`
 - `holding_slot` — confirmed + reserved (blokują capacity)
 
@@ -229,6 +257,7 @@ Na `/eventy/:id` widzi dedykowany banner + przyciski **Akceptuję** / **Odrzuć*
 Każda zmiana `Participation` (utworzenie + każdy update statusu) zostawia ślad w `participation_events`. To źródło prawdy dla `/eventy/:id/historia` — pokazuje pełen flow „zaproszony → przyjął → anulował" zamiast tylko stanu końcowego.
 
 **Tabela `participation_events`:**
+
 | Kolumna           | Typ                  | Uwagi                                                                                          |
 |-------------------|----------------------|------------------------------------------------------------------------------------------------|
 | id                | integer PK           |                                                                                                |
@@ -261,6 +290,7 @@ Każda zmiana `Participation` (utworzenie + każdy update statusu) zostawia śla
 Jedna tabela dla Hostów i Userów.
 
 **Tabela `sessions`:**
+
 | Kolumna              | Typ                  | Uwagi                              |
 |----------------------|----------------------|------------------------------------|
 | id                   | integer PK           |                                    |
@@ -284,6 +314,7 @@ Jedna tabela dla Hostów i Userów.
 Każde urządzenie mobilne (instalacja PWA na Home Screen na iOS / Android) rejestruje swój endpoint.
 
 **Tabela `push_subscriptions`:**
+
 | Kolumna     | Typ                  | Uwagi                                       |
 |-------------|----------------------|---------------------------------------------|
 | id          | integer PK           |                                             |
@@ -298,6 +329,7 @@ Każde urządzenie mobilne (instalacja PWA na Home Screen na iOS / Android) reje
 **Walidacje:** wszystkie 3 pola obecne, `endpoint` unikalny globalnie.
 
 **Kto wysyła:** `WebPushNotifier` (ActiveJob, Solid Queue). Dispatch po `kind`:
+
 - `:completion` / `:promotion` — do konkretnego usera (przez `participation_id:`)
 - `:new_event` — do **wszystkich** userów z subskrypcją (feed jest publiczny)
 
@@ -329,6 +361,7 @@ Magic-linki wyrzucone — tapnięcie linku w aplikacji pocztowej otwierało domy
    - pudło: inkrementuje `attempts` na aktywnym kodzie; po `LoginCode::MAX_ATTEMPTS` (5) kod jest wypalany (`used_at` set). Błędny kod / brak aktywnego kodu / nieznany e-mail → ten sam neutralny `auth.invalid_code`.
 
 **Dwa komunikaty — nie mylić ich:**
+
 - `auth.invalid_code` („Nieprawidłowy lub wygasły kod.") — gdy `LoginCodesController#verify` nie trafia w aktywny `LoginCode`.
 - `auth.login_required` („Zaloguj się, aby kontynuować.") — gdy `require_user!` / `require_host!` z `ApplicationController` przekierowuje niezalogowanego.
 
@@ -357,6 +390,7 @@ Autoryzacja: `before_action :require_event_creator! :last_roster_preview` + `all
 ## Akceptacja eventu
 
 User klika „Akceptuję" → `ParticipationsController#create`:
+
 1. `Event.transaction do; event.lock!` (pessimistic row lock — serializuje równoległych klikaczy)
 2. Szuka istniejącego `participation` dla `(event, user)`:
    - `nil` → insert nowy
@@ -366,6 +400,7 @@ User klika „Akceptuję" → `ParticipationsController#create`:
 4. Broadcast Turbo Stream do `[event, :counts]` i `[event, :roster]` (user + host oglądają ten sam partial rosteru).
 
 Anulowanie:
+
 1. Lock jak wyżej.
 2. Jeśli cancelujemy `confirmed` → `promote_from_waitlist`: najstarszy waitlist → confirmed. Mail + push do promowanego.
 3. Broadcast obu streamów.
@@ -455,6 +490,7 @@ Dwie listy dostępne z dropdown menu w navbarze, obie tylko dla zalogowanych **u
 - **`/kurolapacze`** (`UsersController#index`, `users_path`) — lista wszystkich kurołapaczy, sortowana po randze **desc** (Mistrz Pióra na górze → Żółtodziób na dole), w obrębie rangi alfabetycznie. Pokazuje avatar + imię + **kolorowy badge rangi** + licznik 🐔 zaliczonych zleceń (confirmed participations na eventach z `completed_at`). Liczniki z jednego dodatkowego `GROUP BY` query — zero N+1.
 
 **Roster eventu (`_roster.html.erb`)** ma **cztery** sekcje: (1) Rezerwacje (indigo), (2) Potwierdzeni (emerald), (3) Rezerwa (amber), (4) **Wszyscy kurołapacze** — neutralne szare wiersze ze WSZYSTKIMI userami w systemie, każdy z avatarem, badge'em rangi i statusem po prawej (`oczekuje` / `zapisany` / `rezerwa` / `anulował`) jeśli mają participation na tym evencie. W trzech górnych sekcjach rangę renderujemy pod imieniem. Jeden `User.with_attached_photo.order(title: :desc, last_name: :asc)` query + `index_by(&:user_id)` lookup uniemożliwia N+1.
+
 - **`/gospodarze`** (`HostsController#index`, `hosts_path`) — lista wszystkich gospodarzy z avatarem, lokalizacją i licznikiem nadchodzących eventów.
 
 ---
@@ -535,10 +571,12 @@ wartości (host, porty, domena, obraz) są w `config/deploy.yml`**; tutaj celowo
 placeholdery, żeby README nie było listą namiarów na serwer.
 
 **Publiczne URL-e:**
+
 - `https://<domena>` — hosting front-enduje TLS i forwarduje HTTP na `[IPv6]:<PORT_HTTP>`.
 - `http://<vps-host>:<PORT_HTTP>` — bezpośrednie IPv4 do Kamal Proxy (fallback, HTTP).
 
 **Kluczowe rzeczy w `config/deploy.yml`:**
+
 - `proxy.run.http_port` — hosting wypuszcza tylko dwa porty, więc Kamal Proxy musi słuchać na jednym z nich zamiast na 80.
 - `proxy.hosts:` zawiera oba hosty (VPS i domenę), żeby Proxy trafiał dla obu.
 - `WEB_CONCURRENCY=0` + `RAILS_MAX_THREADS=5`. Niższe `RAILS_MAX_THREADS` powoduje, że Solid Queue in-Puma wali „connection pool too small" i demon idzie w boot/crash-loop.
@@ -547,6 +585,7 @@ placeholdery, żeby README nie było listą namiarów na serwer.
 - `Dockerfile` ma dołożony `libssl-dev` (gem `openssl` → `web-push`).
 
 **Secrets:**
+
 - `RAILS_MASTER_KEY` czyta z `config/master.key` (gitignored).
 - `KAMAL_REGISTRY_PASSWORD` czyta z `.kamal/registry-password` (gitignored) — GitHub PAT z `write:packages`. Env-var nie przechodził przez subprocesy Kamala, plik rozwiązuje problem.
 
@@ -563,6 +602,8 @@ kamal redeploy                                 # bez builda, sama rotacja
 **Seed prod:** `db/seeds.rb` ma gate `Rails.env.development?`, więc na prodzie nie chodzi. Seedowanie przez `kamal console` + wklejenie bloku z `db/seeds.rb`, albo `kamal app exec --reuse 'bin/rails runner "..."'`.
 
 **Porty pamiętaj:**
+
 - Dokerowy kontener aplikacji słucha na `:80` (Thruster).
 - Kamal Proxy na VPS słucha na porcie z `proxy.run.http_port`, nie na 80.
 - SSH chodzi na niestandardowym porcie — patrz `ssh.port` w `config/deploy.yml`.
+
