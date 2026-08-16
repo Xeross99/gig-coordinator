@@ -1,5 +1,4 @@
 class EventCampaignsController < ApplicationController
-  before_action :require_user!
   before_action :require_event_creator!, only: %i[new create]
   before_action :require_campaign_manager!, only: %i[edit update destroy]
 

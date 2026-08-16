@@ -2,6 +2,9 @@ module HostAdmin
   class BaseController < ApplicationController
     layout "host_admin"
 
+    # Gospodarz nie ma Current.user (Session jest polimorficzna), więc globalny
+    # require_user! z ApplicationController zamknąłby mu cały panel.
+    skip_before_action :require_user!
     before_action :require_host!
 
     private

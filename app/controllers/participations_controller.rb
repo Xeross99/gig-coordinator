@@ -1,10 +1,8 @@
 class ParticipationsController < ApplicationController
-  before_action :require_user!
+  include EventLockable
 
   # POST /eventy/:event_id/uczestnictwo
   def create
-    @event = Event.find(params[:event_id])
-    return if enforce_event_lock!(@event)
     unless Current.user.can_join_events?
       redirect_to event_path(@event), alert: "Jako Żółtodziób przeglądasz zlecenia, ale nie zapisujesz się na nie. Po awansie odzyskasz przycisk „Akceptuję”." and return
     end
@@ -55,9 +53,6 @@ class ParticipationsController < ApplicationController
   # przed re-cascade'em z serii (cascader pomija usery, które już mają
   # participation w sub-evencie, niezależnie od statusu).
   def destroy
-    @event = Event.find(params[:event_id])
-    return if enforce_event_lock!(@event)
-
     # Promocja z waitlisty + resequence + powiadomienia dzieją się w modelu
     # (Participation#refill_after_cancellation) — jedna ścieżka dla kontrolera,
     # API i konsoli.
@@ -76,8 +71,6 @@ class ParticipationsController < ApplicationController
   # zdąży pierwszy capacity może być już wyczerpane — wtedy spadamy na
   # waitlistę zamiast wybuchnąć ponad capacity.
   def accept
-    @event = Event.find(params[:event_id])
-    return if enforce_event_lock!(@event)
     unless Current.user.can_join_events?
       redirect_to event_path(@event), alert: "Jako Żółtodziób przeglądasz zlecenia, ale nie zapisujesz się na nie. Po awansie odzyskasz przycisk „Akceptuję”." and return
     end
@@ -111,9 +104,6 @@ class ParticipationsController < ApplicationController
   # User declines a reservation; system invites the next highest-rank user
   # (or promotes from waitlist if the ranking pool is exhausted).
   def decline
-    @event = Event.find(params[:event_id])
-    return if enforce_event_lock!(@event)
-
     # refill_one + resequence robi model (reserved→cancelled).
     Event.transaction do
       @event.lock!

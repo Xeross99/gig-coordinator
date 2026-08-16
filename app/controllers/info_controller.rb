@@ -1,5 +1,6 @@
 class InfoController < ApplicationController
-  before_action :require_user!, only: %i[show support]
+  # /informacje/instalacja jest publiczne — reszta wymaga zalogowania.
+  skip_before_action :require_user!, only: :install
 
   layout -> { Current.session.present? ? "application" : "auth" }, only: :install
 

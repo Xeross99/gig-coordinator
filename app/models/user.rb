@@ -2,7 +2,7 @@ class User < ApplicationRecord
   include Titleable, Premiumable, Calendarable, Disableable, Avatarable
 
   # Presence is inferred from the throttled last_seen_at stamp written by
-  # ApplicationController#touch_last_seen. Five minutes is a comfortable idle
+  # Trackable#touch_last_seen. Five minutes is a comfortable idle
   # window — covers page refreshes, scrolling, short tab-switches.
   ONLINE_WINDOW = 5.minutes
 

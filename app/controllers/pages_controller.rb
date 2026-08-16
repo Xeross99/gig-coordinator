@@ -1,4 +1,3 @@
 class PagesController < ActionController::Base
-  def privacy
-  end
+  def privacy; end
 end

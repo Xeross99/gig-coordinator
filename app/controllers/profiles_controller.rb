@@ -1,13 +1,12 @@
 class ProfilesController < ApplicationController
-  before_action :require_user!, :set_user
+  before_action :set_user
   # Lista sesji jest ładowana filtrem, a nie w akcji `edit`, bo `update`
   # renderuje ten sam widok przy nieudanej walidacji. Gdy siedziała w akcji,
   # taki render trafiał na `@sessions == nil` i wywalał się na `.each`
   # zamiast pokazać błąd formularza.
   before_action :load_sessions, only: %i[edit update]
 
-  def edit
-  end
+  def edit; end
 
   def update
     if @user.update(profile_params)

@@ -1,4 +1,5 @@
 class LoginCodesController < ApplicationController
+  skip_before_action :require_user!   # wysyłka i weryfikacja kodu — przed zalogowaniem
   layout "auth", only: :new
 
   def create

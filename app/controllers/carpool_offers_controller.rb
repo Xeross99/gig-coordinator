@@ -1,10 +1,8 @@
 class CarpoolOffersController < ApplicationController
-  before_action :require_user!
+  include EventLockable
 
   # POST /eventy/:event_id/podwozka
   def create
-    @event = Event.find(params[:event_id])
-    return if enforce_event_lock!(@event)
     unless on_main_list?(@event)
       redirect_to event_path(@event), alert: "Tylko osoby z głównej listy mogą zostać kierowcą." and return
     end
@@ -17,8 +15,6 @@ class CarpoolOffersController < ApplicationController
 
   # DELETE /eventy/:event_id/podwozka
   def destroy
-    @event = Event.find(params[:event_id])
-    return if enforce_event_lock!(@event)
     @event.carpool_offers.where(user_id: Current.user.id).destroy_all
     redirect_to event_path(@event), notice: "Rezygnacja z funkcji kierowcy potwierdzona."
   end

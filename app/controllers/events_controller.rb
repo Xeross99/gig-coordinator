@@ -1,5 +1,4 @@
 class EventsController < ApplicationController
-  before_action :require_user!
   before_action :require_event_creator!, only: %i[new create]
   before_action :require_event_manager!, only: %i[edit update destroy]
 

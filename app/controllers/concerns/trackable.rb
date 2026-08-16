@@ -3,11 +3,16 @@
 # without writing to the DB on every request. The Session gets the same
 # treatment (covers hosts too) — feeds „ostatnio aktywne" on the device
 # list in the profile.
-#
-# Deliberately does NOT register the callback — the includer wires its own
-# hook (ApplicationController runs it as a `before_action`).
-module TracksLastSeen
+module Trackable
   extend ActiveSupport::Concern
+
+  included do
+    # MUSI być includowane PO Authenticatable — kolejność rejestracji filtrów
+    # jest kolejnością wykonania, a ten czyta `Current.session`, którą ustawia
+    # `load_current_session`. Odwrotnie byłby cichym no-opem: żadnego wyjątku,
+    # tylko martwy wskaźnik „online" i pusta data na liście urządzeń.
+    before_action :touch_last_seen
+  end
 
   private
 

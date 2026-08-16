@@ -1,5 +1,4 @@
 class UsersController < ApplicationController
-  before_action :require_user!
   before_action :require_admin!, only: %i[new create edit update destroy test_push toggle_disabled]
 
   SORTS = {

@@ -1,5 +1,4 @@
 class CampaignParticipationsController < ApplicationController
-  before_action :require_user!
   before_action :load_campaign
 
   # POST /kampanie/:event_campaign_id/uczestnictwo

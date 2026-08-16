@@ -1,11 +1,11 @@
 class CarpoolTripsController < ApplicationController
-  before_action :require_user!
-  before_action :load_event_and_offer
+  include EventLockable
+
+  before_action :load_offer
 
   # POST /eventy/:event_id/podwozka/trasa/depart
   # params[:pickup_order] — user_ids w kolejności odbierania z modalu (drag & drop).
   def depart
-    return if enforce_event_lock!(@event)
     @offer.depart!(params[:pickup_order])
     WebPushNotifier.perform_later(:carpool_departed, carpool_offer_id: @offer.id)
     redirect_to event_path(@event), notice: "Pasażerowie zostali powiadomieni, że wyjeżdżasz."
@@ -14,7 +14,6 @@ class CarpoolTripsController < ApplicationController
   # POST /eventy/:event_id/podwozka/trasa/pickup
   # params[:user_id] — pasażer, którego kierowca aktualnie odbiera.
   def pickup
-    return if enforce_event_lock!(@event)
     pickup_user_id = params.require(:user_id).to_i
     target = @offer.accepted_requests.find { |r| r.user_id == pickup_user_id }&.user
     unless target
@@ -31,15 +30,13 @@ class CarpoolTripsController < ApplicationController
   # Cicho — bez push do pasażerów. Semantyka „mam wszystkich, koniec trasy",
   # nie „wstrzymuję dojazd". Pasażerowie już są w aucie, nie ma kogo informować.
   def cancel
-    return if enforce_event_lock!(@event)
     @offer.cancel_trip!
     redirect_to event_path(@event), notice: "Trasa zakończona."
   end
 
   private
 
-  def load_event_and_offer
-    @event = Event.find(params[:event_id])
+  def load_offer
     @offer = @event.carpool_offers.find_by(user_id: Current.user.id)
     return if @offer
 

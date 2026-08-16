@@ -1,7 +1,9 @@
 class PushSubscriptionsController < ApplicationController
-  before_action :require_user_json!, only: %i[create destroy]
-  before_action :require_user!,      only: :test
-  skip_forgery_protection            only: %i[create destroy]
+  # create/destroy wołane są przez fetch (heartbeat PWA, service worker),
+  # więc zamiast przekierowania muszą dostać 401 — patrz require_user_json!.
+  skip_before_action :require_user!,      only: %i[create destroy]
+  before_action      :require_user_json!, only: %i[create destroy]
+  skip_forgery_protection only: %i[create destroy]
 
   # Klient POST-uje aktualną subskrypcję przy KAŻDYM otwarciu PWA (connect()
   # w push_subscription_controller.js), więc create działa jak heartbeat:

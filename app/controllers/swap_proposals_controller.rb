@@ -1,10 +1,7 @@
 class SwapProposalsController < ApplicationController
-  before_action :require_user!
+  include EventLockable
 
   def create
-    @event = Event.find(params[:event_id])
-    return if enforce_event_lock!(@event)
-
     proposer_p = @event.participations.waitlist.find_by(user_id: Current.user.id)
     unless proposer_p
       redirect_to event_path(@event), alert: "Tylko osoby z listy rezerwowej mogą proponować wymianę." and return
@@ -39,9 +36,6 @@ class SwapProposalsController < ApplicationController
   end
 
   def accept
-    @event = Event.find(params[:event_id])
-    return if enforce_event_lock!(@event)
-
     @proposal = @event.swap_proposals.find_by(id: params[:id])
 
     unless @proposal&.pending?
@@ -66,9 +60,6 @@ class SwapProposalsController < ApplicationController
   end
 
   def decline
-    @event = Event.find(params[:event_id])
-    return if enforce_event_lock!(@event)
-
     @proposal = @event.swap_proposals.find_by(id: params[:id])
 
     unless @proposal&.pending?
