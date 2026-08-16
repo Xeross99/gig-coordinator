@@ -68,7 +68,7 @@ class SwapProposalsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to event_path(@event)
-    assert_equal Copy::Participations::BLOCKED, flash[:alert]
+    assert_equal "Masz blokadę u tego gospodarza - nie możesz zapisać się na to zlecenie.", flash[:alert]
   end
 
   test "POST create — duplicate pending proposal rejected" do
@@ -184,7 +184,7 @@ class SwapProposalsControllerTest < ActionDispatch::IntegrationTest
     post accept_event_swap_proposal_path(@event, sp)
 
     assert_redirected_to event_path(@event)
-    assert_equal Copy::SwapProposals::NOT_YOUR_PROPOSAL, flash[:alert]
+    assert_equal "To nie jest Twoja propozycja wymiany.", flash[:alert]
     assert sp.reload.pending?
   end
 
@@ -218,7 +218,7 @@ class SwapProposalsControllerTest < ActionDispatch::IntegrationTest
     post accept_event_swap_proposal_path(@event, sp)
 
     assert_redirected_to event_path(@event)
-    assert_equal Copy::SwapProposals::CONDITIONS_CHANGED, flash[:alert]
+    assert_equal "Warunki wymiany się zmieniły. Spróbuj ponownie.", flash[:alert]
     bartek_p = @event.participations.find_by(user: users(:bartek))
     assert bartek_p.confirmed?, "target should remain confirmed when conditions changed"
   end
@@ -237,7 +237,7 @@ class SwapProposalsControllerTest < ActionDispatch::IntegrationTest
     post accept_event_swap_proposal_path(@event, sp)
 
     assert_redirected_to event_path(@event)
-    assert_equal Copy::SwapProposals::CONDITIONS_CHANGED, flash[:alert]
+    assert_equal "Warunki wymiany się zmieniły. Spróbuj ponownie.", flash[:alert]
   end
 
   test "POST accept — cancels other pending proposals for same proposer" do
@@ -344,7 +344,7 @@ class SwapProposalsControllerTest < ActionDispatch::IntegrationTest
     post decline_event_swap_proposal_path(@event, sp)
 
     assert_redirected_to event_path(@event)
-    assert_equal Copy::SwapProposals::NOT_YOUR_PROPOSAL, flash[:alert]
+    assert_equal "To nie jest Twoja propozycja wymiany.", flash[:alert]
     assert sp.reload.pending?
   end
 
@@ -538,7 +538,7 @@ class SwapProposalsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "form[action=?]", event_swap_proposals_path(@event), minimum: 1
-    assert_match Copy::SwapProposals::PROPOSE_SHORT, response.body
+    assert_match "Wymiana", response.body
   end
 
   test "GET event show — roster shows disabled Wymiana label (not a form) for confirmed user" do

@@ -24,7 +24,7 @@
   <%# Nagłówek kierowcy w formacie paska rosteru: pełnowysokościowy avatar,
       chip Online, tło karty gracza dla premium. Interaktywna treść (trasa,
       przyciski, pasażerowie) zostaje pod spodem na sky-50. %>
-  <div class="relative overflow-hidden flex items-center gap-3 aspect-[5/1] sm:aspect-[6/1] min-h-fit">
+  <div class="relative overflow-hidden flex items-center gap-3 aspect-5/1 sm:aspect-6/1 min-h-fit">
     <%= render "events/roster_card_bg", user: offer.user %>
     <%= render "events/roster_online_chip", user: offer.user, has_card: has_card %>
     <%= render "events/roster_row_avatar", user: offer.user %>
@@ -81,7 +81,7 @@
     <ul class="mt-1.5 space-y-2">
       <% accepted.each do |req| %>
         <% p_card = req.user.player_card? %>
-        <li class="relative overflow-hidden flex items-center gap-3 rounded-lg bg-white/70 shadow-sm aspect-[5/1] sm:aspect-[6/1] min-h-fit">
+        <li class="relative overflow-hidden flex items-center gap-3 rounded-lg bg-white/70 shadow-sm aspect-5/1 sm:aspect-6/1 min-h-fit">
           <%= render "events/roster_card_bg", user: req.user %>
           <%= render "events/roster_online_chip", user: req.user, has_card: p_card %>
           <%= render "events/roster_row_avatar", user: req.user %>
@@ -118,7 +118,7 @@
     <ul class="mt-1.5 space-y-2">
       <% pending.each do |req| %>
         <% p_card = req.user.player_card? %>
-        <li class="relative overflow-hidden flex items-center gap-3 rounded-lg bg-white shadow-sm aspect-[5/1] sm:aspect-[6/1] min-h-fit">
+        <li class="relative overflow-hidden flex items-center gap-3 rounded-lg bg-white shadow-sm aspect-5/1 sm:aspect-6/1 min-h-fit">
           <%= render "events/roster_card_bg", user: req.user %>
           <%= render "events/roster_row_avatar", user: req.user %>
           <div class="relative min-w-0 flex-1 py-2">
@@ -139,7 +139,7 @@
     <ul class="mt-2 space-y-2">
       <% pending.each do |req| %>
         <% p_card = req.user.player_card? %>
-        <li class="relative overflow-hidden flex items-center gap-3 rounded-lg bg-white/70 shadow-sm aspect-[5/1] sm:aspect-[6/1] min-h-fit animate-pulse opacity-60">
+        <li class="relative overflow-hidden flex items-center gap-3 rounded-lg bg-white/70 shadow-sm aspect-5/1 sm:aspect-6/1 min-h-fit animate-pulse opacity-60">
           <%= render "events/roster_card_bg", user: req.user %>
           <%= render "events/roster_row_avatar", user: req.user %>
           <div class="relative min-w-0 flex-1 py-2">

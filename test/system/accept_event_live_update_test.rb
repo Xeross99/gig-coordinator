@@ -23,8 +23,8 @@ class AcceptEventLiveUpdateTest < ApplicationSystemTestCase
       sign_in_as(user)
       assert_current_path root_path
       click_on event.name
-      click_on Copy::Events::ACCEPT
-      assert_text Copy::Events::CONFIRMED_BADGE
+      click_on "Akceptuję"
+      assert_text "Potwierdzony"
     end
 
     # Host session: roster has updated without refresh

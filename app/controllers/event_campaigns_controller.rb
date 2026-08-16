@@ -36,10 +36,10 @@ class EventCampaignsController < ApplicationController
     @campaign = EventCampaign.new(event_campaign_params)
     @campaign.creator = Current.user
     unless allowed_hosts.exists?(id: @campaign.host_id)
-      redirect_to root_path, alert: Copy::Events::NEW_EVENT_FORBIDDEN and return
+      redirect_to root_path, alert: "Nie masz uprawnień do planowania zleceń." and return
     end
     if @campaign.save
-      redirect_to event_campaign_path(@campaign), notice: Copy::EventCampaigns::CREATED
+      redirect_to event_campaign_path(@campaign), notice: "Seria zleceń utworzona."
     else
       @hosts = allowed_hosts.order(:last_name, :first_name)
       @users_for_prereg = users_for_prereg(@campaign)
@@ -100,7 +100,7 @@ class EventCampaignsController < ApplicationController
   def require_event_creator!
     return if Current.user&.can_create_events?
 
-    redirect_to root_path, alert: Copy::Events::NEW_EVENT_FORBIDDEN
+    redirect_to root_path, alert: "Nie masz uprawnień do planowania zleceń."
   end
 
   def require_campaign_manager!
@@ -111,7 +111,7 @@ class EventCampaignsController < ApplicationController
     return if Current.user&.mistrz_piora?
     return if Current.user&.kurnikowy_komendant? && Current.user.managed_hosts.exists?(id: @campaign.host_id)
 
-    redirect_to event_campaign_path(@campaign), alert: Copy::Events::MANAGE_FORBIDDEN
+    redirect_to event_campaign_path(@campaign), alert: "Nie masz uprawnień do zarządzania tym zleceniem."
   end
 
   # Whitelist + przekształcenie nested events_attributes:

@@ -25,7 +25,7 @@ class WaitlistPromotionLiveTest < ApplicationSystemTestCase
       sign_in_as(promoted)
       click_on event.name
       assert_current_path event_path(event), wait: 5
-      assert_text Copy::Events::WAITLIST_BADGE
+      assert_text "Lista rezerwowa"
       within "##{roster_id}" do
         # Header is styled `uppercase` via Tailwind, so Capybara sees "REZERWA".
         assert_text "REZERWA (1)"
@@ -35,12 +35,12 @@ class WaitlistPromotionLiveTest < ApplicationSystemTestCase
     using_session("canceller") do
       sign_in_as(first)
       click_on event.name
-      assert_text Copy::Events::CONFIRMED_BADGE, wait: 5
-      click_on Copy::Events::CANCEL
+      assert_text "Potwierdzony", wait: 5
+      click_on "Anuluj"
       within("el-dialog") { click_on "Potwierdzam" }
       # After cancel, the waitlister is auto-promoted — event is full again, so
       # the CTA flips to "Dołącz na listę rezerwową" (not "Akceptuję").
-      assert_text Copy::Events::WAITLIST_ACCEPT, wait: 5
+      assert_text "Dołącz na listę rezerwową", wait: 5
     end
 
     using_session("promoted_user") do

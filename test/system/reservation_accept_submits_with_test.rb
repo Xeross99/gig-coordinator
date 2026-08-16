@@ -26,6 +26,6 @@ class ReservationAcceptSubmitsWithTest < ApplicationSystemTestCase
 
     # Restore network and wait for final redirect to complete.
     page.driver.browser.network_conditions = { latency: 0, download_throughput: 0, upload_throughput: 0 }
-    assert_text Copy::Events::CONFIRMED_BADGE, wait: 5
+    assert_text "Potwierdzony", wait: 5
   end
 end

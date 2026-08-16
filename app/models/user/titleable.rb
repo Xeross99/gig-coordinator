@@ -1,12 +1,6 @@
 module User::Titleable
   extend ActiveSupport::Concern
 
-  # Wszystko, co opisuje rangę, jest kluczowane wartością enuma `title` i leży
-  # obok niego. Wcześniej etykiety, ikony i opisy siedziały w pl.yml pod
-  # `user.*` — brakujący klucz renderował się tam jako „Translation missing"
-  # zamiast wybuchnąć, a dopisanie rangi do enuma nie wymuszało uzupełnienia
-  # tekstów. Teraz komplet pilnuje test (`titleable_test.rb`).
-
   TITLE_LABELS = {
     "zoltodziob"          => "Żółtodziób",
     "kurzy_pacholek"      => "Kurzy Pachołek",
@@ -31,18 +25,16 @@ module User::Titleable
     "mistrz_piora"        => "bg-yellow-100 text-yellow-800"
   }.freeze
 
-  # Opisy rang w 3 os. — strona /informacje, czytelnik ogląda cudzą hierarchię.
   TITLE_DESCRIPTIONS = {
-    "zoltodziob"          => "Startowa ranga każdego nowego pracownika. Może przeglądać zlecenia, ale nie zapisuje się na nie i nie dostaje powiadomień o nowych zleceniach. Po awansie zyskuje pełne prawa.",
-    "kurzy_pacholek"      => "Pełnoprawny pracownik, ale powiadomienie o nowym zleceniu dostaje 5 min po wyższych rangach, żeby tamte miały pierwszeństwo zapisu.",
+    "zoltodziob"          => "Startowa ranga każdego nowego pracownika. Może przeglądać zlecenia, ale nie zapisuje się na nie i nie
+                              dostaje powiadomień o nowych zleceniach. Po awansie zyskuje pełne prawa.",
+    "kurzy_pacholek"      => "Pełnoprawny pracownik, ale powiadomienie o nowym zleceniu dostaje 5 min po wyższych rangach, żeby tamte
+                              miały pierwszeństwo zapisu.",
     "kurnikowy_gangster"  => "Zapisuje się na zlecenia bez ograniczeń i dostaje powiadomienie o nowym zleceniu od razu razem z wyższymi rangami.",
     "kurnikowy_komendant" => "Może planować zlecenia, ale tylko u przypisanych mu gospodarzy.",
     "mistrz_piora"        => "Może planować zlecenia u dowolnego gospodarza oraz otrzymuje automatyczne rezerwacje na nowe zlecenia."
   }.freeze
 
-  # Te same opisy w 2 os. — mail awansowy jest skierowany do konkretnej osoby.
-  # Brak `zoltodziob` celowo: to ranga startowa, nigdy nie awansuje się NA nią,
-  # więc RankPromotionMailer dla niej nie wysyła (guard w mailerze).
   TITLE_DESCRIPTIONS_PERSONAL = {
     "kurzy_pacholek"      => "Możesz teraz zapisywać się na zlecenia. Powiadomienie o nowym zleceniu dostajesz 5 min po wyższych rangach - wyższe mają chwilę fory na zapis.",
     "kurnikowy_gangster"  => "Zapisujesz się na zlecenia bez ograniczeń i powiadomienie o nowym zleceniu dostajesz od razu razem z wyższymi rangami.",

@@ -97,7 +97,7 @@ class EventsController < ApplicationController
     @event = Event.new(event_params)
     @event.creator = Current.user
     unless allowed_hosts.exists?(id: @event.host_id)
-      redirect_to events_path, alert: Copy::Events::NEW_EVENT_FORBIDDEN and return
+      redirect_to events_path, alert: "Nie masz uprawnień do planowania zleceń." and return
     end
     if @event.save
       redirect_to event_path(@event), notice: "Zlecenie dodane. Zaproszenia już poszły."
@@ -192,14 +192,14 @@ class EventsController < ApplicationController
   def require_event_creator!
     return if Current.user&.can_create_events?
 
-    redirect_to root_path, alert: Copy::Events::NEW_EVENT_FORBIDDEN
+    redirect_to root_path, alert: "Nie masz uprawnień do planowania zleceń."
   end
 
   def require_event_manager!
     @event = Event.find(params[:id])
     return if Current.user&.can_manage_event?(@event)
 
-    redirect_to event_path(@event), alert: Copy::Events::MANAGE_FORBIDDEN
+    redirect_to event_path(@event), alert: "Nie masz uprawnień do zarządzania tym zleceniem."
   end
 
   def event_params

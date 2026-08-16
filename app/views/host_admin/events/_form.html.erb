@@ -16,7 +16,7 @@
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :pay_per_person, Copy::Events::PAY_PER_PERSON, class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.label :pay_per_person, "Zapłata za osobę", class: "block text-sm text-stone-700 mb-1" %>
       <%# selected: konieczne — pay_per_person to decimal ("100.0"), a wartości opcji
           to integery ("100"), więc automatyczna preselekcja Railsów nie trafia. %>
       <%= f.select :pay_per_person,

@@ -45,7 +45,7 @@
   <% confirmed = data[:confirmed] %>
   <div>
     <h3 class="text-stone-600 text-sm font-semibold uppercase tracking-wide mb-2">
-      <%= Copy::Events::CONFIRMED_COUNT %>
+      Potwierdzeni
       (<%= confirmed.size %>/<%= campaign.capacity %>)
     </h3>
     <% if confirmed.any? %>
@@ -73,7 +73,7 @@
   <% if waitlist.any? %>
     <div>
       <h3 class="text-stone-600 text-sm font-semibold uppercase tracking-wide mb-2">
-        <%= Copy::Events::WAITLIST_COUNT %> (<%= waitlist.size %>)
+        Rezerwa (<%= waitlist.size %>)
       </h3>
       <ul class="space-y-2">
         <% waitlist.each_with_index do |p, i| %>

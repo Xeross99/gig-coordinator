@@ -23,8 +23,8 @@ class JoinLiveUpdateTest < ApplicationSystemTestCase
     using_session("user_b") do
       sign_in_as(user_b)
       click_on event.name
-      click_on Copy::Events::ACCEPT
-      assert_text Copy::Events::CONFIRMED_BADGE, wait: 5
+      click_on "Akceptuję"
+      assert_text "Potwierdzony", wait: 5
     end
 
     using_session("user_a") do

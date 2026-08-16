@@ -70,7 +70,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
     get users_path
     assert_response :success
-    assert_match Copy::Users::DISABLED_BADGE, response.body
+    assert_match "Konto wyłączone", response.body
     assert_match "opacity-50 grayscale", response.body
   end
 
@@ -128,14 +128,14 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:bartek))
     get user_path(users(:cezary))
     assert_response :success
-    assert_match Copy::Users::MANAGES,     response.body
+    assert_match "Zarządza",     response.body
     assert_match hosts(:jan).display_name,   response.body
   end
 
   test "GET /pracownicy/:id hides 'Zarządza' section when user has no managed_hosts" do
     sign_in_as(users(:bartek))
     get user_path(users(:cezary))
-    assert_no_match Copy::Users::MANAGES, response.body
+    assert_no_match "Zarządza", response.body
   end
 
   test "GET /pracownicy/:id shows 'Zarządza wszystkimi' section with ALL hosts for mistrz_piora" do
@@ -173,7 +173,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:ala))  # admin
     get new_user_path
     assert_response :success
-    assert_match Copy::Admin::Users::NEW_TITLE, response.body
+    assert_match "Dodaj pracownika", response.body
   end
 
   test "POST /pracownicy as admin creates user and redirects to show" do
@@ -211,7 +211,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     get edit_user_path(users(:bartek))
     assert_response :success
     assert_match users(:bartek).display_name, response.body
-    assert_match Copy::Admin::Users::EDIT_TITLE, response.body
+    assert_match "Edytuj pracownika", response.body
   end
 
   test "GET /pracownicy/:id/edytuj as non-admin redirects" do
@@ -562,7 +562,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
     get user_path(target)
     assert_response :success
-    assert_match Copy::Users::DISABLED_BADGE, response.body
+    assert_match "Konto wyłączone", response.body
     assert_match "opacity-50 grayscale", response.body
     refute_match "Wyślij testowy push", response.body
     assert_match "Włącz konto", response.body

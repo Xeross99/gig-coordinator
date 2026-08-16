@@ -1,7 +1,7 @@
-<% content_for(:title) { Copy::Events::UPCOMING } %>
-<%= render "shared/breadcrumbs", crumbs: [ [ Copy::Events::UPCOMING, nil ] ] %>
+<% content_for(:title) { "Nadchodzące" } %>
+<%= render "shared/breadcrumbs", crumbs: [ [ "Nadchodzące", nil ] ] %>
 <div class="mb-4 flex items-center justify-between gap-3">
-  <h1 class="text-2xl font-semibold"><%= Copy::Events::UPCOMING %></h1>
+  <h1 class="text-2xl font-semibold">Nadchodzące</h1>
   <% if Current.user&.event_creator_rank? %>
     <% if Current.user.can_create_events? %>
       <el-dropdown class="inline-block shrink-0">
@@ -10,7 +10,7 @@
           <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4">
             <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" clip-rule="evenodd" fill-rule="evenodd"/>
           </svg>
-          <%= Copy::Events::NEW_EVENT %>
+          Zaplanuj zlecenie
           <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="-mr-1 size-4 text-stone-300">
             <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
           </svg>
@@ -48,12 +48,12 @@
       </el-dropdown>
     <% else %>
       <span aria-disabled="true"
-            title="<%= "Nie masz jeszcze przypisanego gospodarza." %>"
+            title="Nie masz jeszcze przypisanego gospodarza."
             class="inline-flex items-center gap-1.5 rounded-md bg-stone-300 px-3 py-1.5 text-sm font-semibold text-stone-500 shadow-xs cursor-not-allowed select-none">
         <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4">
           <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" clip-rule="evenodd" fill-rule="evenodd"/>
         </svg>
-        <%= Copy::Events::NEW_EVENT %>
+        Zaplanuj zlecenie
       </span>
     <% end %>
   <% end %>

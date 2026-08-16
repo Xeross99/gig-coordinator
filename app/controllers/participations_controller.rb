@@ -6,10 +6,10 @@ class ParticipationsController < ApplicationController
     @event = Event.find(params[:event_id])
     return if enforce_event_lock!(@event)
     unless Current.user.can_join_events?
-      redirect_to event_path(@event), alert: Copy::Participations::ZOLTODZIOB_VIEW_ONLY and return
+      redirect_to event_path(@event), alert: "Jako Żółtodziób przeglądasz zlecenia, ale nie zapisujesz się na nie. Po awansie odzyskasz przycisk „Akceptuję”." and return
     end
     if Current.user.blocked_from?(@event.host)
-      redirect_to event_path(@event), alert: Copy::Participations::BLOCKED and return
+      redirect_to event_path(@event), alert: "Masz blokadę u tego gospodarza - nie możesz zapisać się na to zlecenie." and return
     end
 
     resulting_status = nil
@@ -79,7 +79,7 @@ class ParticipationsController < ApplicationController
     @event = Event.find(params[:event_id])
     return if enforce_event_lock!(@event)
     unless Current.user.can_join_events?
-      redirect_to event_path(@event), alert: Copy::Participations::ZOLTODZIOB_VIEW_ONLY and return
+      redirect_to event_path(@event), alert: "Jako Żółtodziób przeglądasz zlecenia, ale nie zapisujesz się na nie. Po awansie odzyskasz przycisk „Akceptuję”." and return
     end
     result = nil
 

@@ -59,7 +59,7 @@ class CampaignParticipationsControllerTest < ActionDispatch::IntegrationTest
       post event_campaign_campaign_participation_path(@campaign)
     end
     assert_redirected_to event_campaign_path(@campaign)
-    assert_match Copy::Participations::BLOCKED, flash[:alert]
+    assert_match "Masz blokadę u tego gospodarza - nie możesz zapisać się na to zlecenie.", flash[:alert]
   end
 
   test "DELETE /kampanie/:id/uczestnictwo canceluje kampanię i sub-eventy" do

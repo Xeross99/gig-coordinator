@@ -7,7 +7,7 @@ class SessionsController < ApplicationController
 
   def destroy
     sign_out!
-    redirect_to login_path, notice: Copy::Auth::LOGOUT
+    redirect_to login_path, notice: "Wyloguj"
   end
 
   def destroy_remote
@@ -18,7 +18,7 @@ class SessionsController < ApplicationController
 
     if target.id == Current.session.id
       sign_out!
-      redirect_to login_path, notice: Copy::Auth::LOGOUT
+      redirect_to login_path, notice: "Wyloguj"
     else
       target.destroy
       redirect_to after_remote_destroy_path, notice: "Urządzenie wylogowane."

@@ -1,9 +1,7 @@
 class InvitationMailer < ApplicationMailer
   def notify
-    @event    = params[:event]
-    @user     = params[:user]
-
-    return if recipient_disabled?(@user)
+    @event = params[:event]
+    @user  = params[:user]
 
     @deadline = Event::RESERVATION_WINDOW.from_now
 

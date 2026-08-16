@@ -31,7 +31,7 @@
         <div class="flex items-center gap-1.5 text-xs text-stone-500 mt-1">
           <% host = event.host %>
           <%= render "shared/host_avatar", host: host %>
-          <span class="truncate"><%= Copy::Events::HOST %>: <%= host.display_name %></span>
+          <span class="truncate">Gospodarz: <%= host.display_name %></span>
           <%= render "hosts/supporter_badge", host: host %>
         </div>
         <% if pending %>

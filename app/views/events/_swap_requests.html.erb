@@ -7,7 +7,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="size-4 text-indigo-500 shrink-0">
           <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
         </svg>
-        <span class="font-semibold"><%= sp.proposer.display_name %> <%= "chce się z Tobą zamienić" %></span>
+        <span class="font-semibold"><%= sp.proposer.display_name %> chce się z Tobą zamienić</span>
       </div>
       <div class="grid grid-cols-2 gap-2 mt-2">
         <%= button_to "Akceptuj wymianę", accept_event_swap_proposal_path(event, sp), method: :post,

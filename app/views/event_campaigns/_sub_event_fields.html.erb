@@ -5,11 +5,11 @@
   <%= f.hidden_field :_destroy, value: "0" %>
 
   <div class="flex items-center justify-between gap-2">
-    <h3 class="text-sm font-semibold text-stone-700"><%= "Zlecenie w serii" %></h3>
+    <h3 class="text-sm font-semibold text-stone-700">Zlecenie w serii</h3>
     <button type="button"
             data-action="nested-events#remove"
             class="text-xs font-medium text-red-700 underline decoration-dotted underline-offset-2 hover:text-red-900">
-      <%= "Usuń to zlecenie" %>
+      Usuń to zlecenie
     </button>
   </div>
 
@@ -24,7 +24,7 @@
 
   <div class="grid grid-cols-2 gap-3">
     <div>
-      <%= f.label :pay_per_person, Copy::Events::PAY_PER_PERSON, class: "block text-xs text-stone-700 mb-1" %>
+      <%= f.label :pay_per_person, "Zapłata za osobę", class: "block text-xs text-stone-700 mb-1" %>
       <%= f.select :pay_per_person, (0..500).step(10).to_a,
                    { selected: event.pay_per_person&.to_i || 100 },
                    required: true,

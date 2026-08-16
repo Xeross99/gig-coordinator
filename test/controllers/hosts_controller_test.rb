@@ -276,7 +276,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:ala))
     get new_host_path
     assert_response :success
-    assert_match Copy::Admin::Hosts::NEW_TITLE, response.body
+    assert_match "Dodaj gospodarza", response.body
   end
 
   test "POST /gospodarze as admin creates host and redirects to show" do

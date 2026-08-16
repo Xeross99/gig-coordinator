@@ -11,7 +11,7 @@ class SwapProposalsController < ApplicationController
     end
 
     if Current.user.blocked_from?(@event.host)
-      redirect_to event_path(@event), alert: Copy::Participations::BLOCKED and return
+      redirect_to event_path(@event), alert: "Masz blokadę u tego gospodarza - nie możesz zapisać się na to zlecenie." and return
     end
 
     target_user = User.find(params[:target_user_id])
@@ -45,11 +45,11 @@ class SwapProposalsController < ApplicationController
     @proposal = @event.swap_proposals.find_by(id: params[:id])
 
     unless @proposal&.pending?
-      redirect_to event_path(@event), alert: Copy::SwapProposals::CONDITIONS_CHANGED and return
+      redirect_to event_path(@event), alert: "Warunki wymiany się zmieniły. Spróbuj ponownie." and return
     end
 
     unless @proposal.target_id == Current.user.id
-      redirect_to event_path(@event), alert: Copy::SwapProposals::NOT_YOUR_PROPOSAL and return
+      redirect_to event_path(@event), alert: "To nie jest Twoja propozycja wymiany." and return
     end
 
     if @proposal.time_expired?
@@ -61,7 +61,7 @@ class SwapProposalsController < ApplicationController
       WebPushNotifier.perform_later(:swap_accepted, swap_proposal_id: @proposal.id)
       redirect_to event_path(@event), notice: "Wymiana zaakceptowana!"
     else
-      redirect_to event_path(@event), alert: Copy::SwapProposals::CONDITIONS_CHANGED
+      redirect_to event_path(@event), alert: "Warunki wymiany się zmieniły. Spróbuj ponownie."
     end
   end
 
@@ -72,11 +72,11 @@ class SwapProposalsController < ApplicationController
     @proposal = @event.swap_proposals.find_by(id: params[:id])
 
     unless @proposal&.pending?
-      redirect_to event_path(@event), alert: Copy::SwapProposals::CONDITIONS_CHANGED and return
+      redirect_to event_path(@event), alert: "Warunki wymiany się zmieniły. Spróbuj ponownie." and return
     end
 
     unless @proposal.target_id == Current.user.id
-      redirect_to event_path(@event), alert: Copy::SwapProposals::NOT_YOUR_PROPOSAL and return
+      redirect_to event_path(@event), alert: "To nie jest Twoja propozycja wymiany." and return
     end
 
     @proposal.update!(status: :declined)

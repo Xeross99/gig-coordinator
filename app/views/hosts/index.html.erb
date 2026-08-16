@@ -67,7 +67,7 @@
           <div class="border-t border-stone-200">
             <%= render "shared/map_embed", location: host.location, height_class: "h-40" %>
           </div>
-          <%= link_to Copy::Events::OPEN_IN_MAPS, google_maps_open_url(host.location),
+          <%= link_to "Otwórz w Google Maps", google_maps_open_url(host.location),
                       target: "_blank", rel: "noopener",
                       class: "block text-center py-2 text-xs text-stone-600 hover:text-stone-900 border-t border-stone-100" %>
         <% end %>

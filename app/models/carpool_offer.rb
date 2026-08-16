@@ -4,6 +4,7 @@ class CarpoolOffer < ApplicationRecord
   belongs_to :event
   belongs_to :user
   belongs_to :current_pickup_user, class_name: "User", optional: true
+
   has_many :carpool_requests, dependent: :destroy
 
   enum :trip_state, { not_started: 0, en_route: 1, picking_up: 2 }
@@ -14,8 +15,10 @@ class CarpoolOffer < ApplicationRecord
   validate  :user_is_not_passenger
   validate  :pickup_user_is_accepted_passenger
 
-  after_commit :broadcast_roster, on: %i[create update destroy]
-  after_create_commit :notify_confirmed_participants
+  after_commit on: %i[create update destroy] do
+    EventRosterBroadcastJob.perform_later(event_id: event_id)
+  end
+  after_create_commit { WebPushNotifier.perform_later(:carpool_offered, carpool_offer_id: id) }
 
   # Gdy asocjacja jest już załadowana (preload z Event#roster_data), filtrujemy
   # w pamięci — scope `.accepted` ominąłby preload i strzelał do bazy per oferta.
@@ -56,7 +59,7 @@ class CarpoolOffer < ApplicationRecord
   end
 
   # State transitions used by CarpoolTripsController. Wszystkie idą przez
-  # zwykły `update!`, więc after_commit :broadcast_roster odpala automatycznie.
+  # zwykły `update!`, więc after_commit z broadcastem rostera odpala automatycznie.
   # `ordered_user_ids` to kolejność odbierania z modalu „Wyjeżdżam" — brak
   # (API bez parametru) zostawia dotychczasowe pozycje / kolejność potwierdzenia.
   def depart!(ordered_user_ids = nil)
@@ -105,24 +108,13 @@ class CarpoolOffer < ApplicationRecord
   def user_is_event_participant
     return if event.blank? || user.blank?
     return if event.participations.where(user_id: user_id, status: :confirmed).exists?
+
     errors.add(:base, "tylko zapisani uczestnicy zlecenia mogą zgłosić się jako kierowca")
   end
 
   def user_has_driver_permission
     return if user.blank?
+
     errors.add(:base, "nie masz uprawnień kierowcy — poproś administratora") unless user.can_drive?
-  end
-
-  def broadcast_roster
-    fresh_event = Event.find_by(id: event_id)
-    return unless fresh_event
-    EventRosterBroadcastJob.perform_later(event_id: fresh_event.id)
-  end
-
-  # Nowy kierowca na zleceniu → push do głównej listy (confirmed) tego eventu,
-  # z pominięciem samego kierowcy. Na modelu (nie w kontrolerze), żeby działało
-  # z każdej ścieżki: web, API, konsola.
-  def notify_confirmed_participants
-    WebPushNotifier.perform_later(:carpool_offered, carpool_offer_id: id)
   end
 end

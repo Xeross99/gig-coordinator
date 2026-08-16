@@ -1,14 +1,14 @@
-<% content_for(:title) { Copy::EventCampaigns::EDIT_CAMPAIGN } %>
+<% content_for(:title) { "Edytuj serię" } %>
 <%= render "shared/breadcrumbs", crumbs: [
   [ @campaign.name, event_campaign_path(@campaign) ],
-  [ Copy::EventCampaigns::EDIT_CAMPAIGN, nil ]
+  [ "Edytuj serię", nil ]
 ] %>
 
-<h1 class="text-2xl font-semibold mb-4"><%= Copy::EventCampaigns::EDIT_CAMPAIGN %></h1>
+<h1 class="text-2xl font-semibold mb-4">Edytuj serię</h1>
 
 <%= render "form",
            campaign: @campaign,
            hosts: @hosts,
            url: event_campaign_path(@campaign),
-           submit_label: Copy::Events::SAVE_CHANGES,
+           submit_label: "Zapisz zmiany",
            users_for_prereg: @users_for_prereg %>

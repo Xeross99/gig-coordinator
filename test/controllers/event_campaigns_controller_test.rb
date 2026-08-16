@@ -9,7 +9,7 @@ class EventCampaignsControllerTest < ActionDispatch::IntegrationTest
   test "GET /kampanie/nowa wyświetla pusty formularz" do
     get new_event_campaign_path
     assert_response :success
-    assert_match Copy::EventCampaigns::NEW_CAMPAIGN, response.body
+    assert_match "Nowa seria", response.body
   end
 
   test "POST /kampanie tworzy kampanię z primary capacity" do

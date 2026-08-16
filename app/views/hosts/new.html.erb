@@ -1,9 +1,9 @@
-<% content_for(:title) { Copy::Admin::Hosts::NEW_TITLE } %>
+<% content_for(:title) { "Dodaj gospodarza" } %>
 <%= render "shared/breadcrumbs", crumbs: [
   ["Wszyscy gospodarze", hosts_path],
-  [Copy::Admin::Hosts::NEW_TITLE, nil]
+  ["Dodaj gospodarza", nil]
 ] %>
 
-<h1 class="text-2xl font-semibold mb-4"><%= Copy::Admin::Hosts::NEW_TITLE %></h1>
+<h1 class="text-2xl font-semibold mb-4">Dodaj gospodarza</h1>
 
 <%= render "form", host: @host %>

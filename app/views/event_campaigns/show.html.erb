@@ -34,7 +34,7 @@
 
   <div class="border-t border-stone-200 p-5">
     <div class="flex items-baseline justify-between mb-3">
-      <h2 class="text-sm font-semibold text-stone-700"><%= Copy::EventCampaigns::SUB_EVENTS_HEADING %></h2>
+      <h2 class="text-sm font-semibold text-stone-700">Terminy</h2>
       <%# „Dodaj zlecenie do serii" — dostępne tylko dla zarządzającego serią. %>
     </div>
     <% if @upcoming_sub_events.any? || @past_sub_events.any? %>
@@ -59,12 +59,12 @@
 
   <% if Current.user&.admin? || Current.user&.mistrz_piora? || (Current.user&.kurnikowy_komendant? && Current.user.managed_hosts.exists?(id: @campaign.host_id)) %>
     <div class="border-t border-stone-200 p-5">
-      <div class="text-stone-500 text-xs uppercase tracking-wide mb-2"><%= Copy::Admin::Events::TOOLS %></div>
+      <div class="text-stone-500 text-xs uppercase tracking-wide mb-2">Zarządzanie zleceniem</div>
       <div class="grid grid-cols-2 gap-2">
-        <%= link_to Copy::Admin::Events::EDIT, edit_event_campaign_path(@campaign),
+        <%= link_to "Edytuj serię", edit_event_campaign_path(@campaign),
                     class: "text-center py-2 rounded-lg border border-stone-300 text-sm font-medium text-stone-800 hover:bg-stone-50" %>
-        <%= button_to Copy::Admin::Events::DELETE, event_campaign_path(@campaign), method: :delete,
-                      data: { turbo_confirm: format(Copy::Admin::Events::DELETE_CONFIRM, name: @campaign.name) },
+        <%= button_to "Usuń zlecenie", event_campaign_path(@campaign), method: :delete,
+                      data: { turbo_confirm: format("Na pewno usunąć „%{name}”? Wszystkie zapisy, podwózki i wiadomości znikną.", name: @campaign.name) },
                       form: { class: "contents" },
                       class: "w-full py-2 rounded-lg bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100" %>
       </div>

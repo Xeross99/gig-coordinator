@@ -32,13 +32,13 @@ class CancelLiveUpdateTest < ApplicationSystemTestCase
     using_session("user_b") do
       sign_in_as(user_b)
       click_on event.name
-      assert_text Copy::Events::CONFIRMED_BADGE, wait: 5
-      click_on Copy::Events::CANCEL
+      assert_text "Potwierdzony", wait: 5
+      click_on "Anuluj"
       # Custom el-dialog confirmation replaces the native browser confirm.
       within("el-dialog") { click_on "Potwierdzam" }
       # Po anulowaniu waitlist awansuje, lista nadal pełna — CTA flipa na
       # „Dołącz na listę rezerwową", nie na „Akceptuję".
-      assert_text Copy::Events::WAITLIST_ACCEPT, wait: 5
+      assert_text "Dołącz na listę rezerwową", wait: 5
     end
 
     using_session("user_a") do

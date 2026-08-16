@@ -7,10 +7,10 @@
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="size-4 text-indigo-500 animate-spin shrink-0">
           <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 40"/>
         </svg>
-        <span class="font-semibold"><%= "Propozycja wymiany wysłana" %></span>
+        <span class="font-semibold">Propozycja wymiany wysłana</span>
       </div>
       <div class="text-xs mt-1 text-indigo-700">
-        <%= "Czekasz na odpowiedź od:" %> <%= my_pending_swaps.map { |sp| sp.target.display_name }.join(", ") %>
+        Czekasz na odpowiedź od: <%= my_pending_swaps.map { |sp| sp.target.display_name }.join(", ") %>
       </div>
     </div>
   <% end %>

@@ -21,7 +21,7 @@ module HostAdmin
     def create
       @event = Current.host.events.new(event_params)
       if @event.save
-        redirect_to host_event_path(@event), notice: Copy::HostPanel::NEW_EVENT
+        redirect_to host_event_path(@event), notice: "Nowe zlecenie"
       else
         render :new, status: :unprocessable_content
       end

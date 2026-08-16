@@ -1,6 +1,6 @@
-<% content_for(:title) { Copy::HostPanel::PROFILE } %>
-<%= render "shared/breadcrumbs", crumbs: [[Copy::HostPanel::PROFILE, nil]], home_path: host_root_path %>
-<h1 class="text-2xl font-semibold mb-4"><%= Copy::HostPanel::PROFILE %></h1>
+<% content_for(:title) { "Mój profil" } %>
+<%= render "shared/breadcrumbs", crumbs: [["Mój profil", nil]], home_path: host_root_path %>
+<h1 class="text-2xl font-semibold mb-4">Mój profil</h1>
 
 <%= form_with model: @host, url: host_profile_path, method: :patch, local: true,
               class: "space-y-4",

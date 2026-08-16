@@ -1,11 +1,11 @@
-<% content_for(:title) { Copy::Events::NEW_EVENT } %>
-<%= render "shared/breadcrumbs", crumbs: [ [ Copy::Events::NEW_EVENT, nil ] ] %>
+<% content_for(:title) { "Zaplanuj zlecenie" } %>
+<%= render "shared/breadcrumbs", crumbs: [ [ "Zaplanuj zlecenie", nil ] ] %>
 
-<h1 class="text-2xl font-semibold mb-4"><%= Copy::Events::NEW_EVENT %></h1>
+<h1 class="text-2xl font-semibold mb-4">Zaplanuj zlecenie</h1>
 
 <%= render "form",
            event: @event,
            hosts: @hosts,
            url: events_path,
-           submit_label: Copy::Events::NEW_EVENT,
+           submit_label: "Zaplanuj zlecenie",
            users_for_prereg: @users_for_prereg %>

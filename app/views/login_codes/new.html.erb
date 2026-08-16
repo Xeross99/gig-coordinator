@@ -1,8 +1,8 @@
-<% content_for(:title) { Copy::Auth::CODE_PROMPT } %>
+<% content_for(:title) { "Wpisz kod z e-maila" } %>
 <div class="pt-10 pb-12 sm:px-6 lg:px-8">
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <%= image_tag "/icon.svg", alt: "Gig Coordinator", class: "mx-auto h-16 w-16 rounded-xl shadow-sm" %>
-    <h1 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-stone-900"><%= Copy::Auth::CODE_PROMPT %></h1>
+    <h1 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-stone-900">Wpisz kod z e-maila</h1>
     <p class="mt-2 text-center text-sm text-stone-600">
       Wysłaliśmy 5-cyfrowy kod na <strong><%= @email %></strong>.
     </p>
@@ -49,7 +49,7 @@
       <% end %>
 
       <div class="mt-8 text-center text-xs text-stone-500 space-y-2">
-        <p><%= "Kod wygasa po 15 minutach. Nie przyszedł? Sprawdź folder spam." %></p>
+        <p>Kod wygasa po 15 minutach. Nie przyszedł? Sprawdź folder spam.</p>
         <p>
           <%= link_to "Zmień adres e-mail", login_path, class: "font-medium text-stone-900 underline" %>
         </p>

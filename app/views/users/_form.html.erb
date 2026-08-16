@@ -45,7 +45,7 @@
   <% hosts_for_form = Host.order(:last_name, :first_name) %>
 
   <div>
-    <div class="block text-sm text-stone-700 mb-1"><%= Copy::Users::MANAGES %> (kurniki)</div>
+    <div class="block text-sm text-stone-700 mb-1">Zarządza (kurniki)</div>
     <% if hosts_for_form.any? %>
       <div class="space-y-1 rounded-lg border border-stone-300 bg-white p-3">
         <%= f.collection_check_boxes :managed_host_ids, hosts_for_form, :id, :display_name do |b| %>

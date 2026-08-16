@@ -137,8 +137,8 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     # Ala loads the event page — only 0/1 taken, button shows "Akceptuję".
     get event_path(@event)
     assert_response :success
-    assert_match Copy::Events::ACCEPT, response.body
-    assert_no_match Copy::Events::WAITLIST_ACCEPT, response.body
+    assert_match "Akceptuję", response.body
+    assert_no_match "Dołącz na listę rezerwową", response.body
 
     # Bartek grabs the last seat before Ala clicks.
     Participation.create!(event: @event, user: users(:bartek), status: :confirmed, position: 1)
@@ -152,9 +152,9 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
 
     # After redirect Ala sees the waitlist badge + cancel button, not the waitlist-accept CTA.
     follow_redirect!
-    assert_match Copy::Events::WAITLIST_BADGE, response.body
-    assert_match Copy::Events::CANCEL, response.body
-    assert_no_match Copy::Events::WAITLIST_ACCEPT, response.body
+    assert_match "Lista rezerwowa", response.body
+    assert_match "Anuluj", response.body
+    assert_no_match "Dołącz na listę rezerwową", response.body
   end
 
   test "POST accept flips a live reservation to confirmed" do
@@ -313,7 +313,7 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to event_path(@event)
     follow_redirect!
-    assert_match Copy::Participations::ZOLTODZIOB_VIEW_ONLY, response.body
+    assert_match "Jako Żółtodziób przeglądasz zlecenia, ale nie zapisujesz się na nie. Po awansie odzyskasz przycisk „Akceptuję”.", response.body
   end
 
   test "POST accept is rejected for zoltodziob (defense in depth — they have no reservations anyway)" do
@@ -326,7 +326,7 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     post accept_event_participation_path(@event)
     assert_redirected_to event_path(@event)
     follow_redirect!
-    assert_match Copy::Participations::ZOLTODZIOB_VIEW_ONLY, response.body
+    assert_match "Jako Żółtodziób przeglądasz zlecenia, ale nie zapisujesz się na nie. Po awansie odzyskasz przycisk „Akceptuję”.", response.body
     refute users(:ala).participations.find_by(event: @event).confirmed?,
       "zoltodziob nie powinien móc zaakceptować rezerwacji"
   end
@@ -335,7 +335,7 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     users(:ala).update!(title: :zoltodziob)
     get event_path(@event)
     assert_response :success
-    assert_match Copy::Participations::ZOLTODZIOB_BADGE, response.body
+    assert_match "Tylko podgląd", response.body
     assert_select "form[action=?]", event_participation_path(@event), count: 0
     assert_select "button[disabled][aria-disabled='true']"
   end
@@ -347,14 +347,14 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to event_path(@event)
     follow_redirect!
-    assert_match Copy::Participations::BLOCKED, response.body
+    assert_match "Masz blokadę u tego gospodarza - nie możesz zapisać się na to zlecenie.", response.body
   end
 
   test "GET event show renders a blocked banner instead of the accept button" do
     HostBlock.create!(user: users(:ala), host: @event.host)
     get event_path(@event)
     assert_response :success
-    assert_match Copy::Participations::BLOCKED_BADGE, response.body
+    assert_match "Blokada u gospodarza", response.body
     # Nie ma klikalnego formularza „Akceptuję" – tylko wyłączony przycisk.
     assert_select "form[action=?]", event_participation_path(@event), count: 0
     assert_select "button[disabled][aria-disabled='true']"
@@ -374,9 +374,9 @@ class ParticipationsControllerTest < ActionDispatch::IntegrationTest
 
     get event_path(@event)
     assert_response :success
-    assert_match Copy::Events::CONFIRMED_BADGE, response.body
+    assert_match "Potwierdzony", response.body
     # Brak bannera blokady — istniejące participation ma pierwszeństwo.
-    assert_no_match Copy::Participations::BLOCKED_BADGE, response.body
+    assert_no_match "Blokada u gospodarza", response.body
     # Formularz „Anuluj" (DELETE) jest obecny.
     assert_select "form[action=?][method='post']", event_participation_path(@event) do
       assert_select "input[name='_method'][value='delete']"

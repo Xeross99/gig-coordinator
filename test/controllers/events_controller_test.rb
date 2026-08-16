@@ -123,7 +123,7 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     get new_event_path
     assert_redirected_to root_path
     follow_redirect!
-    assert_match Copy::Events::NEW_EVENT_FORBIDDEN, response.body
+    assert_match "Nie masz uprawnień do planowania zleceń.", response.body
   end
 
   test "GET /eventy/nowy as mistrz_piora renders form" do
@@ -191,13 +191,13 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
   test "GET / does NOT show 'Zaplanuj zlecenie' button for users without rank" do
     sign_in_as(users(:bartek))
     get root_path
-    assert_no_match Copy::Events::NEW_EVENT, response.body
+    assert_no_match "Zaplanuj zlecenie", response.body
   end
 
   test "GET / shows enabled 'Zaplanuj zlecenie' link for mistrz_piora" do
     users(:ala).update!(title: :mistrz_piora)
     get root_path
-    assert_match Copy::Events::NEW_EVENT, response.body
+    assert_match "Zaplanuj zlecenie", response.body
     assert_select "a[href=?]", new_event_path
   end
 
@@ -206,7 +206,7 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:bartek))
     get root_path
     assert_response :success
-    assert_select "span[aria-disabled='true']", text: /#{Regexp.escape(Copy::Events::NEW_EVENT)}/
+    assert_select "span[aria-disabled='true']", text: /#{Regexp.escape("Zaplanuj zlecenie")}/
     assert_match "Nie masz jeszcze przypisanego gospodarza.", response.body
     assert_select "a[href=?]", new_event_path, count: 0
   end
@@ -217,7 +217,7 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:bartek))
     get root_path
     assert_response :success
-    assert_match Copy::Events::NEW_EVENT, response.body
+    assert_match "Zaplanuj zlecenie", response.body
     assert_select "a[href=?]", new_event_path
   end
 
@@ -226,7 +226,7 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
       users(:bartek).update!(title: title)
       sign_in_as(users(:bartek))
       get root_path
-      assert_no_match Copy::Events::NEW_EVENT, response.body, "rank #{title} nie powinien widzieć przycisku"
+      assert_no_match "Zaplanuj zlecenie", response.body, "rank #{title} nie powinien widzieć przycisku"
     end
   end
 

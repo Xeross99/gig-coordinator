@@ -9,7 +9,7 @@
   <% end %>
 
   <div class="mb-3">
-    <%= f.label :host_id, Copy::Events::HOST_LABEL, class: "block text-sm text-stone-700 mb-1" %>
+    <%= f.label :host_id, "W imieniu gospodarza", class: "block text-sm text-stone-700 mb-1" %>
     <%= f.collection_select :host_id, hosts, :id, :display_name,
                             { include_blank: "— wybierz gospodarza —" },
                             { required: true,
@@ -31,7 +31,7 @@
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :pay_per_person, Copy::Events::PAY_PER_PERSON, class: "block text-sm text-stone-700 mb-1" %>
+      <%= f.label :pay_per_person, "Zapłata za osobę", class: "block text-sm text-stone-700 mb-1" %>
       <%= f.select :pay_per_person,
                    (0..500).step(10).to_a,
                    { selected: event.pay_per_person&.to_i },
@@ -74,7 +74,7 @@
               class="w-full py-3 rounded-lg bg-stone-300 text-stone-500 font-medium cursor-not-allowed">
         <%= submit_label %>
       </button>
-      <p class="mt-2 text-xs text-stone-500 text-center"><%= "Tworzenie zleceń chwilowo wyłączone." %></p>
+      <p class="mt-2 text-xs text-stone-500 text-center">Tworzenie zleceń chwilowo wyłączone.</p>
     </div>
   <% end %>
 <% end %>

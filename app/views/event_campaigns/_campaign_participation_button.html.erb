@@ -5,17 +5,17 @@
 
 <% if campaign.completed? %>
   <div class="rounded-lg bg-stone-100 text-stone-700 px-3 py-3 text-sm">
-    <span class="font-medium"><%= "Seria zleceń zakończona." %></span>
+    <span class="font-medium">Seria zleceń zakończona.</span>
   </div>
 <% elsif Current.user && !Current.user.can_join_events? && participation.nil? %>
   <div class="rounded-lg bg-amber-50 text-amber-900 px-3 py-2 text-sm mb-3">
-    <span class="font-semibold"><%= Copy::Participations::ZOLTODZIOB_BADGE %></span>
-    <div class="text-xs mt-1 text-amber-800"><%= Copy::Participations::ZOLTODZIOB_VIEW_ONLY %></div>
+    <span class="font-semibold">Tylko podgląd</span>
+    <div class="text-xs mt-1 text-amber-800">Jako Żółtodziób przeglądasz zlecenia, ale nie zapisujesz się na nie. Po awansie odzyskasz przycisk „Akceptuję”.</div>
   </div>
 <% elsif blocked && participation.nil? %>
   <div class="rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm">
-    <span class="font-semibold"><%= Copy::Participations::BLOCKED_BADGE %></span>
-    <div class="text-xs mt-1 text-red-700"><%= Copy::Participations::BLOCKED %></div>
+    <span class="font-semibold">Blokada u gospodarza</span>
+    <div class="text-xs mt-1 text-red-700">Masz blokadę u tego gospodarza - nie możesz zapisać się na to zlecenie.</div>
   </div>
 <% elsif participation&.reserved? && !participation.reservation_expired? %>
   <% remaining_min = ((participation.reserved_until - Time.current) / 60).to_i %>
@@ -60,12 +60,12 @@
                 data: { turbo_confirm: "Anulowanie wypisze Cię ze wszystkich zleceń w tym rzucie. Jeśli chcesz zrezygnować tylko z jednego terminu, wejdź na stronę tego zlecenia i anuluj tam.", turbo_submits_with: "Anuluję…" },
                 class: "w-full py-3 rounded-lg border border-stone-300 text-stone-800 font-medium disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
 <% elsif participation&.waitlist? %>
-  <div class="rounded-lg bg-amber-50 text-amber-800 px-3 py-2 text-sm mb-3"><%= Copy::Events::WAITLIST_BADGE %></div>
-  <%= button_to Copy::Events::CANCEL, event_campaign_campaign_participation_path(campaign), method: :delete,
+  <div class="rounded-lg bg-amber-50 text-amber-800 px-3 py-2 text-sm mb-3">Lista rezerwowa</div>
+  <%= button_to "Anuluj", event_campaign_campaign_participation_path(campaign), method: :delete,
                 data: { turbo_confirm: "Na pewno zejdziesz z listy rezerwowej serii?", turbo_submits_with: "Wypisuję…" },
                 class: "w-full py-3 rounded-lg border border-stone-300 text-stone-800 font-medium disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
 <% elsif campaign.full? %>
-  <%= button_to Copy::Events::WAITLIST_ACCEPT, event_campaign_campaign_participation_path(campaign), method: :post,
+  <%= button_to "Dołącz na listę rezerwową", event_campaign_campaign_participation_path(campaign), method: :post,
                 data: { turbo_submits_with: "Zapisuję na rezerwę…" },
                 class: "w-full py-3 rounded-lg bg-amber-500 text-white font-medium hover:bg-amber-600 disabled:opacity-60 disabled:cursor-progress disabled:animate-turbo-loading" %>
 <% else %>

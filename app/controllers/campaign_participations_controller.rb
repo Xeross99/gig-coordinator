@@ -11,7 +11,7 @@ class CampaignParticipationsController < ApplicationController
   # cancelled (ktoś wcześniej był w primary, się wypisał, chce wrócić).
   def create
     if Current.user.blocked_from?(@campaign.host)
-      redirect_to event_campaign_path(@campaign), alert: Copy::Participations::BLOCKED and return
+      redirect_to event_campaign_path(@campaign), alert: "Masz blokadę u tego gospodarza - nie możesz zapisać się na to zlecenie." and return
     end
 
     result = nil

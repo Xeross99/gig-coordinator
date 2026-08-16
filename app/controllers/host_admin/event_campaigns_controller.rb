@@ -29,7 +29,7 @@ module HostAdmin
     def create
       @campaign = Current.host.event_campaigns.new(event_campaign_params)
       if @campaign.save
-        redirect_to host_event_campaign_path(@campaign), notice: Copy::EventCampaigns::CREATED
+        redirect_to host_event_campaign_path(@campaign), notice: "Seria zleceń utworzona."
       else
         render :new, status: :unprocessable_content
       end

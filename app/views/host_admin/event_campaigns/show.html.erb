@@ -1,6 +1,6 @@
 <% content_for(:title) { @campaign.name } %>
 <%= render "shared/breadcrumbs", crumbs: [
-  [ Copy::EventCampaigns::INDEX_TITLE, host_event_campaigns_path ],
+  [ "Serie zleceń", host_event_campaigns_path ],
   [ @campaign.name, nil ]
 ], home_path: host_root_path %>
 
@@ -22,7 +22,7 @@
 </div>
 
 <div class="bg-white rounded-xl shadow-sm p-5 mt-4">
-  <h2 class="text-lg font-semibold mb-3"><%= Copy::EventCampaigns::SUB_EVENTS_HEADING %></h2>
+  <h2 class="text-lg font-semibold mb-3">Terminy</h2>
   <% if @upcoming_sub_events.any? || @past_sub_events.any? %>
     <ul class="space-y-3">
       <% (@upcoming_sub_events + @past_sub_events).each do |event| %>
@@ -47,7 +47,7 @@
 
 <details class="bg-white rounded-xl shadow-sm mt-4 group">
   <summary class="cursor-pointer list-none p-5 flex items-center justify-between">
-    <h2 class="text-lg font-semibold"><%= Copy::HostPanel::History::HEADING %> (<%= @history.size %>)</h2>
+    <h2 class="text-lg font-semibold">Historia zapisów (<%= @history.size %>)</h2>
   </summary>
   <% if @history.any? %>
     <ul class="px-5 pb-5 space-y-2">
@@ -60,6 +60,6 @@
       <% end %>
     </ul>
   <% else %>
-    <p class="px-5 pb-5 text-sm text-stone-400"><%= Copy::HostPanel::History::EMPTY %></p>
+    <p class="px-5 pb-5 text-sm text-stone-400">Nic się jeszcze nie zadziało.</p>
   <% end %>
 </details>

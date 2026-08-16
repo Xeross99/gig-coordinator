@@ -1,5 +1,5 @@
 <% content_for(:title) { @event.name } %>
-<%= render "shared/breadcrumbs", crumbs: [[Copy::HostPanel::MY_EVENTS, host_events_path], [@event.name, nil]], home_path: host_root_path %>
+<%= render "shared/breadcrumbs", crumbs: [["Moje zlecenia", host_events_path], [@event.name, nil]], home_path: host_root_path %>
 
 <div class="bg-white rounded-xl shadow-sm p-5">
   <h1 class="text-2xl font-semibold text-stone-900"><%= @event.name %></h1>
@@ -12,7 +12,7 @@
   <dl class="grid grid-cols-2 gap-3 mt-5">
     <div class="rounded-xl bg-emerald-50 p-3">
       <div class="flex items-start justify-between gap-2">
-        <dt class="text-[11px] text-emerald-800/70 font-medium uppercase tracking-wide leading-tight"><%= Copy::Events::PAY_PER_PERSON %></dt>
+        <dt class="text-[11px] text-emerald-800/70 font-medium uppercase tracking-wide leading-tight">Zapłata za osobę</dt>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0 text-emerald-600" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
         </svg>
@@ -41,14 +41,14 @@
 </div>
 
 <div class="bg-white rounded-xl shadow-sm p-5 mt-4">
-  <h2 class="text-lg font-semibold mb-4"><%= "Uczestnicy" %></h2>
+  <h2 class="text-lg font-semibold mb-4">Uczestnicy</h2>
   <%= turbo_stream_from @event, :roster %>
   <%= render "events/roster", event: @event %>
 </div>
 
 <details class="bg-white rounded-xl shadow-sm mt-4 group">
   <summary class="cursor-pointer list-none p-5 flex items-center justify-between">
-    <h2 class="text-lg font-semibold"><%= Copy::HostPanel::History::HEADING %> (<%= @history.size %>)</h2>
+    <h2 class="text-lg font-semibold">Historia zapisów (<%= @history.size %>)</h2>
     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 text-stone-400 transition-transform group-open:rotate-180">
       <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
     </svg>
@@ -64,6 +64,6 @@
       <% end %>
     </ul>
   <% else %>
-    <p class="px-5 pb-5 text-sm text-stone-400"><%= Copy::HostPanel::History::EMPTY %></p>
+    <p class="px-5 pb-5 text-sm text-stone-400">Nic się jeszcze nie zadziało.</p>
   <% end %>
 </details>
