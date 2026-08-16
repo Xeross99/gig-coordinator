@@ -1,4 +1,4 @@
-module Event::Roster
+module Event::Rosterable
   extend ActiveSupport::Concern
 
   # Read-only view of who is on the event: counts, the preloaded roster payload

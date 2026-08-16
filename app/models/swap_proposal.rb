@@ -10,7 +10,7 @@ class SwapProposal < ApplicationRecord
   validates :proposer_id, uniqueness: {
     scope: %i[event_id target_id],
     conditions: -> { where(status: :pending) },
-    message: "already has a pending proposal for this target"
+    message: "ma już oczekującą propozycję wymiany dla tej osoby"
   }
 
   validate :proposer_must_be_on_waitlist, on: :create
@@ -47,9 +47,7 @@ class SwapProposal < ApplicationRecord
   def expire_competing_proposals
     others = SwapProposal.pending.where(event_id: event_id).where.not(id: id)
 
-    others.where(proposer_id: proposer_id)
-          .or(others.where(target_id: target_id))
-          .update_all(status: SwapProposal.statuses[:expired])
+    others.where(proposer_id: proposer_id).or(others.where(target_id: target_id)).update_all(status: SwapProposal.statuses[:expired])
   end
 
   # `swap_transition` wyłącza refill po stronie Participation — zwolniony slot
@@ -70,21 +68,21 @@ class SwapProposal < ApplicationRecord
 
   def proposer_must_be_on_waitlist
     return if event.nil? || proposer_id.nil?
-    unless event.participations.waitlist.exists?(user_id: proposer_id)
-      errors.add(:proposer, "must be on the waitlist")
-    end
+    return if event.participations.waitlist.exists?(user_id: proposer_id)
+
+    errors.add(:base, "propozycję wymiany może złożyć tylko osoba z listy rezerwowej")
   end
 
   def target_must_be_confirmed
     return if event.nil? || target_id.nil?
-    unless event.participations.confirmed.exists?(user_id: target_id)
-      errors.add(:target, "must be confirmed")
-    end
+    return if event.participations.confirmed.exists?(user_id: target_id)
+
+    errors.add(:base, "wymianę można zaproponować tylko osobie z głównej listy")
   end
 
   def proposer_cannot_be_target
     return if proposer_id != target_id
 
-    errors.add(:target, "cannot be the same as proposer")
+    errors.add(:base, "nie możesz zaproponować wymiany samemu sobie")
   end
 end

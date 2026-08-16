@@ -23,7 +23,7 @@
       <ul class="space-y-2">
         <% reserved.each_with_index do |p, i| %>
           <% has_card = p.user.player_card? %>
-          <li class="relative overflow-hidden flex items-center gap-3 bg-indigo-50 rounded-lg ring-2 ring-indigo-400 shadow-md text-sm animate-pop-in aspect-[5/1] sm:aspect-[6/1] min-h-fit"
+          <li class="relative overflow-hidden flex items-center gap-3 bg-indigo-50 rounded-lg ring-2 ring-indigo-400 shadow-md text-sm animate-pop-in aspect-5/1 sm:aspect-6/1 min-h-fit"
               style="animation-delay: <%= i * 40 %>ms">
             <%= render "events/roster_card_bg", user: p.user %>
             <%= render "events/roster_online_chip", user: p.user, has_card: has_card %>
@@ -52,7 +52,7 @@
       <ul class="space-y-2">
         <% confirmed.each_with_index do |p, i| %>
           <% has_card = p.user.player_card? %>
-          <li class="relative overflow-hidden flex items-center gap-3 bg-emerald-50 rounded-lg shadow-md text-sm animate-pop-in aspect-[5/1] sm:aspect-[6/1] min-h-fit"
+          <li class="relative overflow-hidden flex items-center gap-3 bg-emerald-50 rounded-lg shadow-md text-sm animate-pop-in aspect-5/1 sm:aspect-6/1 min-h-fit"
               style="animation-delay: <%= i * 40 %>ms">
             <%= render "events/roster_card_bg", user: p.user %>
             <%= render "events/roster_online_chip", user: p.user, has_card: has_card %>
@@ -78,7 +78,7 @@
       <ul class="space-y-2">
         <% waitlist.each_with_index do |p, i| %>
           <% has_card = p.user.player_card? %>
-          <li class="relative overflow-hidden flex items-center gap-3 bg-amber-50 rounded-lg shadow-md text-sm animate-pop-in aspect-[5/1] sm:aspect-[6/1] min-h-fit"
+          <li class="relative overflow-hidden flex items-center gap-3 bg-amber-50 rounded-lg shadow-md text-sm animate-pop-in aspect-5/1 sm:aspect-6/1 min-h-fit"
               style="animation-delay: <%= i * 40 %>ms">
             <%= render "events/roster_card_bg", user: p.user %>
             <%= render "events/roster_online_chip", user: p.user, has_card: has_card %>

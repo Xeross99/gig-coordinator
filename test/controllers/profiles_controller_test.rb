@@ -45,23 +45,20 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     )
     original_blob_id = users(:ala).photo.blob.id
 
-    # The hidden user[photo] input is rendered `disabled` until DirectUpload
-    # fills it, so a bare submit sends no `user` param at all. That's a user
-    # clicking „Zapisz zdjęcie" without picking a file — redirect with an alert
-    # instead of a 400, and never wipe the existing attachment.
+    # Formularz nie może wyjść pusty — przycisk „Zapisz zdjęcie" startuje
+    # wyłączony i włącza go dopiero udany DirectUpload. Puste `user` to więc
+    # zepsute żądanie: 400, i pod żadnym pozorem skasowane zdjęcie.
     patch profile_path, params: { user: {} }
 
-    assert_redirected_to edit_profile_path
-    assert_equal "Najpierw wybierz zdjęcie.", flash[:alert]
+    assert_response :bad_request
     assert users(:ala).reload.photo.attached?
     assert_equal original_blob_id, users(:ala).reload.photo.blob.id
   end
 
-  test "PATCH update bez żadnego parametru user przekierowuje z alertem" do
+  test "PATCH update bez parametru user to zepsute żądanie" do
     patch profile_path
 
-    assert_redirected_to edit_profile_path
-    assert_equal "Najpierw wybierz zdjęcie.", flash[:alert]
+    assert_response :bad_request
   end
 
   test "hosts cannot reach the worker profile edit" do

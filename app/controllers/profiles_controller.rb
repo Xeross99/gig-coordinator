@@ -10,13 +10,6 @@ class ProfilesController < ApplicationController
   end
 
   def update
-    # „Zapisz zdjęcie" bez wybranego pliku wysyła formularz bez klucza `user`
-    # w ogóle — ukryty input `user[photo]` jest `disabled`, dopóki DirectUpload
-    # go nie wypełni. To nie błąd serwera, tylko pusty submit.
-    if profile_params.blank?
-      redirect_to edit_profile_path, alert: "Najpierw wybierz zdjęcie." and return
-    end
-
     if @user.update(profile_params)
       redirect_to edit_profile_path, notice: "Zapisano"
     else
@@ -26,20 +19,17 @@ class ProfilesController < ApplicationController
 
   def regenerate_calendar_token
     @user.regenerate_calendar_token!
+
     redirect_to edit_profile_path, notice: "Wygenerowano nowy URL kalendarza. Stary adres przestanie się synchronizować."
   end
 
   private
 
-  # `player_card` przechodzi tylko dla kont premium — nie-premium może
-  # aktualizować wyłącznie zdjęcie, spreparowany parametr karty jest ucinany
-  # (drugą linią obrony jest `User#clear_player_card_unless_premium`).
   def profile_params
     permitted = %i[photo]
     permitted << :player_card if Current.user.premium?
+
     params.expect(user: permitted)
-  rescue ActionController::ParameterMissing
-    {}
   end
 
   def set_user

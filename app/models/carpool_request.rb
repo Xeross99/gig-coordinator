@@ -14,13 +14,6 @@ class CarpoolRequest < ApplicationRecord
 
   after_commit :broadcast_roster, on: %i[create update destroy]
 
-  # Jedyna słuszna ścieżka akceptacji (web + API). Walidacja
-  # seats_available_on_accept liczy zaakceptowane zapytania, ale sama z siebie
-  # nie serializuje równoległych akceptów — dwa niemal jednoczesne
-  # `update!(status: :accepted)` mogłyby oba przejść walidację i przepełnić
-  # auto. Blokada wiersza oferty (mirror idiomu `event.lock!` z Participation)
-  # wymusza, że licznik w walidacji zawsze widzi skutek wcześniejszego akceptu.
-  # Podnosi ActiveRecord::RecordInvalid gdy zabrakło miejsc.
   def accept!
     carpool_offer.with_lock do
       update!(status: :accepted)
@@ -34,23 +27,17 @@ class CarpoolRequest < ApplicationRecord
     errors.add(:base, "kierowca nie może zapytać samego siebie") if carpool_offer.user_id == user_id
   end
 
-  # Ktoś kto sam oferuje podwózkę na tym evencie nie może jednocześnie pchać się
-  # na miejsce pasażera u innego kierowcy — to sprzeczne zobowiązania (jedna
-  # osoba nie jedzie dwoma autami). Najpierw `Zrezygnuj z funkcji kierowcy`,
-  # potem proś o podwózkę.
   def user_is_not_driver_on_event
     return if carpool_offer.blank? || user.blank?
     return unless CarpoolOffer.where(event_id: carpool_offer.event_id, user_id: user_id).exists?
+
     errors.add(:base, "jesteś kierowcą na tym zleceniu — zrezygnuj najpierw z funkcji kierowcy, żeby poprosić o podwózkę")
   end
 
-  # „Główna lista" = confirmed. Waitlist / reserved nie mają pewnego miejsca,
-  # więc carpool dla nich jest przedwczesny (po awansie z waitlisty na
-  # confirmed sami mogą zapytać). Egzekwowane też w controllerze (defense-in-depth).
   def user_is_event_participant
     return if carpool_offer.blank? || user.blank?
-    ev = carpool_offer.event
-    return if ev && ev.participations.where(user_id: user_id, status: :confirmed).exists?
+    return if Participation.confirmed.exists?(event_id: carpool_offer.event_id, user_id: user_id)
+
     errors.add(:base, "tylko osoby z głównej listy mogą prosić o podwózkę")
   end
 

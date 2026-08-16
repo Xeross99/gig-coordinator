@@ -1,4 +1,4 @@
-module Event::Capacity
+module Event::Fillable
   extend ActiveSupport::Concern
 
   # Filling the event: „Zapisz od razu" from the creation form, plus reacting to

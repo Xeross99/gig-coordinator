@@ -1,4 +1,4 @@
-module Event::Reservations
+module Event::Reservable
   extend ActiveSupport::Concern
 
   # Auto-invites for the top rank. The invitee has RESERVATION_WINDOW to accept

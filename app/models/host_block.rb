@@ -8,8 +8,8 @@ class HostBlock < ApplicationRecord
   private
 
   def user_is_not_mistrz_piora
-    return if user.nil?
+    return unless user&.mistrz_piora?
 
-    errors.add(:user, "nie może być Mistrzem Pióra — ta ranga nie podlega blokadom") if user.mistrz_piora?
+    errors.add(:user, "nie może być Mistrzem Pióra — ta ranga nie podlega blokadom")
   end
 end

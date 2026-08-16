@@ -1,4 +1,4 @@
-module Event::Notifications
+module Event::Notifiable
   extend ActiveSupport::Concern
 
   # Web push fired by the event itself: „nowe zlecenie", „zmieniono szczegóły"
@@ -36,7 +36,7 @@ module Event::Notifications
 
   # Push :event_changed idzie do WSZYSTKICH userów z subskrypcjami (decyzja
   # produktowa — nie tylko do uczestników), stąd nazwa bez „participants".
-  # `significant_changed_fields` mieszka w Event::ChangeLog — log i push muszą
+  # `significant_changed_fields` mieszka w Event::Auditable — log i push muszą
   # widzieć tę samą listę zmian.
   def notify_users_of_changes
     return if started?

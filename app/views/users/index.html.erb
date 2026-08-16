@@ -39,7 +39,7 @@
           </div>
         <% end %>
         <%= link_to user_path(user),
-                    class: "relative overflow-hidden flex items-center gap-4 aspect-[5/1] sm:aspect-[6/1] min-h-fit hover:bg-stone-50 active:bg-stone-100 transition-colors #{"opacity-50 grayscale" if user.disabled?}" do %>
+                    class: "relative overflow-hidden flex items-center gap-4 aspect-5/1 sm:aspect-6/1 min-h-fit hover:bg-stone-50 active:bg-stone-100 transition-colors #{"opacity-50 grayscale" if user.disabled?}" do %>
           <%= render "events/roster_card_bg", user: user unless user.disabled? %>
           <%= render "events/roster_row_avatar", user: user %>
           <div class="relative min-w-0 flex-1 py-2">

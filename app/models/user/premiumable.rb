@@ -13,9 +13,6 @@ module User::Premiumable
   }.freeze
 
   PLAYER_CARDS = PLAYER_CARD_LABELS.keys.freeze
-
-  # Premium is time-limited: admin grants a year, we check the clock on every
-  # read. No sweeper needed.
   PREMIUM_DURATION = 1.year
 
   included do
@@ -28,12 +25,10 @@ module User::Premiumable
     after_update_commit :notify_premium_granted
   end
 
-  # Admins get premium for free.
   def premium?
     admin? || premium_active?
   end
 
-  # Own, still-valid premium — ignores the admin perk.
   def premium_active?
     premium_until.present? && premium_until.future?
   end

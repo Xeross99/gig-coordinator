@@ -14,6 +14,9 @@ production:
   push_subscription_prune:
     class: PushSubscriptionPruneJob
     schedule: every day at 5am
+  login_code_prune:
+    class: LoginCodePruneJob
+    schedule: every day at 5am
 
 development:
   event_completion:

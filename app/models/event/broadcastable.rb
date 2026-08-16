@@ -1,4 +1,4 @@
-module Event::Broadcasting
+module Event::Broadcastable
   extend ActiveSupport::Concern
 
   # Turbo Stream traffic on the `:events` feed stream. All synchronous — a feed

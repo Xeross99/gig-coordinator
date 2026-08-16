@@ -1,4 +1,4 @@
-module Event::SubEvent
+module Event::Campaignable
   extend ActiveSupport::Concern
 
   # An event with `event_campaign_id` is a sub-event of a series: it inherits the

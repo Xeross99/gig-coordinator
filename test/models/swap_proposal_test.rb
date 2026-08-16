@@ -30,7 +30,7 @@ class SwapProposalTest < ActiveSupport::TestCase
   test "invalid when proposer has no participation on the event" do
     proposal = build_proposal(proposer: users(:cezary))
     refute proposal.valid?
-    assert proposal.errors[:proposer].any?
+    assert_includes proposal.errors[:base], "propozycję wymiany może złożyć tylko osoba z listy rezerwowej"
   end
 
   test "invalid when proposer is confirmed instead of waitlisted" do
@@ -38,7 +38,7 @@ class SwapProposalTest < ActiveSupport::TestCase
                  .update_all(status: Participation.statuses[:confirmed], position: 2)
     proposal = build_proposal
     refute proposal.valid?
-    assert proposal.errors[:proposer].any?
+    assert_includes proposal.errors[:base], "propozycję wymiany może złożyć tylko osoba z listy rezerwowej"
   end
 
   test "invalid when proposer's participation is cancelled" do
@@ -46,20 +46,20 @@ class SwapProposalTest < ActiveSupport::TestCase
                  .update_all(status: Participation.statuses[:cancelled])
     proposal = build_proposal
     refute proposal.valid?
-    assert proposal.errors[:proposer].any?
+    assert_includes proposal.errors[:base], "propozycję wymiany może złożyć tylko osoba z listy rezerwowej"
   end
 
   test "invalid when target has no participation on the event" do
     proposal = build_proposal(target: users(:cezary))
     refute proposal.valid?
-    assert proposal.errors[:target].any?
+    assert_includes proposal.errors[:base], "wymianę można zaproponować tylko osobie z głównej listy"
   end
 
   test "invalid when target is on the waitlist instead of confirmed" do
     Participation.create!(event: @event, user: users(:dominika), status: :waitlist, position: 2)
     proposal = build_proposal(target: users(:dominika))
     refute proposal.valid?
-    assert proposal.errors[:target].any?
+    assert_includes proposal.errors[:base], "wymianę można zaproponować tylko osobie z głównej listy"
   end
 
   test "second pending proposal for the same (event, proposer, target) is invalid" do
@@ -80,6 +80,6 @@ class SwapProposalTest < ActiveSupport::TestCase
   test "proposer cannot target himself" do
     proposal = build_proposal(target: @proposer)
     refute proposal.valid?
-    assert proposal.errors[:target].any? { |m| m.include?("same as proposer") }
+    assert_includes proposal.errors[:base], "nie możesz zaproponować wymiany samemu sobie"
   end
 end

@@ -1,9 +1,4 @@
 class RankPromotionMailer < ApplicationMailer
-  # Every rank-up gets its own mail, lower ranks included. Whether a title change
-  # counts as a promotion is decided by `User#send_rank_promotion_email` — this
-  # mailer only renders. The one hard rule lives here: zoltodziob is the starting
-  # rank, so nobody is ever congratulated on reaching it, not even from a manual
-  # console call.
   def notify(user, new_title:)
     return unless User.titles.key?(new_title.to_s)
     return if new_title.to_s == "zoltodziob"

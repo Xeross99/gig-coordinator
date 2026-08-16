@@ -90,7 +90,10 @@
     </div>
   </div>
 
-  <%= f.submit "Zapisz zdjęcie", class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium",
+  <%# Startuje wyłączony — photo_upload_controller.js włącza go dopiero po udanym
+      DirectUpload, więc formularz nie może wyjść bez `user[photo]`. %>
+  <%= f.submit "Zapisz zdjęcie", disabled: true,
+               class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium disabled:opacity-40",
                data: { photo_upload_target: "submit", turbo_submits_with: "Zapisuję…" } %>
 <% end %>
 

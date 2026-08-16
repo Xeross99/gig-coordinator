@@ -1,4 +1,4 @@
-module Event::ChangeLog
+module Event::Auditable
   extend ActiveSupport::Concern
 
   # Audit trail of field edits (`event_changes`), rendered on /eventy/:id/historia.

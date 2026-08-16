@@ -24,11 +24,13 @@ class CarpoolOffer < ApplicationRecord
   # w pamięci — scope `.accepted` ominąłby preload i strzelał do bazy per oferta.
   def accepted_requests
     return carpool_requests.select(&:accepted?) if carpool_requests.loaded?
+
     carpool_requests.accepted
   end
 
   def pending_requests
     return carpool_requests.select(&:pending?) if carpool_requests.loaded?
+
     carpool_requests.pending
   end
 
@@ -92,11 +94,13 @@ class CarpoolOffer < ApplicationRecord
   def pickup_user_is_accepted_passenger
     return if current_pickup_user_id.blank?
     return if carpool_requests.accepted.where(user_id: current_pickup_user_id).exists?
+
     errors.add(:current_pickup_user_id, "musi być zaakceptowanym pasażerem")
   end
 
   def user_is_not_passenger
     return if event.blank? || user.blank?
+
     passenger = CarpoolRequest.joins(:carpool_offer)
                               .where(carpool_offers: { event_id: event_id })
                               .where(user_id: user_id)
