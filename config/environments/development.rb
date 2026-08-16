@@ -34,18 +34,11 @@ Rails.application.configure do
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
 
-
-  # Set host used for links in mailers + signed ids.
-  # Override via PUBLIC_HOST env when using a tunnel (ngrok, cloudflared, etc.).
-  public_host = ENV["PUBLIC_HOST"]
-  if public_host.present?
-    config.action_mailer.default_url_options = { host: public_host, protocol: "https" }
-    Rails.application.routes.default_url_options = { host: public_host, protocol: "https" }
-  else
-    port = ENV.fetch("PORT", 3000).to_i
-    config.action_mailer.default_url_options = { host: "localhost", port: port }
-    Rails.application.routes.default_url_options = { host: "localhost", port: port }
-  end
+  # Host used for links in mailers + signed ids. PORT keeps them right when more
+  # than one Rails app runs locally (PORT=3001 bin/dev).
+  port = ENV.fetch("PORT", 3000).to_i
+  config.action_mailer.default_url_options = { host: "localhost", port: port }
+  Rails.application.routes.default_url_options = { host: "localhost", port: port }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -75,17 +68,6 @@ Rails.application.configure do
 
   # Annotate rendered view with file names.
   config.action_view.annotate_rendered_view_with_filenames = true
-
-  # Allow tunnels (ngrok, cloudflare trycloudflare, localhost.run, serveo.net) in dev
-  config.hosts << /.*\.ngrok-free\.app/
-  config.hosts << /.*\.ngrok\.io/
-  config.hosts << /.*\.trycloudflare\.com/
-  config.hosts << /.*\.lhr\.life/
-  config.hosts << /.*\.localhost\.run/
-  config.hosts << /.*\.serveo\.net/
-
-  # Allow Action Cable (Turbo Stream + web push over WebSocket) from tunneled origins
-  config.action_cable.disable_request_forgery_protection = true
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true

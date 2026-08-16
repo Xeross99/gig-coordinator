@@ -533,21 +533,7 @@ Regeneruj po edycji `icon.svg`.
 
 # Dev port
 
-`config/environments/development.rb` czyta `ENV["PORT"]` (fallback 3000) gdy `PUBLIC_HOST` nie jest ustawiony — URL-e generowane przez helpery idą na właściwy port. `bin/login-code` tak samo. Jeśli trzymasz kilka Rails apek lokalnie, eksportuj `PORT=3001 bin/dev` (i `PORT=3001 bin/login-code ...`) żeby wygenerować dane z portem 3001.
-
----
-
-# Dev tunnel (mobile testing)
-
-iOS web push wymaga HTTPS + PWA z Home Screen.
-
-```bash
-cloudflared tunnel --url http://localhost:3000                # Terminal 1
-PUBLIC_HOST=<tunnel>.trycloudflare.com bin/dev                # Terminal 2
-PUBLIC_HOST=<tunnel>.trycloudflare.com bin/login-code <email> # wygeneruj kod
-```
-
-`config/environments/development.rb` whitelistuje `*.trycloudflare.com`, `*.ngrok-free.app`, `*.ngrok.io`, `*.lhr.life`, `*.localhost.run`, `*.serveo.net` (przez `config.hosts`), wyłącza `action_cable.request_forgery_protection`, i nadpisuje `default_url_options` na `https://<PUBLIC_HOST>` gdy env var jest ustawiony.
+`config/environments/development.rb` czyta `ENV["PORT"]` (fallback 3000) — URL-e generowane przez helpery idą na właściwy port. `bin/login-code` bierze host i port z tej samej konfiguracji. Jeśli trzymasz kilka Rails apek lokalnie, eksportuj `PORT=3001 bin/dev` (i `PORT=3001 bin/login-code ...`) żeby wygenerować dane z portem 3001.
 
 ---
 

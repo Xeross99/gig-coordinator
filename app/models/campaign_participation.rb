@@ -1,4 +1,6 @@
 class CampaignParticipation < ApplicationRecord
+  include ReservationExpirable
+
   belongs_to :event_campaign
   belongs_to :user
   has_many :campaign_participation_events, dependent: :delete_all
@@ -16,7 +18,6 @@ class CampaignParticipation < ApplicationRecord
   after_commit :log_participation_event,          on: %i[create update]
   after_commit :enroll_in_sub_events,             on: %i[create update]
   after_commit :cascade_cancellation,             on: :update
-  after_commit :schedule_reservation_expiration,  on: %i[create update]
 
   def reservation_expired?
     reserved? && reserved_until.present? && reserved_until <= Time.current
@@ -193,15 +194,6 @@ class CampaignParticipation < ApplicationRecord
         Participation.resequence!(event, :waitlist)
       end
     end
-  end
-
-  # Mirror of Participation#schedule_reservation_expiration — one job per
-  # reservation, fired exactly at reserved_until. Console-safe, idempotent.
-  def schedule_reservation_expiration
-    return unless reserved? && reserved_until.present?
-    return unless previously_new_record? || saved_change_to_reserved_until?
-
-    ReservationExpirationJob.set(wait_until: reserved_until).perform_later(campaign_participation_id: id)
   end
 
   def classify_transition

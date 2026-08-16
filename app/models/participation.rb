@@ -1,4 +1,6 @@
 class Participation < ApplicationRecord
+  include ReservationExpirable
+
   belongs_to :event
   belongs_to :user
   has_many :participation_events, dependent: :delete_all
@@ -30,7 +32,6 @@ class Participation < ApplicationRecord
   after_commit :cleanup_carpool_on_cancel, on: %i[update destroy]
   after_commit :expire_swap_proposals_on_status_change, on: :update
   after_commit :refill_after_cancellation, on: :update
-  after_commit :schedule_reservation_expiration, on: %i[create update]
 
   def reservation_expired?
     reserved? && reserved_until.present? && reserved_until <= Time.current
@@ -84,17 +85,6 @@ class Participation < ApplicationRecord
         Participation.resequence!(fresh_event, :waitlist)
       end
     end
-  end
-
-  # Each reservation gets its own expiration job scheduled exactly at
-  # `reserved_until` (instead of a sweeper polling every minute). Lives on the
-  # model so reservations created from the console self-schedule too. The job
-  # is idempotent — if the user accepted/declined meanwhile, it no-ops.
-  def schedule_reservation_expiration
-    return unless reserved? && reserved_until.present?
-    return unless previously_new_record? || saved_change_to_reserved_until?
-
-    ReservationExpirationJob.set(wait_until: reserved_until).perform_later(participation_id: id)
   end
 
   def broadcast_event_updates

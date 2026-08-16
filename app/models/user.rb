@@ -30,18 +30,12 @@ class User < ApplicationRecord
 
   after_create_commit { WelcomeMailer.notify(self).deliver_later }
 
-  after_update_commit :clear_host_blocks_on_mistrz_promotion, :send_rank_promotion_email,
-                      if: :saved_change_to_title?
+  after_update_commit :clear_host_blocks_on_mistrz_promotion, :send_rank_promotion_email, if: :saved_change_to_title?
 
   def display_name
     "#{first_name} #{last_name}"
   end
 
-  # Chwilowo tylko admin może tworzyć eventy — niezależnie od rangi.
-  # Mistrz_piora / komendant nadal widzą UI rangowe, ale przycisk „Zaplanuj
-  # Wpisy do feedu i przycisk „Zaplanuj zlecenie" są widoczne dla mistrza pióra
-  # i komendantów którzy zarządzają przynajmniej jednym gospodarzem. Submit
-  # jest tym samym gejtem — komendant po wejściu w formularz może go wysłać.
   def can_create_events?
     mistrz_piora? || (kurnikowy_komendant? && managed_hosts.exists?)
   end
@@ -50,9 +44,6 @@ class User < ApplicationRecord
     mistrz_piora? || kurnikowy_komendant?
   end
 
-  # Gospodarze, dla których user może tworzyć eventy/kampanie: admin i mistrz
-  # pióra — wszyscy; komendant — tylko zarządzani (`managed_hosts`); reszta —
-  # nikt. Jedno źródło prawdy dla EventsController i EventCampaignsController.
   def allowed_hosts
     if admin? || mistrz_piora?
       Host.all
@@ -74,18 +65,13 @@ class User < ApplicationRecord
     scope.order(title: :desc, last_name: :asc, first_name: :asc)
   end
 
-  # Edycja / usunięcie istniejącego eventu. Mistrz Pióra i admin mogą wszystko;
-  # komendant tylko eventy u gospodarzy z `managed_hosts` (te same, dla których
-  # może w ogóle tworzyć).
   def can_manage_event?(event)
     return false if event.nil?
     return true if admin? || mistrz_piora?
+
     kurnikowy_komendant? && managed_hosts.exists?(id: event.host_id)
   end
 
-  # Żółtodziób to rola obserwatora — przegląda eventy, ale się nie zapisuje
-  # i nie jest zapraszany. Dopiero po awansie na kurzego pachołka (lub wyżej)
-  # zaczyna brać udział w zleceniach.
   def can_join_events?
     !zoltodziob?
   end
@@ -100,10 +86,6 @@ class User < ApplicationRecord
     host_blocks.exists?(host_id: host.id)
   end
 
-  # Invariant: mistrz_piora nigdy nie ma HostBlocków. Gdy user zostaje promowany
-  # (np. z konsoli: `u.update!(title: :mistrz_piora)`), czyścimy wszystkie
-  # istniejące blokady — bez tego walidacja `HostBlock#user_is_not_mistrz_piora`
-  # chroniłaby jedynie przed tworzeniem nowych, a stare zostawałyby „osierocone".
   def clear_host_blocks_on_mistrz_promotion
     return unless mistrz_piora?
 
