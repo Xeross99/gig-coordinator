@@ -1,5 +1,5 @@
 class SwapProposal < ApplicationRecord
-  EXPIRATION_WINDOW = 1.hour
+  include Expirable
 
   belongs_to :event
   belongs_to :proposer, class_name: "User"
@@ -17,74 +17,55 @@ class SwapProposal < ApplicationRecord
   validate :target_must_be_confirmed, on: :create
   validate :proposer_cannot_be_target
 
-  # Jeden job wygaśnięcia per propozycja, odpalany dokładnie o expires_at —
-  # zamiast sweepera co minutę. Idempotentny (job sprawdza pending? + czas).
-  after_create_commit :schedule_expiration_job
-
-  def time_expired?
-    expires_at.present? && expires_at <= Time.current
-  end
-
-  # Finalizacja wymiany — atomowo pod pesymistycznym lockiem na Event
-  # (jedna implementacja dla web SwapProposalsController i API).
-  # Pod lockiem re-walidujemy warunki (pending? + strony wciąż na swoich
-  # pozycjach), unieważniamy konkurencyjne pending propozycje (pozostałe
-  # tego proposera i te celujące w tego targeta na tym evencie), robimy
-  # swap pozycji (`swap_transition` wyłącza refill — slot przejmuje
-  # proposer, nie waitlista) i resequence waitlisty.
+  # Finalizacja wymiany, atomowo pod pesymistycznym lockiem na Event: pod
+  # lockiem re-walidujemy warunki, bo strony mogły się w międzyczasie ruszyć.
   #
-  # Zwraca true przy sukcesie; false gdy warunki się zmieniły (kontrolery
-  # tłumaczą to na `swap_proposals.conditions_changed`).
+  # Zwraca true przy sukcesie; false gdy warunki się zmieniły (kontroler
+  # tłumaczy to na `swap_proposals.conditions_changed`). Gałęzie `next false`
+  # nie potrzebują rollbacku — nic jeszcze nie zapisały.
   def accept!
-    error = false
-
     Event.transaction do
       event.lock!
       reload
-
-      unless pending?
-        error = true
-        raise ActiveRecord::Rollback
-      end
+      next false unless pending?
 
       proposer_p = event.participations.waitlist.find_by(user_id: proposer_id)
       target_p   = event.participations.confirmed.find_by(user_id: target_id)
+      next false unless proposer_p && target_p
 
-      unless proposer_p && target_p
-        error = true
-        raise ActiveRecord::Rollback
-      end
-
-      target_position = target_p.position
-
-      SwapProposal.pending.where(event: event, proposer_id: proposer_id)
-                  .where.not(id: id)
-                  .update_all(status: SwapProposal.statuses[:expired])
-
-      SwapProposal.pending.where(event: event, target_id: target_id)
-                  .where.not(id: id)
-                  .update_all(status: SwapProposal.statuses[:expired])
-
-      update!(status: :accepted)
-
-      target_p.swap_transition = :swapped_out
-      target_p.update!(status: :cancelled)
-
-      proposer_p.swap_transition = :swapped_in
-      proposer_p.update!(status: :confirmed, position: target_position)
-
-      Participation.resequence!(event, :waitlist)
+      expire_competing_proposals
+      perform_swap!(proposer_p, target_p)
+      true
     end
-
-    !error
   end
 
   private
 
-  def schedule_expiration_job
-    return if expires_at.blank?
+  # Wymiana zamyka też inne pending propozycje, które właśnie straciły sens:
+  # pozostałe tego proposera (dostał już slot) i te celujące w tego targeta
+  # (nie jest już confirmed).
+  def expire_competing_proposals
+    others = SwapProposal.pending.where(event_id: event_id).where.not(id: id)
 
-    SwapExpirationJob.set(wait_until: expires_at).perform_later(swap_proposal_id: id)
+    others.where(proposer_id: proposer_id)
+          .or(others.where(target_id: target_id))
+          .update_all(status: SwapProposal.statuses[:expired])
+  end
+
+  # `swap_transition` wyłącza refill po stronie Participation — zwolniony slot
+  # przejmuje proposer, a nie najstarszy waitlister.
+  def perform_swap!(proposer_p, target_p)
+    target_position = target_p.position
+
+    update!(status: :accepted)
+
+    target_p.swap_transition = :swapped_out
+    target_p.update!(status: :cancelled)
+
+    proposer_p.swap_transition = :swapped_in
+    proposer_p.update!(status: :confirmed, position: target_position)
+
+    Participation.resequence!(event, :waitlist)
   end
 
   def proposer_must_be_on_waitlist
@@ -102,6 +83,8 @@ class SwapProposal < ApplicationRecord
   end
 
   def proposer_cannot_be_target
-    errors.add(:target, "cannot be the same as proposer") if proposer_id == target_id
+    return if proposer_id != target_id
+
+    errors.add(:target, "cannot be the same as proposer")
   end
 end

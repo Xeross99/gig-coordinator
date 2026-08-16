@@ -4,6 +4,7 @@ class LoginCode < ApplicationRecord
 
   belongs_to :authenticatable, polymorphic: true
 
+  # Exactly 5 digits, leading zeros kept (stored as a string, e.g. "00042").
   validates :code, presence: true, format: { with: /\A\d{5}\z/ }
   validates :expires_at, presence: true
 

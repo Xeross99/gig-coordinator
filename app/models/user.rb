@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  include Titleable, Premiumable, Calendarable, Avatarable
+  include Titleable, Premiumable, Calendarable, Disableable, Avatarable
 
   # Presence is inferred from the throttled last_seen_at stamp written by
   # ApplicationController#touch_last_seen. Five minutes is a comfortable idle
@@ -21,13 +21,6 @@ class User < ApplicationRecord
   has_many :swap_proposals_as_proposer, class_name: "SwapProposal", foreign_key: :proposer_id, dependent: :destroy
   has_many :swap_proposals_as_target, class_name: "SwapProposal", foreign_key: :target_id, dependent: :destroy
 
-  # Konto wyłączone przez admina: user nie dostaje żadnych powiadomień
-  # (push, e-mail), nie dostaje auto-rezerwacji i nie może się zalogować
-  # (kod logowania nie jest wydawany, aktywne sesje są ubijane przy
-  # wyłączeniu). Dane i historia zostają nietknięte — to jest alternatywa
-  # dla twardego kasowania konta.
-  scope :enabled, -> { where(disabled_at: nil) }
-
   normalizes :email, with: ->(v) { v.to_s.strip.downcase.presence }
   normalizes :phone, with: ->(v) { v.to_s.strip.presence }
 
@@ -35,28 +28,13 @@ class User < ApplicationRecord
   validates :first_name, presence: true, uniqueness: { scope: :last_name, case_sensitive: false }
   validates :email, presence: true, uniqueness: { case_sensitive: true }, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
 
-  after_create_commit :send_welcome_email
-  after_update_commit :clear_host_blocks_on_mistrz_promotion
-  after_update_commit :send_rank_promotion_email
+  after_create_commit { WelcomeMailer.notify(self).deliver_later }
+
+  after_update_commit :clear_host_blocks_on_mistrz_promotion, :send_rank_promotion_email,
+                      if: :saved_change_to_title?
 
   def display_name
     "#{first_name} #{last_name}"
-  end
-
-  def disabled?
-    disabled_at.present?
-  end
-
-  def disable!
-    transaction do
-      update!(disabled_at: Time.current)
-      sessions.destroy_all           # natychmiastowe wylogowanie wszędzie
-      login_codes.delete_all         # aktywny kod nie może posłużyć do wejścia
-    end
-  end
-
-  def enable!
-    update!(disabled_at: nil)
   end
 
   # Chwilowo tylko admin może tworzyć eventy — niezależnie od rangi.
@@ -76,9 +54,13 @@ class User < ApplicationRecord
   # pióra — wszyscy; komendant — tylko zarządzani (`managed_hosts`); reszta —
   # nikt. Jedno źródło prawdy dla EventsController i EventCampaignsController.
   def allowed_hosts
-    return Host.all if admin? || mistrz_piora?
-    return managed_hosts if kurnikowy_komendant?
-    Host.none
+    if admin? || mistrz_piora?
+      Host.all
+    elsif kurnikowy_komendant?
+      managed_hosts
+    else
+      []
+    end
   end
 
   # Kandydaci do „Zapisz od razu" (pre-registracja przy tworzeniu eventu /
@@ -114,11 +96,8 @@ class User < ApplicationRecord
 
   def blocked_from?(host)
     return false if host.nil?
-    host_blocks.exists?(host_id: host.id)
-  end
 
-  def send_welcome_email
-    WelcomeMailer.notify(self).deliver_later
+    host_blocks.exists?(host_id: host.id)
   end
 
   # Invariant: mistrz_piora nigdy nie ma HostBlocków. Gdy user zostaje promowany
@@ -126,18 +105,13 @@ class User < ApplicationRecord
   # istniejące blokady — bez tego walidacja `HostBlock#user_is_not_mistrz_piora`
   # chroniłaby jedynie przed tworzeniem nowych, a stare zostawałyby „osierocone".
   def clear_host_blocks_on_mistrz_promotion
-    return unless saved_change_to_title? && mistrz_piora?
+    return unless mistrz_piora?
+
     HostBlock.where(user_id: id).delete_all
   end
 
-  # Każdy awans (przejście na wyższą rangę w hierarchii enuma) wysyła maila.
-  # Degradacje są ciche — nie ma sensu witać kogoś, kto właśnie spadł niżej.
-  # `saved_change_to_title` zwraca [poprzednia, nowa] wartość po zapisie; gdy
-  # nowy index > poprzedni, to awans. Pierwsze ustawienie tytułu (np. seed,
-  # console.create) ma `prev = nil` — wtedy nic nie wysyłamy, mail leci dopiero
-  # przy realnej promocji.
   def send_rank_promotion_email
-    return unless saved_change_to_title? && email.present?
+    return unless email.present?
 
     prev_title, new_title = saved_change_to_title
     return if prev_title.blank?

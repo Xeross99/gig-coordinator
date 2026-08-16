@@ -1,5 +1,4 @@
 class CampaignParticipationEvent < ApplicationRecord
-  # Append-only audit log dla `CampaignParticipation` (mirror `ParticipationEvent`).
   self.inheritance_column = nil
 
   belongs_to :campaign_participation
