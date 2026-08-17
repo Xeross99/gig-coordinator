@@ -55,9 +55,15 @@
    jako tło. Filtrujemy `[type="submit"]` żeby celowo nie ruszać statycznie
    disabled-owanych `<button type="button" disabled>` (zoltodziob lock,
    blocked-banner-fallback itp.) — tam disabled to product state, nie
-   loading state. */
-form button[type="submit"][disabled],
-form input[type="submit"][disabled] {
+   loading state.
+
+   `[data-static-disabled]` to ta sama furtka dla submitów, które renderują
+   się wyłączone i czekają na JS (np. „Zapisz zdjęcie" na /profil/edit czeka
+   na DirectUpload) — bez tego przycisk już po wejściu na stronę udaje, że
+   coś się ładuje. Atrybut zdejmuje ten sam kontroler, który włącza przycisk,
+   więc realny submit dostaje pasek normalnie. */
+form button[type="submit"][disabled]:not([data-static-disabled]),
+form input[type="submit"][disabled]:not([data-static-disabled]) {
   background-image: linear-gradient(
     90deg,
     color-mix(in srgb, currentColor 28%, transparent) 0%,

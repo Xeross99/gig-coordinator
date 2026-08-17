@@ -91,10 +91,13 @@
   </div>
 
   <%# Startuje wyłączony — photo_upload_controller.js włącza go dopiero po udanym
-      DirectUpload, więc formularz nie może wyjść bez `user[photo]`. %>
+      DirectUpload, więc formularz nie może wyjść bez `user[photo]`.
+      `static_disabled` wypisuje ten stan z globalnego progress-bar fallbacku
+      w `animations.css` (inaczej przycisk animuje ładowanie od wejścia na
+      stronę); kontroler kasuje atrybut razem z `disabled`. %>
   <%= f.submit "Zapisz zdjęcie", disabled: true,
                class: "w-full py-3 rounded-lg bg-stone-900 text-white font-medium disabled:opacity-40",
-               data: { photo_upload_target: "submit", turbo_submits_with: "Zapisuję…" } %>
+               data: { photo_upload_target: "submit", static_disabled: true, turbo_submits_with: "Zapisuję…" } %>
 <% end %>
 
 <%# Karta pracownika — tło profilu à la Call of Duty. Sekcja tylko dla kont
