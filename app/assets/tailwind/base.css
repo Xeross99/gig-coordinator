@@ -1,0 +1,21 @@
+/* Base: wymuszony light mode + globalne zachowanie dokumentu.
+   Apka nie ma dark-mode palety, więc systemowy dark musi być zablokowany
+   twardo (`only light` + jawne kolory na html/body), inaczej Safari/Chrome
+   przemalowują tła formularzy i tekst. */
+:root {
+  color-scheme: only light !important;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: only light !important;
+  }
+  html, body {
+    background-color: #fafaf9 !important;
+    color: #1c1917 !important;
+  }
+}

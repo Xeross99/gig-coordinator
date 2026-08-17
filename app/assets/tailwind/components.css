@@ -1,0 +1,29 @@
+/* Komponenty: wygląd elementów, których nie da się złożyć samymi utility
+   klasami w widoku. Keyframes, do których odwołują się te reguły, leżą w
+   `animations.css`. */
+
+/* Wskaźnik pull-to-refresh — stany nadawane przez `pull_to_refresh_controller.js`
+   (`ready` = próg przekroczony, `refreshing` = trwa reload). */
+.pull-to-refresh-indicator.ready,
+.pull-to-refresh-indicator.refreshing {
+  background: var(--color-stone-900);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.25), 0 4px 6px -4px rgba(0, 0, 0, 0.15);
+}
+.pull-to-refresh-indicator.ready svg,
+.pull-to-refresh-indicator.refreshing svg {
+  color: white;
+}
+.pull-to-refresh-indicator.refreshing svg {
+  animation: pull-spin 600ms linear infinite;
+}
+
+/* Unified <select> appearance: strip native chevron, draw a stone-500 SVG chevron so selects match text/number inputs. */
+.form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2378716c'><path fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 011.08 1.04l-4.25 4.4a.75.75 0 01-1.08 0l-4.25-4.4a.75.75 0 01.02-1.06z' clip-rule='evenodd' /></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2.25rem;
+}

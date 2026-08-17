@@ -1,0 +1,72 @@
+/* Animacje UI (wszystko poza view transitions — te siedzą w
+   `view-transitions.css`). */
+
+@theme {
+  --animate-pop-in: pop-in 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-bump: bump 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Spinner pull-to-refresh (wygląd samego wskaźnika: `components.css`). */
+@keyframes pull-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Turbo-style progress bar replicated jako tło przycisku w trakcie submitu —
+   semi-transparent fill rośnie z 0% do ~92% szerokości przycisku z
+   asymptotyczną krzywą (szybko na początku, wolniej pod koniec) — ten sam
+   vibe co domyślny `.turbo-progress-bar` na górze strony, tylko nakładany
+   na tle przycisku. Apply przez utility-class `animate-turbo-loading`
+   (w połączeniu z `disabled:` modifier-em żeby odpalić się tylko gdy Turbo
+   disable-uje przycisk podczas submit). */
+@keyframes turbo-loading-progress {
+  0%   { background-size:   0% 100%; }
+  100% { background-size:  92% 100%; }
+}
+
+@utility animate-turbo-loading {
+  /* `currentColor` adoptuje kolor tekstu przycisku, więc fill jest widoczny
+     i na ciemnych przyciskach (biały tekst → biały fill na czarnym tle),
+     i na białych z borderem (stone-800 tekst → szary fill na białym tle),
+     i na amber. */
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, currentColor 28%, transparent) 0%,
+    color-mix(in srgb, currentColor 28%, transparent) 100%
+  );
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  animation: turbo-loading-progress 6s cubic-bezier(0, 0.7, 0.3, 1) forwards;
+}
+
+/* Global fallback — KAŻDY disabled-by-turbo submit button (bez explicite
+   dodawania `disabled:animate-turbo-loading`) dostaje progress-bar fill
+   jako tło. Filtrujemy `[type="submit"]` żeby celowo nie ruszać statycznie
+   disabled-owanych `<button type="button" disabled>` (zoltodziob lock,
+   blocked-banner-fallback itp.) — tam disabled to product state, nie
+   loading state. */
+form button[type="submit"][disabled],
+form input[type="submit"][disabled] {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, currentColor 28%, transparent) 0%,
+    color-mix(in srgb, currentColor 28%, transparent) 100%
+  );
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  animation: turbo-loading-progress 6s cubic-bezier(0, 0.7, 0.3, 1) forwards;
+  cursor: progress;
+  opacity: 0.85;
+}
