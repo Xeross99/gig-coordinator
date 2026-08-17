@@ -1,15 +1,10 @@
-# Składa `scheduled_at`/`ends_at` z surowych pól formularza/API:
-# `event_date` + `start_hour`/`start_minute` (dwa selecty 24h) oraz
-# `duration_hours`/`duration_minutes`. Model trzyma dwa pełne datetime'y —
-# rozbicie na osobne pola jest wyłącznie UI-owe, a to jest jedyne miejsce,
-# gdzie te pola są sklejane z powrotem (web, panel hosta, kampanie, API).
-#
-# `attrs` może być ActionController::Parameters (permitted), Hash lub
-# HashWithIndifferentAccess — surowe pola są z niego USUWANE (delete),
-# a przy kompletnych danych dopisywane są `scheduled_at`/`ends_at`.
-# Guard: bez `event_date` + `start_hour` nic nie składamy (zachowanie
-# webowe — API wcześniej parsowało "na ślepo" i przy braku daty
-# produkowało dzisiejszą północ; teraz brak danych = brak zmiany pól).
+# The form splits a schedule across `event_date`, `start_hour`/`start_minute`
+# and `duration_hours`/`duration_minutes`; the model stores two plain datetimes.
+# This is the only place that folds those fields back together — the split is
+# purely a UI concern. Raw fields are deleted from `attrs` (Parameters or Hash)
+# and replaced by `scheduled_at`/`ends_at`. Without a date and hour nothing is
+# composed, so an incomplete submit leaves both columns untouched instead of
+# silently producing today's midnight.
 module EventSchedule
   def self.compose(attrs)
     date         = attrs.delete(:event_date)

@@ -4,7 +4,7 @@ class ProfilesController < ApplicationController
   # renderuje ten sam widok przy nieudanej walidacji. Gdy siedziała w akcji,
   # taki render trafiał na `@sessions == nil` i wywalał się na `.each`
   # zamiast pokazać błąd formularza.
-  before_action :load_sessions, only: %i[edit update]
+  before_action :set_sessions, only: %i[edit update]
 
   def edit; end
 
@@ -36,7 +36,7 @@ class ProfilesController < ApplicationController
   end
 
   # Bieżąca sesja na górze listy, reszta od ostatnio widzianej.
-  def load_sessions
+  def set_sessions
     sessions = @user.sessions.to_a.sort_by { |s| -(s.last_seen_at || s.created_at).to_i }
     current  = sessions.find { |s| s.id == Current.session.id }
     @sessions = current ? [ current, *(sessions - [ current ]) ] : sessions

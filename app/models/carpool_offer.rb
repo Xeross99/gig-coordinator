@@ -60,6 +60,17 @@ class CarpoolOffer < ApplicationRecord
     passengers_in_pickup_order.first
   end
 
+  # „Czy kierowca stoi właśnie pode mną" i „czy jadę jako pierwszy" — pytania
+  # o stan trasy względem konkretnego pasażera. Na modelu, a nie w widoku, bo
+  # oba panele podwózki (i pushe) zadają je w kilku miejscach.
+  def current_pickup?(user)
+    user.present? && current_pickup_user_id == user.id
+  end
+
+  def first_pickup?(user)
+    user.present? && first_pickup_user&.id == user.id
+  end
+
   # State transitions used by CarpoolTripsController. Wszystkie idą przez
   # zwykły `update!`, więc after_commit z broadcastem rostera odpala automatycznie.
   # `ordered_user_ids` to kolejność odbierania z modalu „Wyjeżdżam" — brak

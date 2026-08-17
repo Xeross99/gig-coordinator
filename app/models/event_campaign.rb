@@ -111,8 +111,7 @@ class EventCampaign < ApplicationRecord
     broadcast_prepend_to(
       :event_campaigns,
       target: "events_list",
-      partial: "event_campaigns/event_campaign_card",
-      locals: { campaign: self }
+      partial: "event_campaigns/event_campaign_card"
     )
   end
 
@@ -124,8 +123,7 @@ class EventCampaign < ApplicationRecord
     broadcast_replace_to(
       :event_campaigns,
       target: ActionView::RecordIdentifier.dom_id(self),
-      partial: "event_campaigns/event_campaign_card",
-      locals: { campaign: self }
+      partial: "event_campaigns/event_campaign_card"
     )
   end
 

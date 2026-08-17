@@ -95,35 +95,29 @@ module EventsHelper
 
   # [bg-color-class, svg-path] pair keyed off the entry kind + participation
   # status. Icons are Heroicons mini paths (solid, 20×20 viewBox).
+  # Zwraca [klasa tła kółka, nazwa ikony]. Ikona to partial z app/views/icons —
+  # inline SVG, a nie plik z assetów, bo `fill="currentColor"` pozwala pomalować
+  # ją klasą z zewnątrz; `image_tag` na pliku .svg tego nie potrafi.
   def history_entry_visuals(entry)
-    plus_path  = "M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"
-    pencil     = "M2.695 14.763l-1.262 3.154a.5.5 0 0 0 .65.65l3.155-1.262a4 4 0 0 0 1.343-.885L17.5 5.5a2.121 2.121 0 0 0-3-3L3.58 13.42a4 4 0 0 0-.885 1.343Z"
-    check      = "M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-    x_circle   = "M8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22ZM10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-7.5 9a7.5 7.5 0 1 1 15 0 7.5 7.5 0 0 1-15 0Z"
-    star       = "M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z"
-    arrow_up   = "M10 17a.75.75 0 0 1-.75-.75V5.612L5.29 9.77a.75.75 0 0 1-1.08-1.04l5.25-5.5a.75.75 0 0 1 1.08 0l5.25 5.5a.75.75 0 1 1-1.08 1.04L10.75 5.612V16.25A.75.75 0 0 1 10 17Z"
-    clock      = "M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .199.079.39.22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78V5Z"
-    thumbs_up  = "M1 8.25a1.25 1.25 0 1 1 2.5 0v7.5a1.25 1.25 0 1 1-2.5 0v-7.5ZM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0 1 14 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 0 1-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 0 1-1.341-.317l-2.734-1.366A3 3 0 0 0 6.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 0 1 2.166-1.73c.432-.143.853-.386.853-.842V3Z"
-
     case entry[:kind]
-    when :created            then [ "bg-stone-500", plus_path ]
-    when :edited             then [ "bg-sky-500",   pencil    ]
+    when :created then [ "bg-stone-500", "plus" ]
+    when :edited  then [ "bg-sky-500",   "pencil" ]
     when :participation_event
       case entry[:participation_event].event_type
-      when "joined"           then [ "bg-emerald-500", check     ]
-      when "joined_waitlist"  then [ "bg-orange-500",  check     ]
-      when "promoted"         then [ "bg-emerald-500", arrow_up  ]
-      when "accepted"         then [ "bg-emerald-500", thumbs_up ]
-      when "reserved"         then [ "bg-indigo-500",  star      ]
-      when "declined"         then [ "bg-red-400",     x_circle  ]
-      when "cancelled"        then [ "bg-red-400",     x_circle  ]
-      when "expired"          then [ "bg-stone-400",   clock     ]
-      when "swapped_in"       then [ "bg-indigo-500",  arrow_up  ]
-      when "swapped_out"      then [ "bg-indigo-400",  x_circle  ]
-      else                         [ "bg-stone-400",   clock     ]
+      when "joined"          then [ "bg-emerald-500", "check" ]
+      when "joined_waitlist" then [ "bg-orange-500",  "check" ]
+      when "promoted"        then [ "bg-emerald-500", "arrow_up" ]
+      when "accepted"        then [ "bg-emerald-500", "thumbs_up" ]
+      when "reserved"        then [ "bg-indigo-500",  "star" ]
+      when "declined"        then [ "bg-red-400",     "x_circle" ]
+      when "cancelled"       then [ "bg-red-400",     "x_circle" ]
+      when "expired"         then [ "bg-stone-400",   "clock" ]
+      when "swapped_in"      then [ "bg-indigo-500",  "arrow_up" ]
+      when "swapped_out"     then [ "bg-indigo-400",  "x_circle" ]
+      else                        [ "bg-stone-400",   "clock" ]
       end
     else
-      [ "bg-stone-400", clock ]
+      [ "bg-stone-400", "clock" ]
     end
   end
 

@@ -1,6 +1,6 @@
 module HostAdmin
   class EventsController < BaseController
-    before_action :load_event, only: %i[show edit update destroy]
+    before_action :set_event, only: %i[show edit update destroy]
 
     def index
       @events = Current.host.events.order(scheduled_at: :desc)
@@ -30,7 +30,10 @@ module HostAdmin
     def edit; end
 
     def update
-      @event.edited_by = nil  # Host edits — log row landuje z user_id = nil → „przez gospodarza".
+      # A host is editing, not a worker - the change log row gets user_id = nil,
+      # which the history renders as „przez gospodarza".
+      @event.edited_by = nil
+
       if @event.update(event_params)
         redirect_to host_event_path(@event)
       else
@@ -45,7 +48,7 @@ module HostAdmin
 
     private
 
-    def load_event
+    def set_event
       @event = Current.host.events.find(params[:id])
     end
 

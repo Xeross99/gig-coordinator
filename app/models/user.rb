@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  include Titleable, Premiumable, Calendarable, Disableable, Avatarable
+  include Nameable, Titleable, Premiumable, Calendarable, Disableable, Avatarable
 
   # Presence is inferred from the throttled last_seen_at stamp written by
   # Trackable#touch_last_seen. Five minutes is a comfortable idle
@@ -31,10 +31,6 @@ class User < ApplicationRecord
   after_create_commit { WelcomeMailer.notify(self).deliver_later }
 
   after_update_commit :clear_host_blocks_on_mistrz_promotion, :send_rank_promotion_email, if: :saved_change_to_title?
-
-  def display_name
-    "#{first_name} #{last_name}"
-  end
 
   def can_create_events?
     mistrz_piora? || (kurnikowy_komendant? && managed_hosts.exists?)

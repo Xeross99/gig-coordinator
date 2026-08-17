@@ -1,7 +1,7 @@
 class CarpoolTripsController < ApplicationController
   include EventLockable
 
-  before_action :load_offer
+  before_action :set_offer
 
   # POST /eventy/:event_id/podwozka/trasa/depart
   # params[:pickup_order] — user_ids w kolejności odbierania z modalu (drag & drop).
@@ -36,7 +36,7 @@ class CarpoolTripsController < ApplicationController
 
   private
 
-  def load_offer
+  def set_offer
     @offer = @event.carpool_offers.find_by(user_id: Current.user.id)
     return if @offer
 

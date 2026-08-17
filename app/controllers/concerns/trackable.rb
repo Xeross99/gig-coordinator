@@ -6,28 +6,23 @@
 module Trackable
   extend ActiveSupport::Concern
 
+  THROTTLE = 1.minute
+
   included do
-    # MUSI być includowane PO Authenticatable — kolejność rejestracji filtrów
-    # jest kolejnością wykonania, a ten czyta `Current.session`, którą ustawia
-    # `load_current_session`. Odwrotnie byłby cichym no-opem: żadnego wyjątku,
-    # tylko martwy wskaźnik „online" i pusta data na liście urządzeń.
     before_action :touch_last_seen
   end
 
   private
 
   def touch_last_seen
-    touch_session_last_seen
-    return unless Current.user
-    last = Current.user.last_seen_at
-    return if last && last > 1.minute.ago
-    Current.user.update_column(:last_seen_at, Time.current)
+    touch_last_seen_on(Current.session)
+    touch_last_seen_on(Current.user)
   end
 
-  def touch_session_last_seen
-    session = Current.session
-    return unless session
-    return if session.last_seen_at && session.last_seen_at > 1.minute.ago
-    session.update_column(:last_seen_at, Time.current)
+  def touch_last_seen_on(record)
+    return if record.nil?
+    return if record.last_seen_at&.after?(THROTTLE.ago)
+
+    record.update_column(:last_seen_at, Time.current)
   end
 end

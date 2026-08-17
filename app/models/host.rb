@@ -1,5 +1,5 @@
 class Host < ApplicationRecord
-  include Avatarable
+  include Nameable, Avatarable
 
   has_many :events, dependent: :destroy
   has_many :event_campaigns, dependent: :destroy
@@ -15,8 +15,4 @@ class Host < ApplicationRecord
   validates :last_name, :location, presence: true
   validates :first_name, presence: true, uniqueness: { scope: :last_name, case_sensitive: false }
   validates :email, uniqueness: { case_sensitive: true, allow_blank: true }, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
-
-  def display_name
-    "#{first_name} #{last_name}"
-  end
 end

@@ -13,7 +13,7 @@
       <ul role="list" class="-mb-8">
         <% @entries.each_with_index do |entry, i| %>
           <% is_last = i == @entries.length - 1 %>
-          <% color, icon_path = history_entry_visuals(entry) %>
+          <% color, icon_name = history_entry_visuals(entry) %>
           <li>
             <%# All rows keep pb-8 so the ul's -mb-8 cancels the last one's
                 padding cleanly — without it the last timestamp slides below
@@ -25,9 +25,7 @@
               <div class="relative flex space-x-3">
                 <div>
                   <span class="flex size-8 items-center justify-center rounded-full <%= color %> ring-8 ring-white">
-                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 text-white">
-                      <path d="<%= icon_path %>" clip-rule="evenodd" fill-rule="evenodd" />
-                    </svg>
+                    <%= icon(icon_name, class_name: "size-5 text-white") %>
                   </span>
                 </div>
                 <div class="flex min-w-0 flex-1 justify-between gap-4 pt-1.5">

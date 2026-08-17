@@ -1,6 +1,6 @@
 module HostAdmin
   class EventCampaignsController < BaseController
-    before_action :load_campaign, only: %i[show edit update destroy]
+    before_action :set_campaign, only: %i[show edit update destroy]
 
     def index
       @campaigns = Current.host.event_campaigns.order(created_at: :desc)
@@ -53,7 +53,7 @@ module HostAdmin
 
     private
 
-    def load_campaign
+    def set_campaign
       @campaign = Current.host.event_campaigns.find(params[:id])
     end
 

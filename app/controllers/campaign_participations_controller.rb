@@ -1,5 +1,5 @@
 class CampaignParticipationsController < ApplicationController
-  before_action :load_campaign
+  before_action :set_campaign
 
   # POST /kampanie/:event_campaign_id/uczestnictwo
   # Standardowy zapis się NIE pojawia jako self-service: primary roster buduje
@@ -88,7 +88,7 @@ class CampaignParticipationsController < ApplicationController
 
   private
 
-  def load_campaign
+  def set_campaign
     @campaign = EventCampaign.find(params[:event_campaign_id])
   end
 

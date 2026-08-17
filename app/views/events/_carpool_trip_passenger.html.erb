@@ -1,21 +1,17 @@
 <%# locals: (event:, offer:) -%>
-<%# Pokazywane pasażerowi gdy trasa jest w toku. Wyróżniamy (emerald) stan,
-    w którym kierowca aktualnie czeka POD MOIM domem albo jedzie najpierw
-    po mnie, od ogólnego „kierowca u kogoś innego / w drodze" (sky). %>
-<% i_am_pickup = Current.user && offer.current_pickup_user_id == Current.user.id %>
-<% first_pickup = offer.first_pickup_user %>
-<% i_am_first = Current.user && first_pickup && first_pickup.id == Current.user.id %>
-<% highlight = i_am_pickup || (offer.en_route? && i_am_first) %>
-<div class="mt-3 rounded-lg border px-3 py-2 text-sm <%= highlight ? 'border-emerald-300 bg-emerald-50 text-emerald-900' : 'border-sky-200 bg-white text-sky-900' %>">
-  <% if offer.en_route? && i_am_first %>
-    🚗 <span class="font-medium"><%= offer.user.display_name %></span> wyjechał — jedzie najpierw po Ciebie!
-  <% elsif offer.en_route? && first_pickup %>
-    🚗 <span class="font-medium"><%= offer.user.display_name %></span> jest w drodze — najpierw jedzie po: <span class="font-medium"><%= first_pickup.display_name %></span>.
-  <% elsif offer.en_route? %>
-    🚗 <span class="font-medium"><%= offer.user.display_name %></span> jest w drodze.
-  <% elsif offer.picking_up? && i_am_pickup %>
-    🚗 <span class="font-medium"><%= offer.user.display_name %></span> czeka pod Twoim domem — wsiadaj.
-  <% elsif offer.picking_up? && offer.current_pickup_user %>
-    🚗 <span class="font-medium"><%= offer.user.display_name %></span> jest teraz u: <span class="font-medium"><%= offer.current_pickup_user.display_name %></span>.
+<% driver = offer.user %>
+
+<div class="mt-3 rounded-lg border px-3 py-2 text-sm <%= carpool_passenger_panel_classes(offer) %>">
+  <% case carpool_passenger_state(offer) %>
+  <% when :departed_for_me %>
+    🚗 <span class="font-medium"><%= driver.display_name %></span> wyjechał — jedzie najpierw po Ciebie!
+  <% when :departed_for_other %>
+    🚗 <span class="font-medium"><%= driver.display_name %></span> jest w drodze — najpierw jedzie po: <span class="font-medium"><%= offer.first_pickup_user.display_name %></span>.
+  <% when :departed %>
+    🚗 <span class="font-medium"><%= driver.display_name %></span> jest w drodze.
+  <% when :at_my_place %>
+    🚗 <span class="font-medium"><%= driver.display_name %></span> czeka pod Twoim domem — wsiadaj.
+  <% when :at_other_place %>
+    🚗 <span class="font-medium"><%= driver.display_name %></span> jest teraz u: <span class="font-medium"><%= offer.current_pickup_user.display_name %></span>.
   <% end %>
 </div>

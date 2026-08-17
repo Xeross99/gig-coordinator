@@ -1,73 +1,48 @@
-<%# Renders one campaign card.
-    Locals: campaign:, pending_reservation: (optional),
-    campaign_upcoming_events:, campaign_slots_taken:, my_sub_event_status:
-    (optional — feed batchuje je w kontrolerze; broadcasty renderują kartę
-    bez nich i wtedy partial liczy sam). %>
-<% campaign = local_assigns[:campaign] || event_campaign %>
-<% pending  = local_assigns[:pending_reservation] %>
-<% completed = campaign.completed? %>
-<% upcoming_preview_limit = 3 %>
-<% all_upcoming = local_assigns[:campaign_upcoming_events] ||
-     campaign.events.where("scheduled_at > ?", Time.current).order(:scheduled_at).to_a %>
-<% upcoming_events = all_upcoming.first(upcoming_preview_limit + 1) %>
-<% extra_upcoming = [ all_upcoming.size - upcoming_preview_limit, 0 ].max %>
-<% slots_taken = local_assigns[:campaign_slots_taken] || campaign.slots_taken %>
-<% preview_event_ids = upcoming_events.first(upcoming_preview_limit).map(&:id) %>
-<% my_sub_event_status = local_assigns[:my_sub_event_status] ||
-     if Current.user && preview_event_ids.any?
-       Current.user.participations.where(event_id: preview_event_ids).where.not(status: :cancelled)
-              .index_by(&:event_id).transform_values(&:status)
-     else
-       {}
-     end %>
-<li id="<%= dom_id(campaign) %>"
-    class="rounded-xl shadow-sm overflow-hidden relative <%= completed ? 'bg-stone-100' : 'bg-gradient-to-br from-amber-50 via-white to-white ring-1 ring-amber-100' %> <%= 'ring-2 ring-indigo-400' if pending %>">
-  <% if pending %>
+<%# locals: (event_campaign:, pending_reservation: false, campaign_upcoming_events: nil,
+             campaign_slots_taken: nil, my_sub_event_status: nil) -%>
+<%# Karta serii zleceń. Trzy ostatnie locale są opcjonalne: feed batchuje je
+    w kontrolerze, a broadcast renderuje kartę bez nich i wtedy `campaign_card`
+    dolicza brakujące kawałki sam. %>
+<% card = campaign_card(event_campaign, upcoming: campaign_upcoming_events,
+                        statuses: my_sub_event_status, slots_taken: campaign_slots_taken) %>
+<li id="<%= dom_id(event_campaign) %>"
+    class="rounded-xl shadow-sm overflow-hidden relative <%= event_campaign.completed? ? 'bg-stone-100' : 'bg-gradient-to-br from-amber-50 via-white to-white ring-1 ring-amber-100' %> <%= 'ring-2 ring-indigo-400' if pending_reservation %>">
+  <% if pending_reservation %>
     <span aria-hidden="true" class="absolute top-2 right-2 z-10 flex size-3">
       <span class="absolute inline-flex size-full rounded-full bg-indigo-400 opacity-75 animate-ping"></span>
       <span class="relative inline-flex size-3 rounded-full bg-indigo-500"></span>
     </span>
   <% end %>
-  <%= link_to event_campaign_path(campaign), class: "block p-4" do %>
+  <%= link_to event_campaign_path(event_campaign), class: "block p-4" do %>
     <div class="min-w-0">
       <div class="flex items-center flex-wrap gap-x-2 gap-y-1">
-        <span class="font-medium text-stone-900 truncate"><%= campaign.name %></span>
+        <span class="font-medium text-stone-900 truncate"><%= event_campaign.name %></span>
       </div>
       <div class="flex items-center gap-1.5 text-xs text-stone-500 mt-1">
-        <% host = campaign.host %>
-        <%= render "shared/host_avatar", host: host %>
-        <span class="truncate">Gospodarz: <%= host.display_name %></span>
-        <%= render "hosts/supporter_badge", host: host %>
+        <%= render "shared/host_avatar", host: event_campaign.host %>
+        <span class="truncate">Gospodarz: <%= event_campaign.host.display_name %></span>
+        <%= render "hosts/supporter_badge", host: event_campaign.host %>
       </div>
       <div class="flex items-center gap-3 text-xs text-stone-500 mt-1">
-        <span>Stały skład: <%= slots_taken %>/<%= campaign.capacity %></span>
+        <span>Stały skład: <%= card.slots_taken %>/<%= event_campaign.capacity %></span>
       </div>
-      <% if pending %>
+      <% if pending_reservation %>
         <div class="text-xs text-indigo-600 mt-1 font-medium">Rezerwacja oczekuje na Twoje potwierdzenie</div>
       <% end %>
     </div>
 
     <div class="mt-3 rounded-lg bg-white/70 ring-1 ring-amber-100 px-3 py-2">
-      <% if upcoming_events.any? %>
+      <% if card.preview.any? %>
         <ul class="space-y-1">
-          <% upcoming_events.first(upcoming_preview_limit).each do |e| %>
-            <% sub_status = my_sub_event_status[e.id] %>
-            <% sub_chip = participation_status_badge(sub_status) %>
+          <% card.preview.each do |sub_event| %>
             <li class="flex items-center gap-2 min-w-0">
-              <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-emerald-100 text-emerald-700 shrink-0 tabular-nums"><%= relative_time_chip(e.scheduled_at) %></span>
-              <span class="text-xs text-stone-800 truncate min-w-0 flex-1"><%= e.name %></span>
-              <% if sub_chip %>
-                <span class="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium shrink-0 <%= sub_chip[0] %>">
-                  <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-2.5">
-                    <path d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"/>
-                  </svg>
-                  <%= sub_chip[1] %>
-                </span>
-              <% end %>
+              <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-emerald-100 text-emerald-700 shrink-0 tabular-nums"><%= relative_time_chip(sub_event.scheduled_at) %></span>
+              <span class="text-xs text-stone-800 truncate min-w-0 flex-1"><%= sub_event.name %></span>
+              <%= render "events/status_chip", status: card.statuses[sub_event.id] %>
             </li>
           <% end %>
-          <% if extra_upcoming > 0 %>
-            <li class="text-[11px] text-stone-400">+<%= extra_upcoming %> więcej</li>
+          <% if card.extra_count.positive? %>
+            <li class="text-[11px] text-stone-400">+<%= card.extra_count %> więcej</li>
           <% end %>
         </ul>
       <% else %>
