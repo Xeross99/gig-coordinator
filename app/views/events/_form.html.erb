@@ -1,5 +1,6 @@
 <%# locals: (event:, hosts:, url:, submit_label:, users_for_prereg: nil) -%>
-<%= form_with model: event, url: url, local: true, class: "space-y-4" do |f| %>
+
+<%= form_with model: event, url: url, class: "space-y-4" do |f| %>
   <% if event.errors.any? %>
     <div class="bg-red-50 text-red-800 rounded-lg p-3 text-sm">
       <ul class="list-disc list-inside">

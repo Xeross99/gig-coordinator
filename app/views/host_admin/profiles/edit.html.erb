@@ -2,9 +2,7 @@
 <%= render "shared/breadcrumbs", crumbs: [["Mój profil", nil]], home_path: host_root_path %>
 <h1 class="text-2xl font-semibold mb-4">Mój profil</h1>
 
-<%= form_with model: @host, url: host_profile_path, method: :patch, local: true,
-              class: "space-y-4",
-              data: { controller: "photo-upload", photo_upload_url_value: rails_direct_uploads_path } do |f| %>
+<%= form_with model: @host, url: host_profile_path, method: :patch, class: "space-y-4", data: { controller: "photo-upload", photo_upload_url_value: rails_direct_uploads_path } do |f| %>
   <% if @host.errors.any? %>
     <div class="bg-red-50 text-red-800 rounded-lg p-3 text-sm">
       <ul class="list-disc list-inside">

@@ -8,7 +8,7 @@
 
   <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
     <div class="bg-white px-6 py-12 shadow-sm sm:rounded-lg sm:px-12">
-      <%= form_with url: login_codes_path, scope: :login_code, method: :post, local: true, class: "space-y-6" do |f| %>
+      <%= form_with url: login_codes_path, scope: :login_code, method: :post, class: "space-y-6" do |f| %>
         <div>
           <%= f.label :email, "Adres e-mail", class: "block text-sm/6 font-medium text-stone-900" %>
           <div class="mt-2">

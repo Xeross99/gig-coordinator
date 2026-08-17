@@ -1,4 +1,4 @@
-<%= form_with model: user, local: true, class: "space-y-4 bg-white rounded-xl shadow-sm p-5",
+<%= form_with model: user, class: "space-y-4 bg-white rounded-xl shadow-sm p-5",
   data: { controller: "photo-upload", photo_upload_url_value: rails_direct_uploads_path } do |f| %>
   <% if user.errors.any? %>
     <div class="bg-red-50 text-red-800 rounded-lg p-3 text-sm">

@@ -1,6 +1,6 @@
 <%# Locals: campaign:, hosts:, url:, submit_label:, users_for_prereg: (optional). %>
-<%= form_with model: campaign, url: url, local: true, class: "space-y-4",
-              data: { controller: "nested-events" } do |f| %>
+
+<%= form_with model: campaign, url: url, class: "space-y-4", data: { controller: "nested-events" } do |f| %>
   <% if campaign.errors.any? %>
     <div class="bg-red-50 text-red-800 rounded-lg p-3 text-sm">
       <ul class="list-disc list-inside">
