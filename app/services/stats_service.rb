@@ -116,7 +116,7 @@ class StatsService
   end
 
   def self.compute_driver
-    top3_by_count(CarpoolRequest.accepted.joins(:carpool_offer), "carpool_offers.user_id")
+    top3_by_count(CarpoolRequest.accepted.joins(:carpool_offer), CarpoolOffer.arel_table[:user_id])
   end
 
   def self.compute_first_lady
@@ -132,15 +132,17 @@ class StatsService
   end
 
   def self.compute_globetrotter
-    top3_by_count(completed_confirmed, "participations.user_id", distinct: "events.host_id")
+    top3_by_count(completed_confirmed, Participation.arel_table[:user_id], distinct: Event.arel_table[:host_id])
   end
 
   # Każde zlecenie liczy się raz — sub-eventy serii mają creator_id = NULL
   # (twórca siedzi na kampanii), więc spadamy na twórcę serii przez COALESCE.
   def self.compute_organizer
-    attribution = "COALESCE(events.creator_id, event_campaigns.creator_id)"
+    attribution = Arel::Nodes::NamedFunction.new(
+      "COALESCE", [ Event.arel_table[:creator_id], EventCampaign.arel_table[:creator_id] ]
+    )
     top3_by_count(
-      Event.left_joins(:event_campaign).where(Arel.sql("#{attribution} IS NOT NULL")),
+      Event.left_joins(:event_campaign).where(attribution.not_eq(nil)),
       attribution
     )
   end
@@ -277,16 +279,18 @@ class StatsService
   # Kanoniczny kształt większości trofeów: policz wiersze per user, weź 3
   # najlepszych. `column` idzie i do GROUP BY, i do projekcji — jedno miejsce,
   # więc nie da się ich rozjechać. `distinct:` przełącza agregat na COUNT(DISTINCT).
+  # Kolumny podajemy symbolem albo węzłem Arel (`Model.arel_table[:kolumna]`),
+  # nie stringiem — bez surowego SQL nie ma czego flagować jako injection.
   def self.top3_by_count(scope, column = :user_id, distinct: nil)
-    aggregate = distinct ? "COUNT(DISTINCT #{distinct})" : "COUNT(*)"
-    scope.group(Arel.sql(column.to_s))
-         .order(Arel.sql("#{aggregate} DESC"))
+    aggregate = distinct ? distinct.count(true) : Arel.star.count
+    scope.group(column)
+         .order(aggregate.desc)
          .limit(3)
-         .pluck(Arel.sql("#{column}, #{aggregate}"))
+         .pluck(column, aggregate)
   end
 
   def self.top3_by_audit(event_type)
-    top3_by_count(audit_scope(event_type), "participations.user_id")
+    top3_by_count(audit_scope(event_type), Participation.arel_table[:user_id])
   end
 
   def self.audit_scope(event_type)
