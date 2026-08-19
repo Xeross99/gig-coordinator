@@ -25,6 +25,23 @@ class HostTest < ActiveSupport::TestCase
     assert dup.errors.of_kind?(:email, :taken)
   end
 
+  test "email zajęty przez pracownika jest odrzucony" do
+    host = Host.new(first_name: "Kolizja", last_name: "Zuserem", email: users(:ala).email, location: "L")
+    refute host.valid?
+    assert_includes host.errors[:email], "jest już używany przez pracownika"
+  end
+
+  test "email zajęty przez pracownika jest odrzucony niezależnie od wielkości liter" do
+    host = Host.new(first_name: "Kolizja", last_name: "Uppercase", email: users(:ala).email.upcase, location: "L")
+    refute host.valid?
+    assert_includes host.errors[:email], "jest już używany przez pracownika"
+  end
+
+  test "host bez emaila nie wpada w walidację kolizji z pracownikami" do
+    host = Host.new(first_name: "Bez", last_name: "Maila", location: "L")
+    assert host.valid?, host.errors.full_messages.inspect
+  end
+
   test "email is normalized to lowercase + stripped" do
     host = Host.create!(first_name: "A", last_name: "B", email: "  NORM@Example.COM ", location: "L")
     assert_equal "norm@example.com", host.email

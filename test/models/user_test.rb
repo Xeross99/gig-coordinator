@@ -63,6 +63,24 @@ class UserTest < ActiveSupport::TestCase
     assert_equal "upper@x.com", user.email
   end
 
+  test "email zajęty przez gospodarza jest odrzucony" do
+    user = User.new(first_name: "Kolizja", last_name: "Zhostem", email: hosts(:jan).email)
+    refute user.valid?
+    assert_includes user.errors[:email], "jest już używany przez gospodarza"
+  end
+
+  test "email zajęty przez gospodarza jest odrzucony niezależnie od wielkości liter" do
+    user = User.new(first_name: "Kolizja", last_name: "Uppercase", email: hosts(:jan).email.upcase)
+    refute user.valid?
+    assert_includes user.errors[:email], "jest już używany przez gospodarza"
+  end
+
+  test "update istniejącego usera bez kolizji z hostem przechodzi" do
+    user = users(:ala)
+    user.first_name = "Alicja"
+    assert user.valid?, user.errors.full_messages.inspect
+  end
+
   test "email format is validated" do
     user = User.new(first_name: "A", last_name: "B", email: "not-an-email")
     refute user.valid?

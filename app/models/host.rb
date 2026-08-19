@@ -15,4 +15,13 @@ class Host < ApplicationRecord
   validates :last_name, :location, presence: true
   validates :first_name, presence: true, uniqueness: { scope: :last_name, case_sensitive: false }
   validates :email, uniqueness: { case_sensitive: true, allow_blank: true }, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
+  validate :email_not_taken_by_user
+
+  private
+
+  def email_not_taken_by_user
+    return if email.blank?
+
+    errors.add(:email, "jest już używany przez pracownika") if User.exists?(email: email)
+  end
 end

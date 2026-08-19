@@ -27,6 +27,7 @@ class User < ApplicationRecord
   validates :last_name, presence: true
   validates :first_name, presence: true, uniqueness: { scope: :last_name, case_sensitive: false }
   validates :email, presence: true, uniqueness: { case_sensitive: true }, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
+  validate :email_not_taken_by_host
 
   after_create_commit { WelcomeMailer.notify(self).deliver_later }
 
@@ -99,5 +100,13 @@ class User < ApplicationRecord
     return unless prev_idx && new_idx && new_idx > prev_idx
 
     RankPromotionMailer.notify(self, new_title: new_title).deliver_later
+  end
+
+  private
+
+  def email_not_taken_by_host
+    return if email.blank?
+
+    errors.add(:email, "jest już używany przez gospodarza") if Host.exists?(email: email)
   end
 end
